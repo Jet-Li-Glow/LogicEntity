@@ -118,12 +118,12 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 添加后续条件
+        /// 组合条件
         /// </summary>
         /// <param name="logicalOperator"></param>
         /// <param name="condition"></param>
         /// <returns></returns>
-        private Condition With(LogicalOperator logicalOperator, Condition condition)
+        private Condition After(LogicalOperator logicalOperator, Condition condition)
         {
             IsMultiple = true;
 
@@ -137,6 +137,32 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 组合条件
+        /// </summary>
+        /// <param name="logicalOperator"></param>
+        /// <param name="condition"></param>
+        /// <returns></returns>
+        private Condition After(LogicalOperator logicalOperator, bool condition)
+        {
+            _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + condition.ToString();
+
+            return this;
+        }
+
+        /// <summary>
+        /// 组合条件
+        /// </summary>
+        /// <param name="logicalOperator"></param>
+        /// <param name="condition"></param>
+        /// <returns></returns>
+        private Condition Before(bool condition, LogicalOperator logicalOperator)
+        {
+            _conditionStr = condition.ToString() + "\n" + logicalOperator.Description().PadLeft(5) + " " + _conditionStr;
+
+            return this;
+        }
+
+        /// <summary>
         /// 与
         /// </summary>
         /// <param name="left"></param>
@@ -144,7 +170,29 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static Condition operator &(Condition left, Condition right)
         {
-            return left.With(LogicalOperator.And, right);
+            return left.After(LogicalOperator.And, right);
+        }
+
+        /// <summary>
+        /// 与
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static Condition operator &(Condition left, bool right)
+        {
+            return left.After(LogicalOperator.And, right);
+        }
+
+        /// <summary>
+        /// 与
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static Condition operator &(bool left, Condition right)
+        {
+            return right.Before(left, LogicalOperator.And);
         }
 
         /// <summary>
@@ -155,7 +203,29 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static Condition operator |(Condition left, Condition right)
         {
-            return left.With(LogicalOperator.Or, right);
+            return left.After(LogicalOperator.Or, right);
+        }
+
+        /// <summary>
+        /// 或
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static Condition operator |(Condition left, bool right)
+        {
+            return left.After(LogicalOperator.Or, right);
+        }
+
+        /// <summary>
+        /// 或
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static Condition operator |(bool left, Condition right)
+        {
+            return right.Before(left, LogicalOperator.Or);
         }
     }
 }

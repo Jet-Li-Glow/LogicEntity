@@ -42,12 +42,12 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 条件
         /// </summary>
-        private ConditionDescription _conditions;
+        private ConditionDescription _condition;
 
         /// <summary>
         /// 是否有条件
         /// </summary>
-        private bool _hasConditons;
+        private bool _hasConditions;
 
         /// <summary>
         /// 分组
@@ -113,12 +113,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn Join(TableDescription table)
         {
-            if (table is null)
-                return this;
+            Relation relation = new Relation() { TableTier = TableTier.Join };
 
-            Relation relation = new Relation() { TableTier = TableTier.Join, RelateTable = table };
-
-            relation.AddParameters(table.GetParameters());
+            relation.SetTable(table);
 
             _relations.Add(relation);
 
@@ -132,12 +129,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn InnerJoin(TableDescription table)
         {
-            if (table is null)
-                return this;
+            Relation relation = new Relation() { TableTier = TableTier.InnerJoin };
 
-            Relation relation = new Relation() { TableTier = TableTier.InnerJoin, RelateTable = table };
-
-            relation.AddParameters(table.GetParameters());
+            relation.SetTable(table);
 
             _relations.Add(relation);
 
@@ -151,12 +145,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn LeftJoin(TableDescription table)
         {
-            if (table is null)
-                return this;
+            Relation relation = new Relation() { TableTier = TableTier.LeftJoin };
 
-            Relation relation = new Relation() { TableTier = TableTier.LeftJoin, RelateTable = table };
-
-            relation.AddParameters(table.GetParameters());
+            relation.SetTable(table);
 
             _relations.Add(relation);
 
@@ -170,12 +161,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn RightJoin(TableDescription table)
         {
-            if (table is null)
-                return this;
+            Relation relation = new Relation() { TableTier = TableTier.RightJoin };
 
-            Relation relation = new Relation() { TableTier = TableTier.RightJoin, RelateTable = table };
-
-            relation.AddParameters(table.GetParameters());
+            relation.SetTable(table);
 
             _relations.Add(relation);
 
@@ -190,8 +178,9 @@ namespace LogicEntity.Operator
         public IJoin On(Condition condition)
         {
             Relation relation = _relations.LastOrDefault();
+
             if (relation is not null)
-                relation.Condition = condition;
+                relation.SetCondition(condition);
 
             return this;
         }
@@ -203,9 +192,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IGroupBy Where(Condition condition)
         {
-            _conditions = condition;
+            _condition = condition;
 
-            _hasConditons = true;
+            _hasConditions = true;
 
             return this;
         }
@@ -215,11 +204,11 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="conditions"></param>
         /// <returns></returns>
-        public IGroupBy With(ConditionCollection conditions)
+        public IGroupBy With(ConditionCollection condition)
         {
-            _conditions = conditions;
+            _condition = condition;
 
-            _hasConditons = true;
+            _hasConditions = true;
 
             return this;
         }
@@ -370,19 +359,24 @@ namespace LogicEntity.Operator
 
             if (_relations.Any())
             {
-                relations = "\n" + string.Join("\n", _relations.Select(r => r?.Description()));
+                relations = "\n" + string.Join("\n", _relations.Select(r => r.Description()));
 
-                parameters.AddRange(_relations.SelectMany(r => r?.GetParameters() ?? new List<KeyValuePair<string, object>>()));
+                parameters.AddRange(_relations.SelectMany(r => r.GetParameters()));
             }
 
             //条件
             string conditions = string.Empty;
 
-            if (_hasConditons)
+            if (_hasConditions)
             {
-                conditions = "\nWhere " + _conditions?.Description();
+                conditions = "\nWhere ";
 
-                parameters.AddRange(_conditions?.GetParameters() ?? new List<KeyValuePair<string, object>>());
+                if (_condition is not null)
+                {
+                    conditions += _condition.Description();
+
+                    parameters.AddRange(_condition.GetParameters());
+                }
             }
 
             //分组
@@ -398,9 +392,14 @@ namespace LogicEntity.Operator
 
             if (_hasHaving)
             {
-                having = "\nHaving " + _having?.Description();
+                having = "\nHaving ";
 
-                parameters.AddRange(_having?.GetParameters() ?? new List<KeyValuePair<string, object>>());
+                if (_having is not null)
+                {
+                    having += _having.Description();
+
+                    parameters.AddRange(_having.GetParameters());
+                }
             }
 
             //排序

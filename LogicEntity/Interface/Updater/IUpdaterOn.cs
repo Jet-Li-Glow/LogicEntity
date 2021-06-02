@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Model;
 using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IWhere : IGroupBy
+    public interface IUpdaterOn<T> where T : Table
     {
-        public IGroupBy Where(Condition condition);
-
-        public IGroupBy With(ConditionCollection condition);
+        public IUpdaterJoin<T> On(Condition condition);
     }
 }

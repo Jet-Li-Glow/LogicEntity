@@ -42,7 +42,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public static Insertor Insert(Table table)
+        public static IInsertor Insert(Table table)
         {
             return new Insertor(table);
         }
@@ -51,9 +51,18 @@ namespace LogicEntity.Operator
         /// 更新操作器
         /// </summary>
         /// <returns></returns>
-        public static Updater Update()
+        public static IUpdaterJoin<T> Update<T>(T table) where T : Table, new()
         {
-            return new Updater();
+            return new Updater<T>(table);
+        }
+
+        /// <summary>
+        /// 更新操作器
+        /// </summary>
+        /// <returns></returns>
+        public static Changer ApplyChanges(Table change)
+        {
+            return new Changer(change);
         }
 
         /// <summary>

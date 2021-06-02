@@ -22,26 +22,40 @@ namespace LogicEntity.Model
         /// <summary>
         /// 表级别
         /// </summary>
-        public TableTier TableTier { get; set; }
+        internal TableTier TableTier { get; set; }
 
         /// <summary>
         /// 关联表
         /// </summary>
-        public TableDescription RelateTable { get; set; }
+        private TableDescription RelateTable { get; set; }
 
         /// <summary>
         /// 关联条件
         /// </summary>
-        public Condition Condition { get; set; }
+        private ConditionDescription Condition { get; set; }
 
         /// <summary>
-        /// 添加参数
+        /// 设置关联表
         /// </summary>
-        /// <param name="parameters"></param>
-        public void AddParameters(IEnumerable<KeyValuePair<string, object>> parameters)
+        /// <param name="table"></param>
+        public void SetTable(TableDescription table)
         {
-            if (parameters is not null)
-                _parameters.AddRange(parameters);
+            RelateTable = table;
+
+            if (table is not null)
+                _parameters.AddRange(table.GetParameters());
+        }
+
+        /// <summary>
+        /// 设置关联条件
+        /// </summary>
+        /// <param name="condition"></param>
+        public void SetCondition(ConditionDescription condition)
+        {
+            Condition = condition;
+
+            if (condition is not null)
+                _parameters.AddRange(condition.GetParameters());
         }
 
         /// <summary>

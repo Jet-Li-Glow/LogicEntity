@@ -75,7 +75,7 @@ namespace DataBaseAccess
                     major.MajorType
                     )
                 .From(student)
-                .LeftJoin(major).On(major.MajorId == student.MajorId)
+                .LeftJoin(major).On(true | major.MajorId == student.MajorId & major.MajorId == 2 & true)
                 .Where(student.Birthday > new DateTime(1996, 2, 12, 7, 0, 0) & student.StudentId.In(1, ")3"));
 
             string tests = testselector.GetCommand().CommandText;
@@ -98,6 +98,29 @@ namespace DataBaseAccess
             IInsertor insertor = DBOperator.Insert(data);
 
             //int insertAffected = testDb.ExecuteNonQuery(insertor);
+
+            //更新
+            Student changedStudent = new Student();
+
+            changedStudent.StudentName.Value = "小刘123";
+            changedStudent.MajorId.Value = 4;
+
+            IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentName == "小刘" & changedStudent.MajorId == 2);
+
+            string changerText = changer.GetCommand().CommandText;
+
+            //int changeAffected = testDb.ExecuteNonQuery(changer);
+
+            Major updateMajor = new Major();
+
+            IUpdater updater = DBOperator.Update(changedStudent)
+                .LeftJoin(updateMajor).On(changedStudent.MajorId == updateMajor.MajorId & updateMajor.MajorId == 1)
+                .Set(s => s.StudentName.Value = updateMajor.MajorName)
+                .Where(changedStudent.StudentId == 4);
+
+            string updaterText = updater.GetCommand().CommandText;
+
+            //int updateAffected = testDb.ExecuteNonQuery(updater);
 
             //删除
             Student deleteTable = new Student();

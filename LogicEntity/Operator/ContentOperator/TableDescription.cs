@@ -38,7 +38,7 @@ namespace LogicEntity.Operator
         /// </summary>
         internal virtual IEnumerable<KeyValuePair<string, object>> GetParameters()
         {
-            return default;
+            yield break;
         }
     }
 }
