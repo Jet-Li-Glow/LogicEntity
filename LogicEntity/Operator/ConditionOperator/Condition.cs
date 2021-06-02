@@ -127,6 +127,13 @@ namespace LogicEntity.Operator
         {
             IsMultiple = true;
 
+            if (condition is null)
+            {
+                _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " ";
+
+                return this;
+            }
+
             string str = condition.IsMultiple ? "(" + condition.Description() + ")" : condition.Description();
 
             _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + str;
