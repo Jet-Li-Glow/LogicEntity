@@ -40,9 +40,36 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 插入操作器
         /// </summary>
-        /// <param name="table"></param>
+        /// <param name="table">数据实体</param>
         /// <returns></returns>
-        public static IInsertor Insert(Table table)
+        public static IInsertor Insert<T>(T row) where T : Table
+        {
+            var properties = row.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
+
+            List<Column> colums = new();
+
+            foreach (PropertyInfo property in properties)
+            {
+                Column column = property.GetValue(row) as Column;
+
+                if (column is null)
+                    continue;
+
+                if (column.IsValueSet == false)
+                    continue;
+
+                colums.Add(column);
+            }
+
+            return InsertInto(row).Columns(columns: colums.ToArray()).Row(row);
+        }
+
+        /// <summary>
+        /// 插入操作器
+        /// </summary>
+        /// <param name="table">插入的表</param>
+        /// <returns></returns>
+        public static IInsertorColumns InsertInto(Table table)
         {
             return new Insertor(table);
         }

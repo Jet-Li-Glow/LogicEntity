@@ -14,24 +14,12 @@ namespace LogicEntity.Model
     {
         public static Description Distinct(this Description description)
         {
-            if (description is null)
-                return null;
-
-            Description newDescription = description.ObjectClone();
-            newDescription.AddBeforeConvertor(s => "Distinct " + s);
-
-            return newDescription;
+            return description?.Next(s => "Distinct " + s);
         }
 
         public static Description As(this Description description, string alias)
         {
-            if (description is null)
-                return null;
-
-            Description newDescription = description.ObjectClone();
-            newDescription.AddBeforeConvertor(s => s + " As " + alias);
-
-            return newDescription;
+            return description?.Next(s => s + " As " + alias);
         }
 
         public static Description Count()
@@ -46,35 +34,17 @@ namespace LogicEntity.Model
 
         public static Description Count(this Description description)
         {
-            if (description is null)
-                return null;
-
-            Description newDescription = description.ObjectClone();
-            newDescription.AddBeforeConvertor(s => "Count(" + s + ")");
-
-            return newDescription;
+            return description?.Next(s => "Count(" + s + ")");
         }
 
         public static Description Max(this Description description)
         {
-            if (description is null)
-                return null;
-
-            Description newDescription = description.ObjectClone();
-            newDescription.AddBeforeConvertor(s => "Max(" + s + ")");
-
-            return newDescription;
+            return description?.Next(s => "Max(" + s + ")");
         }
 
         public static Description Min(this Description description)
         {
-            if (description is null)
-                return null;
-
-            Description newDescription = description.ObjectClone();
-            newDescription.AddBeforeConvertor(s => "Min(" + s + ")");
-
-            return newDescription;
+            return description?.Next(s => "Min(" + s + ")");
         }
     }
 }

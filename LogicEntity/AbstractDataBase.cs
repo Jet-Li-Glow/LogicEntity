@@ -12,7 +12,7 @@ using LogicEntity.Operator;
 
 namespace LogicEntity
 {
-    public abstract class AbstractDataBase
+    public abstract partial class AbstractDataBase
     {
         public abstract IDbConnection GetDbConnection();
 

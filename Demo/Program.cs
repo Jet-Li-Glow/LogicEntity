@@ -75,7 +75,7 @@ namespace DataBaseAccess
                     major.MajorType
                     )
                 .From(student)
-                .LeftJoin(major).On(true | major.MajorId == student.MajorId & major.MajorId == 2 & true)
+                .LeftJoin(major).On(true | major.MajorId == student.MajorId & true & major.MajorId == 2 & true)
                 .Where(student.Birthday > new DateTime(1996, 2, 12, 7, 0, 0) & student.StudentId.In(1, ")3"));
 
             string tests = testselector.GetCommand().CommandText;
@@ -86,18 +86,43 @@ namespace DataBaseAccess
             //DataTable dt = testDb.Query(testselector);
 
 
-
             //插入
 
             Student data = new Student();
             //data.StudentId.Value = 5;
             data.StudentName.Value = "小刘";
-            data.Birthday.Value = new DateTime(2001, 3, 5);
+            data.Birthday.Value = null; // new DateTime(2001, 3, 5);
             data.MajorId.Value = 2;
 
             IInsertor insertor = DBOperator.Insert(data);
 
             //int insertAffected = testDb.ExecuteNonQuery(insertor);
+
+            //批量插入
+            Student insertTable = new Student();
+
+            Student data1 = new Student();
+            data1.StudentName.Value = "小喵1";
+            data1.Birthday.Value = new DateTime(1995, 5, 10);
+            data1.MajorId.Value = 1;
+
+            Student data2 = new Student();
+            data2.StudentName.Value = "小喵2";
+            data2.Birthday.Value = new DateTime(1996, 5, 10);
+            data2.MajorId.Value = 2;
+
+            Student data3 = new Student();
+            data3.StudentName.Value = "小喵3";
+            data3.Birthday.Value = new DateTime(1997, 5, 10);
+            data3.MajorId.Value = 3;
+
+            IInsertor batch = DBOperator.InsertInto(insertTable)
+                .Columns(insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
+                .Rows(new List<Student>() { data1, data2, data3 });
+
+            string batchText = batch.GetCommand().CommandText;
+
+            //int batchAffected = testDb.ExecuteNonQuery(batch);
 
             //更新
             Student changedStudent = new Student();

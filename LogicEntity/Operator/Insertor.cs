@@ -12,9 +12,13 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 插入操作器
     /// </summary>
-    public class Insertor : IInsertor
+    public class Insertor : IInsertorColumns, IInsertorValues, IInsertor
     {
-        private Table _entity;
+        private Table _table;
+
+        private List<string> _columns = new();
+
+        private List<List<object>> _rows = new();
 
         /// <summary>
         /// 插入操作器
@@ -22,7 +26,60 @@ namespace LogicEntity.Operator
         /// <param name="table"></param>
         public Insertor(Table table)
         {
-            _entity = table;
+            _table = table;
+        }
+
+        public IInsertorValues Columns(params Column[] columns)
+        {
+            if (columns is null)
+                return this;
+
+            _columns.AddRange(columns.Select(c => c?.ColumnName ?? string.Empty));
+
+            return this;
+        }
+
+        public IInsertor Row<T>(T row)
+        {
+            Rows(Enumerable.Repeat(row, 1));
+
+            return this;
+        }
+
+        public IInsertor Rows<T>(IEnumerable<T> rows)
+        {
+            if (rows is null)
+                return this;
+
+            Type type = typeof(T);
+
+            List<PropertyInfo> properties = new List<PropertyInfo>();
+
+            foreach (string columnName in _columns)
+            {
+                properties.Add(type.GetProperty(columnName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
+            }
+
+            foreach (object obj in rows)
+            {
+                List<object> row = new();
+
+                foreach (PropertyInfo property in properties)
+                {
+                    object v = property?.GetValue(obj);
+
+                    if (v is Column)
+                    {
+                        v = (v as Column).Value;
+                    }
+
+                    row.Add(v);
+                }
+
+                _rows.Add(row);
+            }
+
+            return this;
         }
 
         /// <summary>
@@ -33,35 +90,35 @@ namespace LogicEntity.Operator
         {
             Command command = new Command();
 
-            if (_entity is null)
-                return command;
-
-            var properties = _entity.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
-
-            List<string> colums = new();
-
             command.Parameters = new();
+
+            string columns = string.Join(", ", _columns);
 
             int index = 0;
 
-            foreach (PropertyInfo property in properties)
+            List<string> values = new();
+
+            foreach (List<object> row in _rows)
             {
-                Column column = property.GetValue(_entity) as Column;
+                List<string> parameters = new();
 
-                if (column is null)
-                    continue;
+                foreach (object v in row)
+                {
+                    string key = "@param" + index.ToString();
 
-                if (column.IsValueSet == false)
-                    continue;
+                    parameters.Add(key);
 
-                colums.Add(column.ColumnName);
+                    command.Parameters.Add(KeyValuePair.Create(key, v));
 
-                command.Parameters.Add(KeyValuePair.Create("@param" + index.ToString(), column.Value));
+                    index++;
+                }
 
-                index++;
+                values.Add("(" + string.Join(", ", parameters) + ")");
             }
 
-            command.CommandText = $"Insert Into {_entity.TableName} ({string.Join(", ", colums)}) Values ({string.Join(", ", command.Parameters.Select(p => p.Key))})";
+            string rows = string.Join(",\n       ", values);
+
+            command.CommandText = $"Insert Into {_table.TableName} ({columns})\nValues {rows}";
 
             return command;
         }

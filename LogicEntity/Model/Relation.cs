@@ -64,7 +64,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         internal string Description()
         {
-            return TableTier.Description() + " " + RelateTable?.Description() + "\n  On " + Condition.Description();
+            return TableTier.Description() + " " + RelateTable?.Description() + "\n   On " + Condition.Description();
         }
 
         /// <summary>

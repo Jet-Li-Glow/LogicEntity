@@ -25,7 +25,7 @@ namespace LogicEntity.Operator
         /// 字符串描述
         /// </summary>
         public Description()
-        { 
+        {
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace LogicEntity.Operator
         /// 添加查询前转换器
         /// </summary>
         /// <param name="convertor"></param>
-        public void AddBeforeConvertor(Func<string, string> convertor)
+        private void AddBeforeConvertor(Func<string, string> convertor)
         {
             BeforeConvertors.Add(convertor);
         }
@@ -76,12 +76,70 @@ namespace LogicEntity.Operator
         /// 复制
         /// </summary>
         /// <returns></returns>
-        public virtual Description ObjectClone()
+        private Description ObjectClone()
         {
             Description description = MemberwiseClone() as Description;
             description.BeforeConvertors = new(BeforeConvertors);
 
             return description;
+        }
+
+        /// <summary>
+        /// 获取下一个描述
+        /// </summary>
+        /// <param name="convertor"></param>
+        /// <returns></returns>
+        public Description Next(Func<string, string> convertor)
+        {
+            Description description = ObjectClone();
+
+            description.AddBeforeConvertor(convertor);
+
+            return description;
+        }
+
+        /// <summary>
+        /// 加
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Description operator +(Description description, object value)
+        {
+            return description?.Next((s) => s + " + " + value);
+        }
+
+        /// <summary>
+        /// 减
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Description operator -(Description description, object value)
+        {
+            return description?.Next((s) => s + " - " + value);
+        }
+
+        /// <summary>
+        /// 乘
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Description operator *(Description description, object value)
+        {
+            return description?.Next((s) => s + " * " + value);
+        }
+
+        /// <summary>
+        /// 除
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Description operator /(Description description, object value)
+        {
+            return description?.Next((s) => s + " / " + value);
         }
 
         /// <summary>
