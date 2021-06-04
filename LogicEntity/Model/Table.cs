@@ -52,7 +52,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 别名
         /// </summary>
-        protected string TableAlias { get; set; }
+        private string TableAlias { get; set; }
 
         /// <summary>
         /// 最后的表名
@@ -76,7 +76,7 @@ namespace LogicEntity.Model
         /// </summary>
         internal override string Description()
         {
-            return FullName + (TableAlias == null ? string.Empty : " As " + TableAlias);
+            return FullName + (TableAlias is null ? string.Empty : " As " + TableAlias);
         }
 
         /// <summary>
