@@ -93,7 +93,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"Update {_change.TableName}{set}{conditions}";
+            command.CommandText = $"Update {_change.FullName}{set}{conditions}";
 
             return command;
         }

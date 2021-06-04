@@ -35,9 +35,19 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 库名
+        /// </summary>
+        public virtual string schemaName => string.Empty;
+
+        /// <summary>
         /// 表名
         /// </summary>
         public virtual string TableName => GetType().Name;
+
+        /// <summary>
+        /// 表全名
+        /// </summary>
+        public string FullName => schemaName.IsValid() ? schemaName + "." + TableName : TableName;
 
         /// <summary>
         /// 别名
@@ -47,7 +57,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 最后的表名
         /// </summary>
-        internal override string FinalTableName => TableAlias ?? TableName;
+        internal override string FinalTableName => TableAlias ?? FullName;
 
         /// <summary>
         /// 添加别名
@@ -66,7 +76,7 @@ namespace LogicEntity.Model
         /// </summary>
         internal override string Description()
         {
-            return TableName + (TableAlias == null ? string.Empty : " As " + TableAlias);
+            return FullName + (TableAlias == null ? string.Empty : " As " + TableAlias);
         }
 
         /// <summary>

@@ -7,8 +7,8 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
-    public interface IInsertorColumns<T> where T : Table
+    public interface IOnDuplicateKeyUpdate<T> : IInsertor where T : Table
     {
-        public IInsertorValues<T> Columns(params Column[] columns);
+        public IInsertor OnDuplicateKeyUpdate(Action<T> updateValue);
     }
 }

@@ -7,10 +7,12 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
-    public interface IInsertorValues
+    public interface IInsertorValues<T> where T : Table
     {
-        public IInsertor Row<T>(T row);
+        public IOnDuplicateKeyUpdate<T> Row<TRow>(TRow row);
 
-        public IInsertor Rows<T>(IEnumerable<T> rows);
+        public IOnDuplicateKeyUpdate<T> Rows<TRow>(IEnumerable<TRow> rows);
+
+        public IOnDuplicateKeyUpdate<T> Rows(ISelector selector);
     }
 }

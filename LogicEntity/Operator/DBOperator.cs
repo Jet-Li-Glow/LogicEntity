@@ -42,7 +42,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="table">数据实体</param>
         /// <returns></returns>
-        public static IInsertor Insert<T>(T row) where T : Table
+        public static IInsertor Insert<T>(T row) where T : Table, new()
         {
             var properties = row.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
 
@@ -69,9 +69,9 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="table">插入的表</param>
         /// <returns></returns>
-        public static IInsertorColumns InsertInto(Table table)
+        public static IInsertorColumns<T> InsertInto<T>(T table) where T : Table, new()
         {
-            return new Insertor(table);
+            return new Insertor<T>(table);
         }
 
         /// <summary>

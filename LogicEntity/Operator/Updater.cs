@@ -157,14 +157,14 @@ namespace LogicEntity.Operator
 
                 if (column.Value is Description)
                 {
-                    columns.Add(column.ColumnName + " = " + (column.Value as Description).FullContent);
+                    columns.Add(column.FullContent + " = " + (column.Value as Description).FullContent);
 
                     continue;
                 }
 
                 string key = "@param" + index.ToString();
 
-                columns.Add(column.ColumnName + " = " + key);
+                columns.Add(column.FullContent + " = " + key);
 
                 command.Parameters.Add(KeyValuePair.Create(key, column.Value));
 
@@ -197,7 +197,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"Update {_table.TableName}{relations}{set}{conditions}";
+            command.CommandText = $"Update {_table.FullName}{relations}{set}{conditions}";
 
             return command;
         }

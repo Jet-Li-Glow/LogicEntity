@@ -10,6 +10,10 @@ namespace DataBaseAccess.TableModel
 {
     public class Student : Table
     {
+        public override string schemaName => "testdb";
+
+        public override string TableName => "Student";
+
         public Column StudentId { get; init; }
 
         public Column StudentName { get; init; }

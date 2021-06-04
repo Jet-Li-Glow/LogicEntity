@@ -87,7 +87,7 @@ namespace LogicEntity.Operator
                 parameters.AddRange(_conditions?.GetParameters() ?? new List<KeyValuePair<string, object>>());
             }
 
-            command.CommandText = $"Delete From {_mainTable?.TableName}{conditions}";
+            command.CommandText = $"Delete From {_mainTable?.FullName}{conditions}";
 
             command.Parameters = new();
 

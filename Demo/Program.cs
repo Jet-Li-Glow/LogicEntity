@@ -102,27 +102,53 @@ namespace DataBaseAccess
             Student insertTable = new Student();
 
             Student data1 = new Student();
-            data1.StudentName.Value = "小喵1";
+            data1.StudentId.Value = 14;
+            data1.StudentName.Value = "小喵11";
             data1.Birthday.Value = new DateTime(1995, 5, 10);
             data1.MajorId.Value = 1;
 
             Student data2 = new Student();
-            data2.StudentName.Value = "小喵2";
+            data2.StudentId.Value = 15;
+            data2.StudentName.Value = "小喵22";
             data2.Birthday.Value = new DateTime(1996, 5, 10);
             data2.MajorId.Value = 2;
 
             Student data3 = new Student();
-            data3.StudentName.Value = "小喵3";
+            data3.StudentId.Value = 16;
+            data3.StudentName.Value = "小喵33";
             data3.Birthday.Value = new DateTime(1997, 5, 10);
             data3.MajorId.Value = 3;
 
             IInsertor batch = DBOperator.InsertInto(insertTable)
-                .Columns(insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
-                .Rows(new List<Student>() { data1, data2, data3 });
+                .Columns(insertTable.StudentId, insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
+                .Rows(new List<Student>() { data1, data2, data3 })
+                .OnDuplicateKeyUpdate(s =>
+                {
+                    s.StudentName.Value = s.StudentName;
+                    s.Birthday.Value = s.Birthday;
+                    s.MajorId.Value = 5;
+                });
 
             string batchText = batch.GetCommand().CommandText;
 
             //int batchAffected = testDb.ExecuteNonQuery(batch);
+
+            //查询插入
+
+            Student Target = new Student();
+
+            Major OriginalData = new Major();
+
+            IInsertor selectInsert = DBOperator.InsertInto(Target).Columns(Target.StudentName, Target.Birthday, Target.MajorId)
+                .Rows(DBOperator.Select(OriginalData.MajorName.As("StudentName"),
+                                        new Description("'2001-05-01 05:00:00'").As("Birthday"),
+                                        OriginalData.MajorId)
+                                        .From(OriginalData)
+                                        .Where(OriginalData.MajorId == 3));
+
+            string selectInsertText = selectInsert.GetCommand().CommandText;
+
+            //int selectInsertAffected = testDb.ExecuteNonQuery(selectInsert);
 
             //更新
             Student changedStudent = new Student();
