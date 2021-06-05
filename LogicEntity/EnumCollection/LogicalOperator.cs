@@ -13,20 +13,23 @@ namespace LogicEntity.EnumCollection
     public enum LogicalOperator
     {
         /// <summary>
-        /// 空
+        /// Null
         /// </summary>
         [Description("")]
         Null = 0,
+
         /// <summary>
         /// 与
         /// </summary>
         [Description("And")]
         And = 1,
+
         /// <summary>
         /// 或
         /// </summary>
         [Description("Or")]
         Or = 2,
+
         /// <summary>
         /// 非
         /// </summary>

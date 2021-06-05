@@ -10,9 +10,9 @@ namespace DataBaseAccess.Operator
 {
     public class StudentInfo
     {
-        public int Id { get; set; }
+        public int StudentId { get; set; }
 
-        public string Name { get; set; }
+        public string StudentName { get; set; }
 
         public DateTime? Birthday { get; set; }
 

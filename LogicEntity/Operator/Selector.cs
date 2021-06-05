@@ -74,6 +74,8 @@ namespace LogicEntity.Operator
         /// </summary>
         private string _limit;
 
+        private List<UnionDescription> _unionDescriptions = new();
+
         /// <summary>
         /// 查询操作器
         /// </summary>
@@ -162,6 +164,38 @@ namespace LogicEntity.Operator
         public IOn RightJoin(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.RightJoin };
+
+            relation.SetTable(table);
+
+            _relations.Add(relation);
+
+            return this;
+        }
+
+        /// <summary>
+        /// 以 Full Join 添加从表
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        public IOn FullJoin(TableDescription table)
+        {
+            Relation relation = new Relation() { TableTier = TableTier.FullJoin };
+
+            relation.SetTable(table);
+
+            _relations.Add(relation);
+
+            return this;
+        }
+
+        /// <summary>
+        /// 以 Natural Join 添加从表
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        public IOn NaturalJoin(TableDescription table)
+        {
+            Relation relation = new Relation() { TableTier = TableTier.NaturalJoin };
 
             relation.SetTable(table);
 
@@ -315,6 +349,30 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 联合
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public ISelector Union(ISelector selector)
+        {
+            _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.Union, Selector = selector });
+
+            return this;
+        }
+
+        /// <summary>
+        /// 联合所有
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public ISelector UnionAll(ISelector selector)
+        {
+            _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.UnionAll, Selector = selector });
+
+            return this;
+        }
+
+        /// <summary>
         /// 作为嵌套表
         /// </summary>
         /// <param name="alias"></param>
@@ -419,16 +477,55 @@ namespace LogicEntity.Operator
 
             command.Parameters = new();
 
-            for (int i = 0; i < parameters.Count; i++)
+            int index = 0;
+
+            foreach (KeyValuePair<string, object> parameter in parameters)
             {
-                string key = "@param" + i.ToString();
+                string key = "@param" + index.ToString();
 
-                command.CommandText = command.CommandText.Replace(parameters[i].Key, key);
+                command.CommandText = command.CommandText.Replace(parameter.Key, key);
 
-                command.Parameters.Add(KeyValuePair.Create(key, parameters[i].Value));
+                command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
+
+                index++;
+            }
+
+            //联合表
+            foreach (UnionDescription union in _unionDescriptions)
+            {
+                Command unionCommand = union.Selector.GetCommand();
+
+                foreach (KeyValuePair<string, object> parameter in unionCommand.Parameters)
+                {
+                    string key = "@param" + index.ToString();
+
+                    unionCommand.CommandText = unionCommand.CommandText.Replace(parameter.Key, key);
+
+                    command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
+
+                    index++;
+                }
+
+                command.CommandText += "\n\n" + union.TableTier.Description() + "\n\n" + unionCommand.CommandText;
             }
 
             return command;
+        }
+
+        /// <summary>
+        /// 联合表描述
+        /// </summary>
+        private class UnionDescription
+        { 
+            /// <summary>
+            /// 表级别
+            /// </summary>
+            public TableTier TableTier { get; set; }
+
+            /// <summary>
+            /// 查询操作器
+            /// </summary>
+            public ISelector Selector { get; set; }
         }
     }
 }

@@ -13,34 +13,63 @@ namespace LogicEntity.EnumCollection
     internal enum TableTier
     {
         /// <summary>
-        /// 空
+        /// Null
         /// </summary>
         [Description("")]
         Null = 0,
+
         /// <summary>
-        /// 主表
+        /// From
         /// </summary>
         [Description("From")]
         From = 1,
+
         /// <summary>
         /// Join
         /// </summary>
         [Description("Join")]
         Join = 2,
+
         /// <summary>
         /// Inner Join
         /// </summary>
         [Description("Inner Join")]
         InnerJoin = 3,
+
         /// <summary>
         /// Left Join
         /// </summary>
         [Description("Left Join")]
         LeftJoin = 4,
+
         /// <summary>
         /// Right Join
         /// </summary>
         [Description("Right Join")]
-        RightJoin = 5
+        RightJoin = 5,
+
+        /// <summary>
+        /// Full Join
+        /// </summary>
+        [Description("Full Join")]
+        FullJoin = 6,
+
+        /// <summary>
+        /// Natural Join
+        /// </summary>
+        [Description("Natural Join")]
+        NaturalJoin = 7,
+
+        /// <summary>
+        /// Union
+        /// </summary>
+        [Description("Union")]
+        Union = 8,
+
+        /// <summary>
+        /// Union All
+        /// </summary>
+        [Description("Union All")]
+        UnionAll = 9
     }
 }

@@ -27,12 +27,17 @@ namespace LogicEntity.Model
         /// <summary>
         /// 关联表
         /// </summary>
-        private TableDescription RelateTable { get; set; }
+        private TableDescription _relateTable;
 
         /// <summary>
         /// 关联条件
         /// </summary>
-        private ConditionDescription Condition { get; set; }
+        private ConditionDescription _condition;
+
+        /// <summary>
+        /// 是否设置条件
+        /// </summary>
+        private bool _isSetCondition;
 
         /// <summary>
         /// 设置关联表
@@ -40,7 +45,7 @@ namespace LogicEntity.Model
         /// <param name="table"></param>
         public void SetTable(TableDescription table)
         {
-            RelateTable = table;
+            _relateTable = table;
 
             if (table is not null)
                 _parameters.AddRange(table.GetParameters());
@@ -52,7 +57,9 @@ namespace LogicEntity.Model
         /// <param name="condition"></param>
         public void SetCondition(ConditionDescription condition)
         {
-            Condition = condition;
+            _isSetCondition = true;
+
+            _condition = condition;
 
             if (condition is not null)
                 _parameters.AddRange(condition.GetParameters());
@@ -64,7 +71,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         internal string Description()
         {
-            return TableTier.Description() + " " + RelateTable?.Description() + "\n   On " + Condition.Description();
+            return TableTier.Description() + " " + _relateTable?.Description() + (_isSetCondition ? "\n   On " + _condition?.Description() : string.Empty);
         }
 
         /// <summary>

@@ -17,5 +17,9 @@ namespace LogicEntity.Interface
         public IOn LeftJoin(TableDescription table);
 
         public IOn RightJoin(TableDescription table);
+
+        public IOn FullJoin(TableDescription table);
+
+        public IOn NaturalJoin(TableDescription table);
     }
 }

@@ -85,6 +85,38 @@ namespace DataBaseAccess
 
             //DataTable dt = testDb.Query(testselector);
 
+            Student joinStudent = new Student();
+
+            Major joinMajor = new Major();
+
+            ISelector joinSelect = DBOperator.Select().From(joinStudent).FullJoin(joinMajor);
+
+            string joinText = joinSelect.GetCommand().CommandText;
+
+            //List<StudentInfo> joinResult = testDb.Query<StudentInfo>(joinSelect).ToList();
+
+
+            ISelector njoinSelect = DBOperator.Select().From(joinStudent).NaturalJoin(joinMajor);
+
+            string njoinText = njoinSelect.GetCommand().CommandText;
+
+            //List<StudentInfo> njoinResult = testDb.Query<StudentInfo>(njoinSelect).ToList();
+
+
+            List<StudentInfo> students = testDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+
+            //联合查询
+
+            Student unionA = new Student();
+
+            Student unionB = new Student();
+
+            ISelector unionSelect = DBOperator.Select().From(unionA).Where(unionA.StudentId == 1)
+                .UnionAll(DBOperator.Select().From(unionB).Where(unionB.StudentId == 2));
+
+            string unionText = unionSelect.GetCommand().CommandText;
+
+            //List<StudentInfo> unionResult = testDb.Query<StudentInfo>(unionSelect).ToList();
 
             //插入
 
@@ -96,7 +128,7 @@ namespace DataBaseAccess
 
             IInsertor insertor = DBOperator.Insert(data);
 
-            //int insertAffected = testDb.ExecuteNonQuery(insertor);
+            //int insertAffected = testDb.ExecuteNonQuery(DBOperator.Insert(data));
 
             //批量插入
             Student insertTable = new Student();
