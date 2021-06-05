@@ -103,7 +103,7 @@ namespace DataBaseAccess
             //List<StudentInfo> njoinResult = testDb.Query<StudentInfo>(njoinSelect).ToList();
 
 
-            List<StudentInfo> students = testDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+            //List<StudentInfo> students = testDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
 
             //联合查询
 
