@@ -25,6 +25,11 @@ namespace LogicEntity.Operator
         private Action<T> _updateValue;
 
         /// <summary>
+        /// 超时时间（秒）
+        /// </summary>
+        private int _commandTimeout = 0;
+
+        /// <summary>
         /// 插入操作器
         /// </summary>
         /// <param name="table"></param>
@@ -146,6 +151,13 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        public IInsertor SetCommandTimeout(int seconds)
+        {
+            _commandTimeout = seconds;
+
+            return this;
+        }
+
         /// <summary>
         /// 获取操作命令
         /// </summary>
@@ -221,8 +233,9 @@ namespace LogicEntity.Operator
                 update = "\nON DUPLICATE KEY UPDATE\n" + string.Join(",\n", updateSets);
             }
 
-
             command.CommandText = $"Insert Into {_table.FullName} ({columns}){_valueDescription.Description}{update}";
+
+            command.CommandTimeout = _commandTimeout;
 
             return command;
         }

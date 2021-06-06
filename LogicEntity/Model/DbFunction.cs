@@ -46,5 +46,10 @@ namespace LogicEntity.Model
         {
             return description?.Next(s => "Min(" + s + ")");
         }
+
+        public static Description LastInsertId()
+        {
+            return new Description("Last_Insert_Id()");
+        }
     }
 }

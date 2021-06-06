@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Interface;
 using LogicEntity.Model;
+using LogicEntity.Operator;
 
 namespace LogicEntity
 {
@@ -17,9 +20,34 @@ namespace LogicEntity
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
-        public int InsertNext(Table row)
+        public ulong InsertNext<T>(T row) where T : Table, new()
         {
-            return 0;
+            Command insert = DBOperator.Insert(row).GetCommand();
+
+            using (IDbConnection connection = GetDbConnection())
+            {
+                connection.Open();
+
+                IDbCommand command = connection.CreateCommand();
+
+                foreach (KeyValuePair<string, object> kv in insert.Parameters)
+                {
+                    command.Parameters.Add(GetDbParameter(kv.Key, kv.Value));
+                }
+
+                command.CommandText = insert.CommandText;
+
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+
+
+                command.CommandText = DBOperator.Select(DbFunction.LastInsertId()).GetCommand().CommandText;
+
+                command.Parameters.Clear();
+
+                return (ulong)Convert.ChangeType(command.ExecuteScalar(), TypeCode.UInt64);
+            }
         }
     }
 }

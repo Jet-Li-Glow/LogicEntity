@@ -32,7 +32,12 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 主表
         /// </summary>
-        private TableDescription[] _mainTables;
+        private List<TableDescription> _mainTables = new();
+
+        /// <summary>
+        /// 是否有主表
+        /// </summary>
+        private bool _hasMainTable;
 
         /// <summary>
         /// 从表
@@ -74,7 +79,20 @@ namespace LogicEntity.Operator
         /// </summary>
         private string _limit;
 
+        /// <summary>
+        /// 加锁
+        /// </summary>
+        private bool _isForUpdate;
+
+        /// <summary>
+        /// 联合表
+        /// </summary>
         private List<UnionDescription> _unionDescriptions = new();
+
+        /// <summary>
+        /// 超时时间（秒）
+        /// </summary>
+        private int _commandTimeout = 0;
 
         /// <summary>
         /// 查询操作器
@@ -103,7 +121,10 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IJoin From(params TableDescription[] tables)
         {
-            _mainTables = tables;
+            _hasMainTable = true;
+
+            if (tables is not null)
+                _mainTables.AddRange(tables);
 
             return this;
         }
@@ -328,7 +349,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="limit">返回的条数</param>
         /// <returns></returns>
-        public ISelector Limit(int limit)
+        public IForUpdate Limit(int limit)
         {
             _limit = "Limit " + limit.ToString();
 
@@ -341,9 +362,20 @@ namespace LogicEntity.Operator
         /// <param name="offset">跳过的条数</param>
         /// <param name="limit">返回的条数</param>
         /// <returns></returns>
-        public ISelector Limit(int offset, int limit)
+        public IForUpdate Limit(int offset, int limit)
         {
             _limit = "Limit " + offset.ToString() + ", " + limit.ToString();
+
+            return this;
+        }
+
+        /// <summary>
+        /// 加锁
+        /// </summary>
+        /// <returns></returns>
+        public ISelector ForUpdate()
+        {
+            _isForUpdate = true;
 
             return this;
         }
@@ -382,6 +414,13 @@ namespace LogicEntity.Operator
             return new NestedTable(this, alias);
         }
 
+        public ISelector SetCommandTimeout(int seconds)
+        {
+            _commandTimeout = seconds;
+
+            return this;
+        }
+
         /// <summary>
         /// 获取操作命令
         /// </summary>
@@ -405,9 +444,9 @@ namespace LogicEntity.Operator
             //主表
             string tables = string.Empty;
 
-            if (_mainTables is not null)
+            if (_hasMainTable)
             {
-                tables = string.Join(",\n  ", _mainTables.Select(t => t?.Description()));
+                tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables.Select(t => t?.Description()));
 
                 parameters.AddRange(_mainTables.SelectMany(t => t?.GetParameters() ?? new List<KeyValuePair<string, object>>()));
             }
@@ -471,9 +510,13 @@ namespace LogicEntity.Operator
             //限制条数
             string limit = _limit.IsValid() ? "\n" + _limit : string.Empty;
 
+            //加锁
+            string forUpdate = _isForUpdate ? "\nFor Update" : string.Empty;
+
+            //命令
             Command command = new Command();
 
-            command.CommandText = $"Select {distinct}\n  {columns}\nFrom\n  {tables}{relations}{conditions}{groupBy}{having}{orderBy}{limit}";
+            command.CommandText = $"Select {distinct}\n  {columns}{tables}{relations}{conditions}{groupBy}{having}{orderBy}{limit}{forUpdate}";
 
             command.Parameters = new();
 
@@ -508,6 +551,8 @@ namespace LogicEntity.Operator
 
                 command.CommandText += "\n\n" + union.TableTier.Description() + "\n\n" + unionCommand.CommandText;
             }
+
+            command.CommandTimeout = _commandTimeout;
 
             return command;
         }

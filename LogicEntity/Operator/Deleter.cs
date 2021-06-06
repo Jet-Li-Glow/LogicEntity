@@ -29,6 +29,11 @@ namespace LogicEntity.Operator
         private bool _hasConditons;
 
         /// <summary>
+        /// 超时时间（秒）
+        /// </summary>
+        private int _commandTimeout = 0;
+
+        /// <summary>
         /// 添加主表
         /// </summary>
         /// <param name="table"></param>
@@ -68,6 +73,13 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        public IDeleter SetCommandTimeout(int seconds)
+        {
+            _commandTimeout = seconds;
+
+            return this;
+        }
+
         /// <summary>
         /// 获取操作命令
         /// </summary>
@@ -99,6 +111,8 @@ namespace LogicEntity.Operator
 
                 command.Parameters.Add(KeyValuePair.Create(key, parameters[i].Value));
             }
+
+            command.CommandTimeout = _commandTimeout;
 
             return command;
         }

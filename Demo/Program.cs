@@ -12,6 +12,7 @@ using LogicEntity.Operator;
 using System.Data.Common;
 using LogicEntity.Model;
 using LogicEntity.Interface;
+using System.Threading.Tasks;
 
 namespace DataBaseAccess
 {
@@ -89,14 +90,14 @@ namespace DataBaseAccess
 
             Major joinMajor = new Major();
 
-            ISelector joinSelect = DBOperator.Select().From(joinStudent).FullJoin(joinMajor);
+            ISelector joinSelect = DBOperator.Select().From(joinStudent).FullJoin(joinMajor).SetCommandTimeout(20);
 
             string joinText = joinSelect.GetCommand().CommandText;
 
             //List<StudentInfo> joinResult = testDb.Query<StudentInfo>(joinSelect).ToList();
 
 
-            ISelector njoinSelect = DBOperator.Select().From(joinStudent).NaturalJoin(joinMajor);
+            ISelector njoinSelect = DBOperator.Select().From(joinStudent).Limit(1).ForUpdate();
 
             string njoinText = njoinSelect.GetCommand().CommandText;
 
@@ -129,6 +130,8 @@ namespace DataBaseAccess
             IInsertor insertor = DBOperator.Insert(data);
 
             //int insertAffected = testDb.ExecuteNonQuery(DBOperator.Insert(data));
+
+            //ulong newId = testDb.InsertNext(data);
 
             //批量插入
             Student insertTable = new Student();
@@ -186,9 +189,9 @@ namespace DataBaseAccess
             Student changedStudent = new Student();
 
             changedStudent.StudentName.Value = "小刘123";
-            changedStudent.MajorId.Value = 4;
+            changedStudent.MajorId.Value = changedStudent.MajorId - 1;
 
-            IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentName == "小刘" & changedStudent.MajorId == 2);
+            IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentId == 12 & changedStudent.MajorId > 0);
 
             string changerText = changer.GetCommand().CommandText;
 
@@ -213,6 +216,21 @@ namespace DataBaseAccess
             string testdel = deleter.GetCommand().CommandText;
 
             //int delAffected = testDb.ExecuteNonQuery(deleter);
+
+            //事务
+            Student traStu = new Student();
+
+            IDeleter traDel = DBOperator.Delete().From(traStu).Where(traStu.StudentId.In(71124, "aaa"));
+
+            Student traStuB = new Student();
+            traStuB.StudentId.Value = 71120;
+            traStuB.StudentName.Value = "事务";
+
+            IInsertor traInsert = DBOperator.Insert(traStuB);
+
+            //bool success = testDb.ExecuteTransaction(new List<IDbOperator>() { traDel, traInsert }, out int affected, out Exception exception);
+
+            //bool successB = testDb.ExecuteTransaction(traDel, traInsert);
 
             int a = 0;
 

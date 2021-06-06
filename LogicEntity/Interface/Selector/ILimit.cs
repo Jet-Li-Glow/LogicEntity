@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Interface
 {
-    public interface ILimit : ISelector
+    public interface ILimit : IForUpdate
     {
-        public ISelector Limit(int limit);
+        public IForUpdate Limit(int limit);
 
-        public ISelector Limit(int offset, int limit);
+        public IForUpdate Limit(int offset, int limit);
     }
 }

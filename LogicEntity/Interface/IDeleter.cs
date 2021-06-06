@@ -8,5 +8,11 @@ namespace LogicEntity.Interface
 {
     public interface IDeleter : IDbOperator
     {
+        /// <summary>
+        /// 设置超时时间
+        /// </summary>
+        /// <param name="seconds">超时时间（秒）</param>
+        /// <returns></returns>
+        public IDeleter SetCommandTimeout(int seconds);
     }
 }

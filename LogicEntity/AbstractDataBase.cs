@@ -466,6 +466,90 @@ namespace LogicEntity
             }
         }
 
+        /// <summary>
+        /// 执行事务
+        /// </summary>
+        /// <param name="dbOperators">数据库操作器</param>
+        /// <returns>事务是否执行成功</returns>
+        public bool ExecuteTransaction(params IDbOperator[] dbOperators)
+        {
+            if (dbOperators is null)
+                return false;
+
+            return ExecuteTransaction(dbOperators, out int affected, out Exception exception);
+        }
+
+        /// <summary>
+        /// 执行事务
+        /// </summary>
+        /// <param name="dbOperators">数据库操作器</param>
+        /// <param name="affected">受影响的行数</param>
+        /// <param name="exception">事务执行失败时的异常</param>
+        /// <returns>事务是否执行成功</returns>
+        public bool ExecuteTransaction(IEnumerable<IDbOperator> dbOperators, out int affected, out Exception exception)
+        {
+            affected = 0;
+
+            exception = null;
+
+            using (IDbConnection connection = GetDbConnection())
+            {
+                connection.Open();
+
+                IDbCommand command = connection.CreateCommand();
+
+                command.Connection = connection;
+
+                command.Transaction = connection.BeginTransaction();
+
+                try
+                {
+                    foreach (IDbOperator dbOperator in dbOperators)
+                    {
+                        Command cmd = dbOperator.GetCommand();
+
+                        command.CommandText = cmd.CommandText;
+
+                        command.CommandType = CommandType.Text;
+
+                        command.Parameters.Clear();
+
+                        foreach (KeyValuePair<string,object> dbParameter in cmd.Parameters)
+                        {
+                            command.Parameters.Add(GetDbParameter(dbParameter.Key, dbParameter.Value));
+                        }
+
+                        command.CommandTimeout = 30;
+
+                        if (cmd.CommandTimeout > 0)
+                            command.CommandTimeout = cmd.CommandTimeout;
+
+                        affected += command.ExecuteNonQuery();
+                    }
+
+                    command.Transaction.Commit();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        command.Transaction.Rollback();
+                    }
+                    catch
+                    {
+                    }
+
+                    affected = 0;
+
+                    exception = ex;
+
+                    return false;
+                }
+            }
+        }
+
         private static Command ConvertToCommand(string sql, object[] args)
         {
             List<KeyValuePair<string, object>> keyValues = new();

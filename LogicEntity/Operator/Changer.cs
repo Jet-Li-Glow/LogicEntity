@@ -20,16 +20,37 @@ namespace LogicEntity.Operator
 
         private bool _hasConditons;
 
+        /// <summary>
+        /// 超时时间（秒）
+        /// </summary>
+        private int _commandTimeout = 0;
+
+        /// <summary>
+        /// 更新操作器
+        /// </summary>
+        /// <param name="change"></param>
         public Changer(Table change)
         {
             _change = change;
         }
 
+        /// <summary>
+        /// 在特定条件上更新
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         public IUpdater On(Condition condition)
         {
             _conditions = condition;
 
             _hasConditons = true;
+
+            return this;
+        }
+
+        public IUpdater SetCommandTimeout(int seconds)
+        {
+            _commandTimeout = seconds;
 
             return this;
         }
@@ -59,9 +80,16 @@ namespace LogicEntity.Operator
                 if (column.IsValueSet == false)
                     continue;
 
+                if (column.Value is Description)
+                {
+                    columns.Add(column.FullContent + " = " + (column.Value as Description).FullContent);
+
+                    continue;
+                }
+
                 string key = "@param" + index.ToString();
 
-                columns.Add(column.ColumnName + " = " + key);
+                columns.Add(column.FullContent + " = " + key);
 
                 command.Parameters.Add(KeyValuePair.Create(key, column.Value));
 
@@ -94,6 +122,8 @@ namespace LogicEntity.Operator
             }
 
             command.CommandText = $"Update {_change.FullName}{set}{conditions}";
+
+            command.CommandTimeout = _commandTimeout;
 
             return command;
         }

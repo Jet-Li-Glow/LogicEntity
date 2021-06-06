@@ -14,5 +14,12 @@ namespace LogicEntity.Interface
         public ISelector UnionAll(ISelector selector);
 
         public NestedTable As(string alias);
+
+        /// <summary>
+        /// 设置超时时间
+        /// </summary>
+        /// <param name="seconds">超时时间（秒）</param>
+        /// <returns></returns>
+        public ISelector SetCommandTimeout(int seconds);
     }
 }

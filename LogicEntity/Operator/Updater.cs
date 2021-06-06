@@ -25,11 +25,25 @@ namespace LogicEntity.Operator
 
         private bool _hasConditions;
 
+        /// <summary>
+        /// 超时时间（秒）
+        /// </summary>
+        private int _commandTimeout = 0;
+
+        /// <summary>
+        /// 更新操作器
+        /// </summary>
+        /// <param name="table"></param>
         public Updater(T table)
         {
             _table = table;
         }
 
+        /// <summary>
+        /// 添加从表
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
         public IUpdaterOn<T> Join(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.Join };
@@ -41,6 +55,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 添加从表
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
         public IUpdaterOn<T> InnerJoin(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.InnerJoin };
@@ -105,6 +124,13 @@ namespace LogicEntity.Operator
             _condition = condition;
 
             _hasConditions = true;
+
+            return this;
+        }
+
+        public IUpdater SetCommandTimeout(int seconds)
+        {
+            _commandTimeout = seconds;
 
             return this;
         }
@@ -198,6 +224,8 @@ namespace LogicEntity.Operator
             }
 
             command.CommandText = $"Update {_table.FullName}{relations}{set}{conditions}";
+
+            command.CommandTimeout = _commandTimeout;
 
             return command;
         }

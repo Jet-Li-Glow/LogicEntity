@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Model;
-using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IFrom : IGroupBy
+    public interface IForUpdate : ISelector
     {
-        public IJoin From(params TableDescription[] tables);
+        public ISelector ForUpdate();
     }
 }
