@@ -93,6 +93,28 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        public IUpdaterOn<T> FullJoin(TableDescription table)
+        {
+            Relation relation = new Relation() { TableTier = TableTier.FullJoin };
+
+            relation.SetTable(table);
+
+            _relations.Add(relation);
+
+            return this;
+        }
+
+        public IUpdaterOn<T> NaturalJoin(TableDescription table)
+        {
+            Relation relation = new Relation() { TableTier = TableTier.NaturalJoin };
+
+            relation.SetTable(table);
+
+            _relations.Add(relation);
+
+            return this;
+        }
+
         public IUpdaterJoin<T> On(Condition condition)
         {
             Relation relation = _relations.LastOrDefault();

@@ -68,16 +68,16 @@ namespace DataBaseAccess
             List<KeyValuePair<string, object>> paramC = command.Parameters.ToList();
 
             ISelector testselector = DBOperator.Select(
-                    student.StudentId.As("Id"),
-                    student.StudentName.As("Name"),
+                    student.StudentId.As("StudentId"),
+                    student.StudentName.As("StudentName"),
                     student.Birthday,
                     student.MajorId,
                     major.MajorName,
                     major.MajorType
                     )
                 .From(student)
-                .LeftJoin(major).On(true | major.MajorId == student.MajorId & true & major.MajorId == 2 & true)
-                .Where(student.Birthday > new DateTime(1996, 2, 12, 7, 0, 0) & student.StudentId.In(1, ")3"));
+                .LeftJoin(major).On(true & major.MajorId == student.MajorId & true)
+                .Where(student.StudentId.In(1, ")3", 2) & student.StudentId.In(DBOperator.Select(student.StudentId).From(student).Where(student.StudentId.In(1, 2))));
 
             string tests = testselector.GetCommand().CommandText;
 
@@ -211,7 +211,7 @@ namespace DataBaseAccess
             //删除
             Student deleteTable = new Student();
 
-            IDeleter deleter = DBOperator.Delete().From(deleteTable).Where(deleteTable.StudentId >= 5);
+            IDeleter deleter = DBOperator.Delete(deleteTable).Where(deleteTable.StudentId == 71124);
 
             string testdel = deleter.GetCommand().CommandText;
 
@@ -220,7 +220,7 @@ namespace DataBaseAccess
             //事务
             Student traStu = new Student();
 
-            IDeleter traDel = DBOperator.Delete().From(traStu).Where(traStu.StudentId.In(71124, "aaa"));
+            IDeleter traDel = DBOperator.Delete(traStu).Where(traStu.StudentId.In(71124, "aaa"));
 
             Student traStuB = new Student();
             traStuB.StudentId.Value = 71120;
@@ -233,13 +233,6 @@ namespace DataBaseAccess
             //bool successB = testDb.ExecuteTransaction(traDel, traInsert);
 
             int a = 0;
-
-            List<int> t = new List<int>().DefaultIfEmpty(5)
-                .OrderBy(s => s + a)
-                .OrderByDescending(s => s)
-                .ThenBy(s => s)
-                .ThenByDescending(s => s)
-                .ToList();
 
             Console.WriteLine("-- End --");
 

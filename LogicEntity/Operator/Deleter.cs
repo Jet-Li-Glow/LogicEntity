@@ -11,7 +11,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 删除操作器
     /// </summary>
-    public class Deleter : IDeleteFrom, IDeleteWhere
+    public class Deleter : IDeleteWhere
     {
         /// <summary>
         /// 主表
@@ -34,15 +34,13 @@ namespace LogicEntity.Operator
         private int _commandTimeout = 0;
 
         /// <summary>
-        /// 添加主表
+        /// 删除操作器
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public IDeleteWhere From(Table table)
+        public Deleter(Table table)
         {
             _mainTable = table;
-
-            return this;
         }
 
         /// <summary>

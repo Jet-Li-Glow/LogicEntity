@@ -27,7 +27,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 列
         /// </summary>
-        private IEnumerable<Description> _columnDescriptions;
+        private List<Description> _columnDescriptions = new();
 
         /// <summary>
         /// 主表
@@ -100,7 +100,8 @@ namespace LogicEntity.Operator
         /// <param name="columnDescriptions"></param>
         public Selector(IEnumerable<Description> columnDescriptions)
         {
-            _columnDescriptions = columnDescriptions;
+            if (columnDescriptions is not null)
+                _columnDescriptions.AddRange(columnDescriptions);
         }
 
         /// <summary>
@@ -436,7 +437,7 @@ namespace LogicEntity.Operator
             //列
             string columns = string.Empty;
 
-            if (_columnDescriptions is not null && _columnDescriptions.Any())
+            if (_columnDescriptions.Any())
                 columns = string.Join(",\n  ", _columnDescriptions.Select(s => s?.FullContent));
             else
                 columns = "*";

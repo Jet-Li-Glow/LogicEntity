@@ -17,5 +17,9 @@ namespace LogicEntity.Interface
         public IUpdaterOn<T> LeftJoin(TableDescription table);
 
         public IUpdaterOn<T> RightJoin(TableDescription table);
+
+        public IUpdaterOn<T> FullJoin(TableDescription table);
+
+        public IUpdaterOn<T> NaturalJoin(TableDescription table);
     }
 }

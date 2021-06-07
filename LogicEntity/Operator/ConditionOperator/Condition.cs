@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LogicEntity.Extension;
 using LogicEntity.Model;
 using LogicEntity.EnumCollection;
+using LogicEntity.Interface;
 
 namespace LogicEntity.Operator
 {
@@ -15,6 +16,9 @@ namespace LogicEntity.Operator
     /// </summary>
     public class Condition : ConditionDescription
     {
+        /// <summary>
+        /// 参数
+        /// </summary>
         private List<KeyValuePair<string, object>> _parameters = new();
 
         /// <summary>
@@ -41,25 +45,43 @@ namespace LogicEntity.Operator
 
             if (comparator == Comparator.In)
             {
-                if (right is not IEnumerable)
+                if (right is ISelector)
                 {
-                    _conditionStr = left?.FullContent + " " + comparator.Description() + " (" + right + ")";
+                    Command command = (right as ISelector).GetCommand();
+
+                    foreach (KeyValuePair<string, object> parameter in command.Parameters)
+                    {
+                        string selectorKey = "@param" + DateTime.Now.Ticks;
+
+                        command.CommandText = command.CommandText.Replace(parameter.Key, selectorKey);
+
+                        _parameters.Add(KeyValuePair.Create(selectorKey, parameter.Value));
+                    }
+
+                    _conditionStr = left?.FullContent + " " + comparator.Description() + " (\n" + command.CommandText + "\n)";
 
                     return;
                 }
 
-                List<string> ekeys = new List<string>();
-
-                foreach (object obj in right as IEnumerable)
+                if (right is IEnumerable)
                 {
-                    string ekey = "@param" + DateTime.Now.Ticks;
+                    List<string> ekeys = new List<string>();
 
-                    _parameters.Add(KeyValuePair.Create(ekey, obj));
+                    foreach (object obj in right as IEnumerable)
+                    {
+                        string ekey = "@param" + DateTime.Now.Ticks;
 
-                    ekeys.Add(ekey);
+                        _parameters.Add(KeyValuePair.Create(ekey, obj));
+
+                        ekeys.Add(ekey);
+                    }
+
+                    _conditionStr = left?.FullContent + " " + comparator.Description() + " (" + string.Join(", ", ekeys) + ")";
+
+                    return;
                 }
 
-                _conditionStr = left?.FullContent + " " + comparator.Description() + " (" + string.Join(", ", ekeys) + ")";
+                _conditionStr = left?.FullContent + " " + comparator.Description() + " (" + right + ")";
 
                 return;
             }

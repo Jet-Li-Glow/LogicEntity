@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.EnumCollection;
 using LogicEntity.Extension;
+using LogicEntity.Interface;
 
 namespace LogicEntity.Operator
 {
@@ -226,6 +227,16 @@ namespace LogicEntity.Operator
         public Condition In(params object[] vs)
         {
             return new Condition(this, Comparator.In, vs);
+        }
+
+        /// <summary>
+        /// 枚举查找
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public Condition In(ISelector selector)
+        {
+            return new Condition(this, Comparator.In, selector);
         }
 
         /// <summary>

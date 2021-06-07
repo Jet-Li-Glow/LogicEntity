@@ -130,6 +130,16 @@ namespace LogicEntity
                                 if (property is null)
                                     continue;
 
+                                if (property.CanWrite == false)
+                                    continue;
+
+                                if (property.PropertyType == typeof(Column) || property.PropertyType.IsSubclassOf(typeof(Column)))
+                                {
+                                    (property.GetValue(t) as Column).Value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+
+                                    continue;
+                                }
+
                                 if (reader.IsDBNull(i))
                                 {
                                     property.SetValue(t, null);

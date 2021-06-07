@@ -96,9 +96,9 @@ namespace LogicEntity.Operator
         /// 删除操作器
         /// </summary>
         /// <returns></returns>
-        public static IDeleteFrom Delete()
+        public static IDeleteWhere Delete(Table table)
         {
-            return new Deleter();
+            return new Deleter(table);
         }
     }
 }

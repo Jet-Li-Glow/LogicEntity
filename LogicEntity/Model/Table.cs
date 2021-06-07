@@ -21,7 +21,7 @@ namespace LogicEntity.Model
         {
             Type type = GetType();
 
-            var properties = type.GetProperties().Where(p => p.PropertyType == typeof(Column));
+            var properties = type.GetProperties().Where(p => p.PropertyType == typeof(Column) || p.PropertyType.IsSubclassOf(typeof(Column)));
 
             foreach (PropertyInfo property in properties)
             {
