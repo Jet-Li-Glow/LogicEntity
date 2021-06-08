@@ -72,12 +72,13 @@ namespace DataBaseAccess
                     student.StudentName.As("StudentName"),
                     student.Birthday,
                     student.MajorId,
+                    student.Guid,
                     major.MajorName,
                     major.MajorType
                     )
                 .From(student)
                 .LeftJoin(major).On(true & major.MajorId == student.MajorId & true)
-                .Where(student.StudentId.In(1, ")3", 2) & student.StudentId.In(DBOperator.Select(student.StudentId).From(student).Where(student.StudentId.In(1, 2))));
+                .Where(student.StudentId.In(1, ")3", 2, 4) & student.StudentId.In(DBOperator.Select(student.StudentId).From(student).Where(student.StudentId.In(1, 2, 4))));
 
             string tests = testselector.GetCommand().CommandText;
 
@@ -105,6 +106,8 @@ namespace DataBaseAccess
 
 
             //List<StudentInfo> students = testDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+
+            //int sc = testDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.LastInsertId()));
 
             //联合查询
 
@@ -188,10 +191,11 @@ namespace DataBaseAccess
             //更新
             Student changedStudent = new Student();
 
-            changedStudent.StudentName.Value = "小刘123";
+            changedStudent.StudentName.Value = changedStudent.StudentName;
             changedStudent.MajorId.Value = changedStudent.MajorId - 1;
+            changedStudent.Guid.Value = Guid.NewGuid();
 
-            IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentId == 12 & changedStudent.MajorId > 0);
+            IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentId == 2 & changedStudent.MajorId > 0);
 
             string changerText = changer.GetCommand().CommandText;
 

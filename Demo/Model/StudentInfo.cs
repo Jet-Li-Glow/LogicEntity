@@ -21,5 +21,7 @@ namespace DataBaseAccess.Operator
         public string MajorName { get; set; }
 
         public int MajorType { get; set; }
+
+        public Guid? Guid { get; set; }
     }
 }

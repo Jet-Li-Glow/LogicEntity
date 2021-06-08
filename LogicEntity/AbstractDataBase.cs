@@ -14,8 +14,18 @@ namespace LogicEntity
 {
     public abstract partial class AbstractDataBase
     {
+        /// <summary>
+        /// 获取数据库连接
+        /// </summary>
+        /// <returns></returns>
         public abstract IDbConnection GetDbConnection();
 
+        /// <summary>
+        /// 获取数据库参数
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public abstract IDataParameter GetDbParameter(string key, object value);
 
         /// <summary>
@@ -26,8 +36,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(ISelector selector)
         {
-            Command command = selector.GetCommand();
-            return Query<T>(command.CommandText, command.Parameters, command.CommandTimeout);
+            return Query<T>(selector.GetCommand());
         }
 
         /// <summary>
@@ -37,7 +46,27 @@ namespace LogicEntity
         /// <returns></returns>
         public DataTable Query(ISelector selector)
         {
-            Command command = selector.GetCommand();
+            return Query(selector.GetCommand());
+        }
+
+        /// <summary>
+        /// 使用命令查询，并返回 T 类型的集合
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public IEnumerable<T> Query<T>(Command command)
+        {
+            return Query<T>(command.CommandText, command.Parameters, command.CommandTimeout);
+        }
+
+        /// <summary>
+        /// 使用命令查询，并返回 DataTable
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public DataTable Query(Command command)
+        {
             return Query(command.CommandText, command.Parameters, command.CommandTimeout);
         }
 
@@ -320,12 +349,20 @@ namespace LogicEntity
         /// <summary>
         /// 执行一个数据库操作器，并返回受影响的行数
         /// </summary>
-        /// <param name="dbOperator"></param>
+        /// <param name="dbOperator">数据库操作器</param>
         /// <returns></returns>
         public int ExecuteNonQuery(IDbOperator dbOperator)
         {
-            Command command = dbOperator.GetCommand();
+            return ExecuteNonQuery(dbOperator.GetCommand());
+        }
 
+        /// <summary>
+        /// 执行一个命令，并返回受影响的行数
+        /// </summary>
+        /// <param name="command">命令</param>
+        /// <returns></returns>
+        public int ExecuteNonQuery(Command command)
+        {
             return ExecuteNonQuery(command.CommandText, command.Parameters, command.CommandTimeout);
         }
 
@@ -384,6 +421,48 @@ namespace LogicEntity
         }
 
         /// <summary>
+        /// 执行数据库操作器，并返回查询结果的第一行的第一列
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dbOperator"></param>
+        /// <returns></returns>
+        public T ExecuteScalar<T>(IDbOperator dbOperator)
+        {
+            return ExecuteScalar<T>(dbOperator.GetCommand());
+        }
+
+        /// <summary>
+        /// 执行数据库操作器，并返回查询结果的第一行的第一列
+        /// </summary>
+        /// <param name="dbOperator"></param>
+        /// <returns></returns>
+        public object ExecuteScalar(IDbOperator dbOperator)
+        {
+            return ExecuteScalar(dbOperator.GetCommand());
+        }
+
+        /// <summary>
+        /// 执行一个命令，并返回查询结果的第一行的第一列
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public T ExecuteScalar<T>(Command command)
+        {
+            return ExecuteScalar<T>(command.CommandText, command.Parameters, command.CommandTimeout);
+        }
+
+        /// <summary>
+        /// 执行一个命令，并返回查询结果的第一行的第一列
+        /// </summary>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public object ExecuteScalar(Command command)
+        {
+            return ExecuteScalar(command.CommandText, command.Parameters, command.CommandTimeout);
+        }
+
+        /// <summary>
         /// 执行SQL语句，并返回查询结果的第一行的第一列
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -394,19 +473,7 @@ namespace LogicEntity
         {
             Command command = ConvertToCommand(sql, args);
 
-            return (T)ExecuteScalar(command.CommandText, command.Parameters);
-        }
-
-        /// <summary>
-        /// 执行数据库操作器，并返回查询结果的第一行的第一列
-        /// </summary>
-        /// <param name="dbOperator"></param>
-        /// <returns></returns>
-        public object ExecuteScalar(IDbOperator dbOperator)
-        {
-            Command command = dbOperator.GetCommand();
-
-            return ExecuteScalar(command.CommandText, command.Parameters, command.CommandTimeout);
+            return ExecuteScalar<T>(command.CommandText, command.Parameters);
         }
 
         /// <summary>
@@ -429,9 +496,9 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <returns></returns>
-        public object ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
+        public T ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
         {
-            return (T)ExecuteScalar(sql, keyValues);
+            return ExecuteScalar<T>(sql, keyValues, 0);
         }
 
         /// <summary>
@@ -443,6 +510,19 @@ namespace LogicEntity
         public object ExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
         {
             return ExecuteScalar(sql, keyValues, 0);
+        }
+
+        /// <summary>
+        /// 执行SQL语句，并返回查询结果的第一行的第一列
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        /// <param name="keyValues"></param>
+        /// <param name="commandTimeout"></param>
+        /// <returns></returns>
+        public T ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        {
+            return (T)Convert.ChangeType(ExecuteScalar(sql, keyValues, commandTimeout), typeof(T));
         }
 
         /// <summary>
@@ -498,6 +578,31 @@ namespace LogicEntity
         /// <returns>事务是否执行成功</returns>
         public bool ExecuteTransaction(IEnumerable<IDbOperator> dbOperators, out int affected, out Exception exception)
         {
+            return ExecuteTransaction(dbOperators.Select(o => o.GetCommand()), out affected, out exception);
+        }
+
+        /// <summary>
+        /// 执行事务
+        /// </summary>
+        /// <param name="commands">命令</param>
+        /// <returns></returns>
+        public bool ExecuteTransaction(params Command[] commands)
+        {
+            if (commands is null)
+                return false;
+
+            return ExecuteTransaction(commands, out int affected, out Exception exception);
+        }
+
+        /// <summary>
+        /// 执行事务
+        /// </summary>
+        /// <param name="commands">命令</param>
+        /// <param name="affected">受影响的行数</param>
+        /// <param name="exception">事务执行失败时的异常</param>
+        /// <returns>事务是否执行成功</returns>
+        public bool ExecuteTransaction(IEnumerable<Command> commands, out int affected, out Exception exception)
+        {
             affected = 0;
 
             exception = null;
@@ -514,17 +619,15 @@ namespace LogicEntity
 
                 try
                 {
-                    foreach (IDbOperator dbOperator in dbOperators)
+                    foreach (Command cmd in commands)
                     {
-                        Command cmd = dbOperator.GetCommand();
-
                         command.CommandText = cmd.CommandText;
 
                         command.CommandType = CommandType.Text;
 
                         command.Parameters.Clear();
 
-                        foreach (KeyValuePair<string,object> dbParameter in cmd.Parameters)
+                        foreach (KeyValuePair<string, object> dbParameter in cmd.Parameters)
                         {
                             command.Parameters.Add(GetDbParameter(dbParameter.Key, dbParameter.Value));
                         }

@@ -21,5 +21,7 @@ namespace DataBaseAccess.TableModel
         public Column MajorId { get; init; }
 
         public Column Birthday { get; init; }
+
+        public Column Guid { get; init; }
     }
 }
