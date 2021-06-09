@@ -53,28 +53,16 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        /// <summary>
-        /// 数据行
-        /// </summary>
-        /// <typeparam name="TRow"></typeparam>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public IOnDuplicateKeyUpdate<T> Row<TRow>(TRow row)
+        public IOnDuplicateKeyUpdate<T> Row<TRow>(params TRow[] rows)
         {
-            if (row is null)
+            if (rows is null)
                 return this;
 
-            Rows(Enumerable.Repeat(row, 1));
+            Rows(rows);
 
             return this;
         }
 
-        /// <summary>
-        /// 多数据行
-        /// </summary>
-        /// <typeparam name="TRow"></typeparam>
-        /// <param name="rows"></param>
-        /// <returns></returns>
         public IOnDuplicateKeyUpdate<T> Rows<TRow>(IEnumerable<TRow> rows)
         {
             if (rows is null)

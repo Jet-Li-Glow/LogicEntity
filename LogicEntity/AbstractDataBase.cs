@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using LogicEntity.Extension;
@@ -663,7 +662,16 @@ namespace LogicEntity
             }
         }
 
-        private static Command ConvertToCommand(string sql, object[] args)
+        /// <summary>
+        /// 创建事务
+        /// </summary>
+        /// <returns></returns>
+        public DbTransaction BeginTransaction()
+        {
+            return new DbTransaction(this);
+        }
+
+        internal static Command ConvertToCommand(string sql, object[] args)
         {
             List<KeyValuePair<string, object>> keyValues = new();
 
@@ -671,12 +679,12 @@ namespace LogicEntity
 
             foreach (object obj in args)
             {
-                keyValues.Add(KeyValuePair.Create("param" + index.ToString(), obj));
+                keyValues.Add(KeyValuePair.Create("@param" + index.ToString(), obj));
 
                 index++;
             }
 
-            sql = string.Format(sql, args: keyValues.Select(s => s.Key));
+            sql = string.Format(sql, keyValues.Select(s => s.Key).ToArray());
 
             return new Command() { CommandText = sql, Parameters = keyValues };
         }

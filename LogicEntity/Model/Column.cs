@@ -42,7 +42,7 @@ namespace LogicEntity.Model
         /// </summary>
         public object Value
         {
-            internal get { return _value; }
+            get { return _value; }
             set { _value = value; IsValueSet = true; }
         }
 

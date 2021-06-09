@@ -9,10 +9,10 @@ using DataBaseAccess.Operator;
 using System.Linq.Expressions;
 using System.Reflection;
 using LogicEntity.Operator;
-using System.Data.Common;
 using LogicEntity.Model;
 using LogicEntity.Interface;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace DataBaseAccess
 {
@@ -73,12 +73,16 @@ namespace DataBaseAccess
                     student.Birthday,
                     student.MajorId,
                     student.Guid,
+                    student.Bytes,
                     major.MajorName,
                     major.MajorType
                     )
                 .From(student)
                 .LeftJoin(major).On(true & major.MajorId == student.MajorId & true)
-                .Where(student.StudentId.In(1, ")3", 2, 4) & student.StudentId.In(DBOperator.Select(student.StudentId).From(student).Where(student.StudentId.In(1, 2, 4))));
+                .Where(student.StudentId.In(1, ")3", 2, 4) &
+                student.StudentId.In(DBOperator.Select(student.StudentId)
+                                     .From(student)
+                                     .Where(student.StudentId.In(1, 2, 4))));
 
             string tests = testselector.GetCommand().CommandText;
 
@@ -159,7 +163,7 @@ namespace DataBaseAccess
 
             IInsertor batch = DBOperator.InsertInto(insertTable)
                 .Columns(insertTable.StudentId, insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
-                .Rows(new List<Student>() { data1, data2, data3 })
+                .Row(data1, data2, data3)
                 .OnDuplicateKeyUpdate(s =>
                 {
                     s.StudentName.Value = s.StudentName;
@@ -194,6 +198,7 @@ namespace DataBaseAccess
             changedStudent.StudentName.Value = changedStudent.StudentName;
             changedStudent.MajorId.Value = changedStudent.MajorId - 1;
             changedStudent.Guid.Value = Guid.NewGuid();
+            changedStudent.Bytes.Value = Encoding.UTF8.GetBytes("Bytes");
 
             IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentId == 2 & changedStudent.MajorId > 0);
 
@@ -235,6 +240,29 @@ namespace DataBaseAccess
             //bool success = testDb.ExecuteTransaction(new List<IDbOperator>() { traDel, traInsert }, out int affected, out Exception exception);
 
             //bool successB = testDb.ExecuteTransaction(traDel, traInsert);
+
+            //事务2
+            //using (DbTransaction transaction = testDb.BeginTransaction())
+            //{
+            //    try
+            //    {
+            //        List<Student> s = transaction.Query<Student>("select * from student where studentId = {0}", 1).ToList();
+
+            //        Student first = new Student();
+
+            //        first.Birthday.Value = (s.First().Birthday.Value as DateTime?).Value.AddMonths(1);
+
+            //        transaction.ExecuteNonQuery(DBOperator.ApplyChanges(first).On(first.StudentId == 2));
+
+            //        transaction.ExecuteNonQuery("select");
+
+            //        transaction.Commit();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        transaction.Rollback();
+            //    }
+            //}
 
             int a = 0;
 

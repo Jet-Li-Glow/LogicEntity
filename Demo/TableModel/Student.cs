@@ -23,5 +23,7 @@ namespace DataBaseAccess.TableModel
         public Column Birthday { get; init; }
 
         public Column Guid { get; init; }
+
+        public Column Bytes { get; set; }
     }
 }

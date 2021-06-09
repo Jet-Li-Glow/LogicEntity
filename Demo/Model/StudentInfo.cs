@@ -23,5 +23,7 @@ namespace DataBaseAccess.Operator
         public int MajorType { get; set; }
 
         public Guid? Guid { get; set; }
+
+        public byte[] Bytes { get; set; }
     }
 }
