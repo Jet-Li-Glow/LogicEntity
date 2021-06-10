@@ -145,10 +145,7 @@ namespace LogicEntity.Model
         {
             Type type = typeof(T);
 
-            TypeCode typeCode = Type.GetTypeCode(type);
-
-            if (typeCode == TypeCode.Empty)
-                yield break;
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             IDbCommand command = _connection.CreateCommand();
 
@@ -170,7 +167,7 @@ namespace LogicEntity.Model
 
             using (IDataReader reader = command.ExecuteReader())
             {
-                if (typeCode == TypeCode.Object)
+                if (AbstractDataBase.IsDbBaseType(type) == false)
                 {
                     while (reader.Read())
                     {
@@ -203,42 +200,42 @@ namespace LogicEntity.Model
 
                             try
                             {
-                                switch (dataType.Name)
+                                switch (dataType.FullName)
                                 {
-                                    case "Boolean":
+                                    case "System.Boolean":
                                         property.SetValue(t, reader.GetBoolean(i));
                                         break;
-                                    case "Byte":
+                                    case "System.Byte":
                                         property.SetValue(t, reader.GetByte(i));
                                         break;
-                                    case "Char":
+                                    case "System.Char":
                                         property.SetValue(t, reader.GetChar(i));
                                         break;
-                                    case "DateTime":
+                                    case "System.DateTime":
                                         property.SetValue(t, reader.GetDateTime(i));
                                         break;
-                                    case "Decimal":
+                                    case "System.Decimal":
                                         property.SetValue(t, reader.GetDecimal(i));
                                         break;
-                                    case "Double":
+                                    case "System.Double":
                                         property.SetValue(t, reader.GetDouble(i));
                                         break;
-                                    case "Single":
+                                    case "System.Single":
                                         property.SetValue(t, reader.GetFloat(i));
                                         break;
-                                    case "Guid":
+                                    case "System.Guid":
                                         property.SetValue(t, reader.GetGuid(i));
                                         break;
-                                    case "Int16":
+                                    case "System.Int16":
                                         property.SetValue(t, reader.GetInt16(i));
                                         break;
-                                    case "Int32":
+                                    case "System.Int32":
                                         property.SetValue(t, reader.GetInt32(i));
                                         break;
-                                    case "Int64":
+                                    case "System.Int64":
                                         property.SetValue(t, reader.GetInt64(i));
                                         break;
-                                    case "String":
+                                    case "System.String":
                                         property.SetValue(t, reader.GetString(i));
                                         break;
                                     default:
@@ -260,48 +257,52 @@ namespace LogicEntity.Model
                     while (reader.Read())
                     {
                         if (reader.IsDBNull(0))
+                        {
                             yield return default;
+
+                            continue;
+                        }
 
                         object t = default;
 
                         try
                         {
-                            switch (type.Name)
+                            switch (type.FullName)
                             {
-                                case "Boolean":
+                                case "System.Boolean":
                                     t = reader.GetBoolean(0);
                                     break;
-                                case "Byte":
+                                case "System.Byte":
                                     t = reader.GetByte(0);
                                     break;
-                                case "Char":
+                                case "System.Char":
                                     t = reader.GetChar(0);
                                     break;
-                                case "DateTime":
+                                case "System.DateTime":
                                     t = reader.GetDateTime(0);
                                     break;
-                                case "Decimal":
+                                case "System.Decimal":
                                     t = reader.GetDecimal(0);
                                     break;
-                                case "Double":
+                                case "System.Double":
                                     t = reader.GetDouble(0);
                                     break;
-                                case "Single":
+                                case "System.Single":
                                     t = reader.GetFloat(0);
                                     break;
-                                case "Guid":
+                                case "System.Guid":
                                     t = reader.GetGuid(0);
                                     break;
-                                case "Int16":
+                                case "System.Int16":
                                     t = reader.GetInt16(0);
                                     break;
-                                case "Int32":
+                                case "System.Int32":
                                     t = reader.GetInt32(0);
                                     break;
-                                case "Int64":
+                                case "System.Int64":
                                     t = reader.GetInt64(0);
                                     break;
-                                case "String":
+                                case "System.String":
                                     t = reader.GetString(0);
                                     break;
                                 default:

@@ -109,6 +109,9 @@ namespace DataBaseAccess
             //List<StudentInfo> njoinResult = testDb.Query<StudentInfo>(njoinSelect).ToList();
 
 
+            //List<Guid?> Ids = testDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
+
+
             //List<StudentInfo> students = testDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
 
             //int sc = testDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.LastInsertId()));
@@ -133,6 +136,7 @@ namespace DataBaseAccess
             data.StudentName.Value = "小刘";
             data.Birthday.Value = null; // new DateTime(2001, 3, 5);
             data.MajorId.Value = 2;
+            data.Guid.Value = Guid.NewGuid();
 
             IInsertor insertor = DBOperator.Insert(data);
 
@@ -246,7 +250,9 @@ namespace DataBaseAccess
             //{
             //    try
             //    {
-            //        List<Student> s = transaction.Query<Student>("select * from student where studentId = {0}", 1).ToList();
+            //        List<Student> s = transaction.Query<Student>("select * from student where studentId < {0}", 10).ToList();
+
+            //        List<DateTime?> ds = transaction.Query<DateTime?>("select birthday from student where studentId < {0}", 10).ToList();
 
             //        Student first = new Student();
 

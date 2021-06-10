@@ -61,7 +61,18 @@ namespace LogicEntity.Operator
                 colums.Add(column);
             }
 
-            return InsertInto(row).Columns(columns: colums.ToArray()).Row(row);
+            return InsertInto(row).Columns(colums.ToArray()).Row(row);
+        }
+
+        /// <summary>
+        /// 插入操作器（当主键冲突时更新）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public IInsertor Save<T>(T row) where T : Table, new()
+        {
+            return new Insertor<T>(row);
         }
 
         /// <summary>
