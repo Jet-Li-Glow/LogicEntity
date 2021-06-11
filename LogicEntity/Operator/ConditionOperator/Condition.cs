@@ -179,19 +179,6 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 组合条件
-        /// </summary>
-        /// <param name="logicalOperator"></param>
-        /// <param name="condition"></param>
-        /// <returns></returns>
-        private Condition Before(bool condition, LogicalOperator logicalOperator)
-        {
-            _conditionStr = condition.ToString() + "\n" + logicalOperator.Description().PadLeft(5) + " " + _conditionStr;
-
-            return this;
-        }
-
-        /// <summary>
         /// 与
         /// </summary>
         /// <param name="left"></param>
@@ -221,7 +208,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static Condition operator &(bool left, Condition right)
         {
-            return right.Before(left, LogicalOperator.And);
+            return new Condition(left.ToString()) & right;
         }
 
         /// <summary>
@@ -254,7 +241,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static Condition operator |(bool left, Condition right)
         {
-            return right.Before(left, LogicalOperator.Or);
+            return new Condition(left.ToString()) | right;
         }
     }
 }

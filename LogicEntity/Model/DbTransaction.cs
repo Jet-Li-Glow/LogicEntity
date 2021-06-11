@@ -183,7 +183,7 @@ namespace LogicEntity.Model
                             if (property.CanWrite == false)
                                 continue;
 
-                            if (property.PropertyType == typeof(Column) || property.PropertyType.IsSubclassOf(typeof(Column)))
+                            if (property.PropertyType == typeof(Column))
                             {
                                 (property.GetValue(t) as Column).Value = reader.IsDBNull(i) ? null : reader.GetValue(i);
 

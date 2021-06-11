@@ -13,7 +13,7 @@ namespace LogicEntity.Model
     /// <summary>
     /// 列
     /// </summary>
-    public class Column : Description
+    public sealed class Column : Description
     {
         private object _value;
 

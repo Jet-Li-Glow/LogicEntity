@@ -44,11 +44,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertor Insert<T>(T row) where T : Table, new()
         {
-            var properties = row.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
-
             List<Column> colums = new();
 
-            foreach (PropertyInfo property in properties)
+            foreach (PropertyInfo property in row.GetType().GetProperties())
             {
                 Column column = property.GetValue(row) as Column;
 
@@ -70,9 +68,37 @@ namespace LogicEntity.Operator
         /// <typeparam name="T"></typeparam>
         /// <param name="row"></param>
         /// <returns></returns>
-        public IInsertor Save<T>(T row) where T : Table, new()
+        public static IInsertor Save<T>(T row) where T : Table, new()
         {
-            return new Insertor<T>(row);
+            List<Column> colums = new();
+
+            foreach (PropertyInfo property in row.GetType().GetProperties())
+            {
+                Column column = property.GetValue(row) as Column;
+
+                if (column is null)
+                    continue;
+
+                if (column.IsValueSet == false)
+                    continue;
+
+                colums.Add(column);
+            }
+
+            return InsertInto(row).Columns(colums.ToArray()).Row(row).OnDuplicateKeyUpdate(t =>
+            {
+                Type type = t.GetType();
+
+                foreach (Column column in colums)
+                {
+                    Column col = type.GetProperty(column.ColumnName)?.GetValue(t) as Column;
+
+                    if (col is null)
+                        continue;
+
+                    col.Value = col;
+                }
+            });
         }
 
         /// <summary>

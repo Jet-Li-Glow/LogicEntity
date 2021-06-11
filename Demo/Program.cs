@@ -78,7 +78,7 @@ namespace DataBaseAccess
                     major.MajorType
                     )
                 .From(student)
-                .LeftJoin(major).On(true & major.MajorId == student.MajorId & true)
+                .LeftJoin(major).On(true & (major.MajorId == student.MajorId & major.MajorId > 0) & true)
                 .Where(student.StudentId.In(1, ")3", 2, 4) &
                 student.StudentId.In(DBOperator.Select(student.StudentId)
                                      .From(student)
@@ -134,15 +134,32 @@ namespace DataBaseAccess
             Student data = new Student();
             //data.StudentId.Value = 5;
             data.StudentName.Value = "小刘";
-            data.Birthday.Value = null; // new DateTime(2001, 3, 5);
             data.MajorId.Value = 2;
+            data.Birthday.Value = new DateTime(2007, 9, 7);
             data.Guid.Value = Guid.NewGuid();
 
             IInsertor insertor = DBOperator.Insert(data);
 
+            string insertText = insertor.GetCommand().CommandText;
+
             //int insertAffected = testDb.ExecuteNonQuery(DBOperator.Insert(data));
 
             //ulong newId = testDb.InsertNext(data);
+
+            //保存
+
+            Student saveData = new Student();
+            saveData.StudentId.Value = 71126;
+            saveData.StudentName.Value = "小刘";
+            saveData.MajorId.Value = 2;
+            saveData.Birthday.Value = new DateTime(2007, 9, 7);
+            saveData.Guid.Value = Guid.NewGuid();
+
+            IInsertor saver = DBOperator.Save(saveData);
+
+            string saverText = saver.GetCommand().CommandText;
+
+            //int saveAffected = testDb.ExecuteNonQuery(saver);
 
             //批量插入
             Student insertTable = new Student();
