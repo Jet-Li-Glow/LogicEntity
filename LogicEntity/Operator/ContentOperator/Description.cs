@@ -74,15 +74,6 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 转为字符串
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return FullContent;
-        }
-
-        /// <summary>
         /// 复制
         /// </summary>
         /// <returns></returns>

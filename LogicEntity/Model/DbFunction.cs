@@ -52,12 +52,12 @@ namespace LogicEntity.Model
         {
             return description?.Next(s =>
             {
-                string vs = string.Empty;
+                List<string> vs = new() { s };
 
-                if (more is not null && more.Any())
-                    vs = ", " + string.Join(", ", more.Select(m => m.FullContent));
+                if (more is not null)
+                    vs.AddRange(more.Select(m => m.FullContent));
 
-                return "Concat(" + s + vs + ")";
+                return $"Concat({string.Join(", ", vs)})";
             });
         }
 
@@ -71,12 +71,12 @@ namespace LogicEntity.Model
         {
             return description?.Next(s =>
             {
-                string vs = string.Empty;
+                List<string> vs = new() { s };
 
-                if (more is not null && more.Any())
-                    vs = ", " + string.Join<string>(", ", more);
+                if (more is not null)
+                    vs.AddRange(more);
 
-                return "Concat(" + s + vs + ")";
+                return $"Concat({string.Join(", ", vs)})";
             });
         }
 
@@ -91,12 +91,12 @@ namespace LogicEntity.Model
         {
             return description?.Next(s =>
             {
-                string vs = string.Empty;
+                List<string> vs = new() { s };
 
-                if (more is not null && more.Any())
-                    vs = ", " + string.Join(", ", more.Select(m => m.FullContent));
+                if (more is not null)
+                    vs.AddRange(more.Select(m => m.FullContent));
 
-                return "Concat_Ws(" + separator + ", " + s + vs + ")";
+                return $"Concat_Ws({separator}, {string.Join(", ", vs)})";
             });
         }
 
@@ -111,12 +111,12 @@ namespace LogicEntity.Model
         {
             return description?.Next(s =>
             {
-                string vs = string.Empty;
+                List<string> vs = new() { s };
 
-                if (more is not null && more.Any())
-                    vs = ", " + string.Join<string>(", ", more);
+                if (more is not null)
+                    vs.AddRange(more);
 
-                return "Concat_Ws(" + separator + ", " + s + vs + ")";
+                return $"Concat_Ws({separator}, {string.Join(", ", vs)})";
             });
         }
 
@@ -130,12 +130,12 @@ namespace LogicEntity.Model
         {
             return description?.Next(s =>
             {
-                string vs = string.Empty;
+                List<string> vs = new() { s };
 
-                if (more is not null && more.Any())
-                    vs = ", " + string.Join(", ", more.Select(m => m.FullContent));
+                if (more is not null)
+                    vs.AddRange(more.Select(m => m.FullContent));
 
-                return "Field(" + s + vs + ")";
+                return $"Field({string.Join(", ", vs)})";
             });
         }
 
@@ -149,12 +149,12 @@ namespace LogicEntity.Model
         {
             return description?.Next(s =>
             {
-                string vs = string.Empty;
+                List<string> vs = new() { s };
 
-                if (more is not null && more.Any())
-                    vs = ", " + string.Join<string>(", ", more);
+                if (more is not null)
+                    vs.AddRange(more);
 
-                return "Field(" + s + vs + ")";
+                return $"Field({string.Join(", ", vs)})";
             });
         }
 
@@ -538,6 +538,272 @@ namespace LogicEntity.Model
             return left?.Next(s => $"Strcmp({s}, {right})");
         }
 
+        /// <summary>
+        /// 绝对值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Abs(this Description description)
+        {
+            return description?.Next(s => $"Abs({s})");
+        }
+
+        /// <summary>
+        /// 余弦
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Sin(this Description description)
+        {
+            return description?.Next(s => $"Sin({s})");
+        }
+
+        /// <summary>
+        /// 余弦
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Cos(this Description description)
+        {
+            return description?.Next(s => $"Cos({s})");
+        }
+
+        /// <summary>
+        /// 余切
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Cot(this Description description)
+        {
+            return description?.Next(s => $"Cot({s})");
+        }
+
+        /// <summary>
+        /// 反正弦
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Asin(this Description description)
+        {
+            return description?.Next(s => $"Asin({s})");
+        }
+
+        /// <summary>
+        /// 反余弦
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Acos(this Description description)
+        {
+            return description?.Next(s => $"Acos({s})");
+        }
+
+        /// <summary>
+        /// 反正切
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Atan(this Description description)
+        {
+            return description?.Next(s => $"Atan({s})");
+        }
+
+        /// <summary>
+        /// 反正切
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Atan2(this Description x, Description y)
+        {
+            return x?.Next(s => $"Atan2({s}, {y})");
+        }
+
+        /// <summary>
+        /// 反正切
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Atan2(this Description x, double y)
+        {
+            return x?.Next(s => $"Atan2({s}, {y})");
+        }
+
+        /// <summary>
+        /// 平均值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Avg(this Description description)
+        {
+            return description?.Next(s => $"Avg({s})");
+        }
+
+        /// <summary>
+        /// 向上取整
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Ceil(this Description description)
+        {
+            return description?.Next(s => $"Ceil({s})");
+        }
+
+        /// <summary>
+        /// 向上取整
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Ceiling(this Description description)
+        {
+            return description?.Next(s => $"Ceiling({s})");
+        }
+
+        /// <summary>
+        /// 向下取整
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Floor(this Description description)
+        {
+            return description?.Next(s => $"Floor({s})");
+        }
+
+        /// <summary>
+        /// 总数
+        /// </summary>
+        /// <returns></returns>
+        public static Description Count()
+        {
+            return new Description("Count(*)");
+        }
+
+        /// <summary>
+        /// 总数
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public static Description Count(int i)
+        {
+            return new Description($"Count({i})");
+        }
+
+        /// <summary>
+        /// 总数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Count(this Description description)
+        {
+            return description?.Next(s => $"Count({s})");
+        }
+
+        /// <summary>
+        /// 角度
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Degrees(this Description description)
+        {
+            return description?.Next(s => $"Degrees({s})");
+        }
+
+        /// <summary>
+        /// 角度
+        /// </summary>
+        /// <param name="rad"></param>
+        /// <returns></returns>
+        public static Description Degrees(double rad)
+        {
+            return new Description($"Degrees({rad})");
+        }
+
+        /// <summary>
+        /// 整除
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Div(this Description description, double divider)
+        {
+            return description?.Next(s => $"{s} Div {divider}");
+        }
+
+        /// <summary>
+        /// E的幂
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static Description Exp(double index)
+        {
+            return new Description($"Exp({index})");
+        }
+
+        /// <summary>
+        /// 最大值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="more"></param>
+        /// <returns></returns>
+        public static Description Greatest(this Description description, params Description[] more)
+        {
+            return description?.Next(s =>
+            {
+                List<string> vs = new() { s };
+
+                if (more is not null)
+                    vs.AddRange(more.Select(m => m.FullContent));
+
+                return $"Greatest({string.Join(", ", vs)})";
+            });
+        }
+
+        /// <summary>
+        /// 最小值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="more"></param>
+        /// <returns></returns>
+        public static Description Least(this Description description, params Description[] more)
+        {
+            return description?.Next(s =>
+            {
+                List<string> vs = new() { s };
+
+                if (more is not null)
+                    vs.AddRange(more.Select(m => m.FullContent));
+
+                return $"Least({string.Join(", ", vs)})";
+            });
+        }
+
+        /// <summary>
+        /// 最大值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Max(this Description description)
+        {
+            return description?.Next(s => $"Max({s})");
+        }
+
+        /// <summary>
+        /// 最小值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Min(this Description description)
+        {
+            return description?.Next(s => $"Min({s})");
+        }
+
+        public static Description LastInsertId()
+        {
+            return new Description("Last_Insert_Id()");
+        }
+
+
+        //自定义
+
         public static Description Distinct(this Description description)
         {
             return description?.Next(s => "Distinct " + s);
@@ -546,36 +812,6 @@ namespace LogicEntity.Model
         public static Description As(this Description description, string alias)
         {
             return description?.Next(s => s + " As " + alias);
-        }
-
-        public static Description Count()
-        {
-            return new Description("Count(*)");
-        }
-
-        public static Description Count(int i)
-        {
-            return new Description("Count(" + i.ToString() + ")");
-        }
-
-        public static Description Count(this Description description)
-        {
-            return description?.Next(s => "Count(" + s + ")");
-        }
-
-        public static Description Max(this Description description)
-        {
-            return description?.Next(s => "Max(" + s + ")");
-        }
-
-        public static Description Min(this Description description)
-        {
-            return description?.Next(s => "Min(" + s + ")");
-        }
-
-        public static Description LastInsertId()
-        {
-            return new Description("Last_Insert_Id()");
         }
     }
 }
