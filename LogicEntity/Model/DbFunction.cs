@@ -166,7 +166,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description FindInSet(this Description description, Description strList)
         {
-            return description?.Next(s => $"Find_In_Set({s}, {strList})");
+            return description?.Next(s => $"Find_In_Set({s}, {strList.FullContent})");
         }
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Locate(this Description description, Description str)
         {
-            return description?.Next(s => $"Locate({s}, {str})");
+            return description?.Next(s => $"Locate({s}, {str.FullContent})");
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description LPad(this Description description, int length, Description str)
         {
-            return description?.Next(s => $"LPad({s}, {length}, {str})");
+            return description?.Next(s => $"LPad({s}, {length}, {str.FullContent})");
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description RPad(this Description description, int length, Description str)
         {
-            return description?.Next(s => $"RPad({s}, {length}, {str})");
+            return description?.Next(s => $"RPad({s}, {length}, {str.FullContent})");
         }
 
         /// <summary>
@@ -411,7 +411,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description SubStringIndex(this Description description, Description separator, int num)
         {
-            return description?.Next(s => $"SubString_Index({s}, {separator}, {num})");
+            return description?.Next(s => $"SubString_Index({s}, {separator.FullContent}, {num})");
         }
 
         /// <summary>
@@ -434,7 +434,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Position(this Description description, Description str)
         {
-            return description?.Next(s => $"Position({s} In {str})");
+            return description?.Next(s => $"Position({s} In {str.FullContent})");
         }
 
         /// <summary>
@@ -468,7 +468,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, Description original, Description replace)
         {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
+            return description?.Next(s => $"Replace({s}, {original.FullContent}, {replace.FullContent})");
         }
 
         /// <summary>
@@ -480,7 +480,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, Description original, string replace)
         {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
+            return description?.Next(s => $"Replace({s}, {original.FullContent}, {replace})");
         }
 
         /// <summary>
@@ -492,7 +492,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, string original, Description replace)
         {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
+            return description?.Next(s => $"Replace({s}, {original}, {replace.FullContent})");
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Strcmp(this Description left, Description right)
         {
-            return left?.Next(s => $"Strcmp({s}, {right})");
+            return left?.Next(s => $"Strcmp({s}, {right.FullContent})");
         }
 
         /// <summary>
@@ -549,7 +549,7 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 余弦
+        /// 正弦
         /// </summary>
         /// <param name="description"></param>
         /// <returns></returns>
@@ -566,6 +566,16 @@ namespace LogicEntity.Model
         public static Description Cos(this Description description)
         {
             return description?.Next(s => $"Cos({s})");
+        }
+
+        /// <summary>
+        /// 正切
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Tan(this Description description)
+        {
+            return description?.Next(s => $"Tan({s})");
         }
 
         /// <summary>
@@ -615,7 +625,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Atan2(this Description x, Description y)
         {
-            return x?.Next(s => $"Atan2({s}, {y})");
+            return x?.Next(s => $"Atan2({s}, {y.FullContent})");
         }
 
         /// <summary>
@@ -718,14 +728,111 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 整除
+        /// 弧度
         /// </summary>
         /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Radians(this Description description)
+        {
+            return description?.Next(s => $"Radians({s})");
+        }
+
+        /// <summary>
+        /// 弧度
+        /// </summary>
+        /// <param name="deg"></param>
+        /// <returns></returns>
+        public static Description Radians(double deg)
+        {
+            return new Description($"Radians({deg})");
+        }
+
+        /// <summary>
+        /// 整除
+        /// </summary>
+        /// <param name="divided"></param>
         /// <param name="divider"></param>
         /// <returns></returns>
-        public static Description Div(this Description description, double divider)
+        public static Description Div(this Description divided, Description divider)
         {
-            return description?.Next(s => $"{s} Div {divider}");
+            return divided?.Next(s => $"{s} Div {divider.FullContent}");
+        }
+
+        /// <summary>
+        /// 整除
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Div(this Description divided, double divider)
+        {
+            return divided?.Next(s => $"{s} Div {divider}");
+        }
+
+        /// <summary>
+        /// 整除
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Div(double divided, Description divider)
+        {
+            return new Description($"{divided} Div {divider.FullContent}");
+        }
+
+        /// <summary>
+        /// 整除
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Div(double divided, double divider)
+        {
+            return new Description($"{divided} Div {divider}");
+        }
+
+        /// <summary>
+        /// 取余
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Mod(this Description divided, Description divider)
+        {
+            return divided?.Next(s => $"Mod({s}, {divider.FullContent})");
+        }
+
+        /// <summary>
+        /// 取余
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Mod(this Description divided, double divider)
+        {
+            return divided?.Next(s => $"Mod({s}, {divider})");
+        }
+
+        /// <summary>
+        /// 取余
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Mod(double divided, Description divider)
+        {
+            return new Description($"Mod({divided}, {divider.FullContent})");
+        }
+
+        /// <summary>
+        /// 取余
+        /// </summary>
+        /// <param name="divided"></param>
+        /// <param name="divider"></param>
+        /// <returns></returns>
+        public static Description Mod(double divided, double divider)
+        {
+            return new Description($"Mod({divided}, {divider})");
         }
 
         /// <summary>
@@ -777,6 +884,110 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// e 的对数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Ln(this Description description)
+        {
+            return description?.Next(s => $"Ln({s})");
+        }
+
+        /// <summary>
+        /// e 的对数
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        public static Description Ln(double val)
+        {
+            return new Description($"Ln({val})");
+        }
+
+        /// <summary>
+        /// 对数
+        /// </summary>
+        /// <param name="baseNum">底数</param>
+        /// <param name="power"></param>
+        /// <returns></returns>
+        public static Description Log(Description baseNum, Description power)
+        {
+            return new Description($"Log({baseNum.FullContent}, {power.FullContent})");
+        }
+
+        /// <summary>
+        /// 对数
+        /// </summary>
+        /// <param name="baseNum">底数</param>
+        /// <param name="power"></param>
+        /// <returns></returns>
+        public static Description Log(Description baseNum, double power)
+        {
+            return new Description($"Log({baseNum.FullContent}, {power})");
+        }
+
+        /// <summary>
+        /// 对数
+        /// </summary>
+        /// <param name="baseNum">底数</param>
+        /// <param name="power"></param>
+        /// <returns></returns>
+        public static Description Log(double baseNum, Description power)
+        {
+            return new Description($"Log({baseNum}, {power.FullContent})");
+        }
+
+        /// <summary>
+        /// 对数
+        /// </summary>
+        /// <param name="baseNum">底数</param>
+        /// <param name="power"></param>
+        /// <returns></returns>
+        public static Description Log(double baseNum, double power)
+        {
+            return new Description($"Log({baseNum}, {power})");
+        }
+
+        /// <summary>
+        /// 10 的对数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Log10(this Description description)
+        {
+            return description?.Next(s => $"Log10({s})");
+        }
+
+        /// <summary>
+        /// 10 的对数
+        /// </summary>
+        /// <param name="power"></param>
+        /// <returns></returns>
+        public static Description Log10(double power)
+        {
+            return new Description($"Log10({power})");
+        }
+
+        /// <summary>
+        /// 2 的对数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Log2(this Description description)
+        {
+            return description?.Next(s => $"Log2({s})");
+        }
+
+        /// <summary>
+        /// 2 的对数
+        /// </summary>
+        /// <param name="power"></param>
+        /// <returns></returns>
+        public static Description Log2(double power)
+        {
+            return new Description($"Log2({power})");
+        }
+
+        /// <summary>
         /// 最大值
         /// </summary>
         /// <param name="description"></param>
@@ -796,6 +1007,167 @@ namespace LogicEntity.Model
             return description?.Next(s => $"Min({s})");
         }
 
+        /// <summary>
+        /// 圆周率
+        /// </summary>
+        /// <returns></returns>
+        public static Description PI()
+        {
+            return new Description("PI()");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Pow(this Description x, Description y)
+        {
+            return x.Next(s => $"Pow({s}, {y.FullContent})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Pow(this Description x, double y)
+        {
+            return x.Next(s => $"Pow({s}, {y})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Pow(double x, Description y)
+        {
+            return new Description($"Pow({x}, {y.FullContent})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Pow(double x, double y)
+        {
+            return new Description($"Pow({x}, {y})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Power(this Description x, Description y)
+        {
+            return x.Next(s => $"Power({s}, {y.FullContent})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Power(this Description x, double y)
+        {
+            return x.Next(s => $"Power({s}, {y})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Power(double x, Description y)
+        {
+            return new Description($"Power({x}, {y.FullContent})");
+        }
+
+        /// <summary>
+        /// 幂
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static Description Power(double x, double y)
+        {
+            return new Description($"Power({x}, {y})");
+        }
+
+        /// <summary>
+        /// 随机数
+        /// </summary>
+        /// <returns></returns>
+        public static Description Rand()
+        {
+            return new Description("Rand()");
+        }
+
+        /// <summary>
+        /// 取整
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Round(this Description description)
+        {
+            return description?.Next(s => $"Round({s})");
+        }
+
+        /// <summary>
+        /// 正数、0 或 负数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Sign(this Description description)
+        {
+            return description?.Next(s => $"Sign({s})");
+        }
+
+        /// <summary>
+        /// 算术平方根
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Sqrt(this Description description)
+        {
+            return description?.Next(s => $"Sqrt({s})");
+        }
+
+        /// <summary>
+        /// 求和
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Sum(this Description description)
+        {
+            return description?.Next(s => $"Sum({s})");
+        }
+
+        /// <summary>
+        /// 保留小数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="digits"></param>
+        /// <returns></returns>
+        public static Description Truncate(this Description description, int digits)
+        {
+            return description?.Next(s => $"Truncate({s}, {digits})");
+        }
+
+        /// <summary>
+        /// 最后插入的Id
+        /// </summary>
+        /// <returns></returns>
         public static Description LastInsertId()
         {
             return new Description("Last_Insert_Id()");
