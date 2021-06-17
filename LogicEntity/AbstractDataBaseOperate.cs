@@ -42,7 +42,7 @@ namespace LogicEntity
                 command.ExecuteNonQuery();
 
 
-                command.CommandText = DBOperator.Select(DbFunction.LastInsertId()).GetCommand().CommandText;
+                command.CommandText = DBOperator.Select(DbFunction.Last_Insert_Id()).GetCommand().CommandText;
 
                 command.Parameters.Clear();
 

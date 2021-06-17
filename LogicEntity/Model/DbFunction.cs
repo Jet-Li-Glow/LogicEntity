@@ -27,7 +27,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="description"></param>
         /// <returns></returns>
-        public static Description CharLength(this Description description)
+        public static Description Char_Length(this Description description)
         {
             return description?.Next(s => $"Char_Length({s})");
         }
@@ -37,7 +37,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="description"></param>
         /// <returns></returns>
-        public static Description CharacterLength(this Description description)
+        public static Description Character_Length(this Description description)
         {
             return description?.Next(s => $"Character_Length({s})");
         }
@@ -87,7 +87,7 @@ namespace LogicEntity.Model
         /// <param name="separator">分隔符</param>
         /// <param name="more">后续的字符</param>
         /// <returns></returns>
-        public static Description ConcatWS(this Description description, string separator, params Description[] more)
+        public static Description Concat_Ws(this Description description, string separator, params Description[] more)
         {
             return description?.Next(s =>
             {
@@ -107,7 +107,7 @@ namespace LogicEntity.Model
         /// <param name="separator">分隔符</param>
         /// <param name="more">后续的字符</param>
         /// <returns></returns>
-        public static Description ConcatWS(this Description description, string separator, params string[] more)
+        public static Description Concat_Ws(this Description description, string separator, params string[] more)
         {
             return description?.Next(s =>
             {
@@ -164,9 +164,9 @@ namespace LogicEntity.Model
         /// <param name="description">当前字符串</param>
         /// <param name="strList">字符串列表（以 , 分隔）</param>
         /// <returns></returns>
-        public static Description FindInSet(this Description description, Description strList)
+        public static Description Find_In_Set(this Description description, Description strList)
         {
-            return description?.Next(s => $"Find_In_Set({s}, {strList.FullContent})");
+            return description?.Next(s => $"Find_In_Set({s}, {strList})");
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace LogicEntity.Model
         /// <param name="description">当前字符串</param>
         /// <param name="strList">字符串列表（以 , 分隔）</param>
         /// <returns></returns>
-        public static Description FindInSet(this Description description, string strList)
+        public static Description Find_In_Set(this Description description, string strList)
         {
             return description?.Next(s => $"Find_In_Set({s}, {strList})");
         }
@@ -212,7 +212,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Locate(this Description description, Description str)
         {
-            return description?.Next(s => $"Locate({s}, {str.FullContent})");
+            return description?.Next(s => $"Locate({s}, {str})");
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description LPad(this Description description, int length, Description str)
         {
-            return description?.Next(s => $"LPad({s}, {length}, {str.FullContent})");
+            return description?.Next(s => $"LPad({s}, {length}, {str})");
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description RPad(this Description description, int length, Description str)
         {
-            return description?.Next(s => $"RPad({s}, {length}, {str.FullContent})");
+            return description?.Next(s => $"RPad({s}, {length}, {str})");
         }
 
         /// <summary>
@@ -409,9 +409,9 @@ namespace LogicEntity.Model
         /// <param name="separator">分隔符</param>
         /// <param name="num">分隔符序号</param>
         /// <returns></returns>
-        public static Description SubStringIndex(this Description description, Description separator, int num)
+        public static Description SubString_Index(this Description description, Description separator, int num)
         {
-            return description?.Next(s => $"SubString_Index({s}, {separator.FullContent}, {num})");
+            return description?.Next(s => $"SubString_Index({s}, {separator}, {num})");
         }
 
         /// <summary>
@@ -421,7 +421,7 @@ namespace LogicEntity.Model
         /// <param name="separator">分隔符</param>
         /// <param name="num">分隔符序号</param>
         /// <returns></returns>
-        public static Description SubStringIndex(this Description description, string separator, int num)
+        public static Description SubString_Index(this Description description, string separator, int num)
         {
             return description?.Next(s => $"SubString_Index({s}, {separator}, {num})");
         }
@@ -434,7 +434,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Position(this Description description, Description str)
         {
-            return description?.Next(s => $"Position({s} In {str.FullContent})");
+            return description?.Next(s => $"Position({s} In {str})");
         }
 
         /// <summary>
@@ -468,7 +468,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, Description original, Description replace)
         {
-            return description?.Next(s => $"Replace({s}, {original.FullContent}, {replace.FullContent})");
+            return description?.Next(s => $"Replace({s}, {original}, {replace})");
         }
 
         /// <summary>
@@ -480,7 +480,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, Description original, string replace)
         {
-            return description?.Next(s => $"Replace({s}, {original.FullContent}, {replace})");
+            return description?.Next(s => $"Replace({s}, {original}, {replace})");
         }
 
         /// <summary>
@@ -492,7 +492,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, string original, Description replace)
         {
-            return description?.Next(s => $"Replace({s}, {original}, {replace.FullContent})");
+            return description?.Next(s => $"Replace({s}, {original}, {replace})");
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Strcmp(this Description left, Description right)
         {
-            return left?.Next(s => $"Strcmp({s}, {right.FullContent})");
+            return left?.Next(s => $"Strcmp({s}, {right})");
         }
 
         /// <summary>
@@ -625,7 +625,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Atan2(this Description x, Description y)
         {
-            return x?.Next(s => $"Atan2({s}, {y.FullContent})");
+            return x?.Next(s => $"Atan2({s}, {y})");
         }
 
         /// <summary>
@@ -755,7 +755,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Div(this Description divided, Description divider)
         {
-            return divided?.Next(s => $"{s} Div {divider.FullContent}");
+            return divided?.Next(s => $"{s} Div {divider}");
         }
 
         /// <summary>
@@ -777,7 +777,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Div(double divided, Description divider)
         {
-            return new Description($"{divided} Div {divider.FullContent}");
+            return new Description($"{divided} Div {divider}");
         }
 
         /// <summary>
@@ -799,7 +799,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Mod(this Description divided, Description divider)
         {
-            return divided?.Next(s => $"Mod({s}, {divider.FullContent})");
+            return divided?.Next(s => $"Mod({s}, {divider})");
         }
 
         /// <summary>
@@ -821,7 +821,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Mod(double divided, Description divider)
         {
-            return new Description($"Mod({divided}, {divider.FullContent})");
+            return new Description($"Mod({divided}, {divider})");
         }
 
         /// <summary>
@@ -911,7 +911,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Log(Description baseNum, Description power)
         {
-            return new Description($"Log({baseNum.FullContent}, {power.FullContent})");
+            return new Description($"Log({baseNum}, {power})");
         }
 
         /// <summary>
@@ -922,7 +922,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Log(Description baseNum, double power)
         {
-            return new Description($"Log({baseNum.FullContent}, {power})");
+            return new Description($"Log({baseNum}, {power})");
         }
 
         /// <summary>
@@ -933,7 +933,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Log(double baseNum, Description power)
         {
-            return new Description($"Log({baseNum}, {power.FullContent})");
+            return new Description($"Log({baseNum}, {power})");
         }
 
         /// <summary>
@@ -1024,7 +1024,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Pow(this Description x, Description y)
         {
-            return x.Next(s => $"Pow({s}, {y.FullContent})");
+            return x.Next(s => $"Pow({s}, {y})");
         }
 
         /// <summary>
@@ -1046,7 +1046,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Pow(double x, Description y)
         {
-            return new Description($"Pow({x}, {y.FullContent})");
+            return new Description($"Pow({x}, {y})");
         }
 
         /// <summary>
@@ -1068,7 +1068,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Power(this Description x, Description y)
         {
-            return x.Next(s => $"Power({s}, {y.FullContent})");
+            return x.Next(s => $"Power({s}, {y})");
         }
 
         /// <summary>
@@ -1090,7 +1090,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Power(double x, Description y)
         {
-            return new Description($"Power({x}, {y.FullContent})");
+            return new Description($"Power({x}, {y})");
         }
 
         /// <summary>
@@ -1165,10 +1165,245 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 加年
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="years"></param>
+        /// <returns></returns>
+        public static Description AddYears(this Description description, int years)
+        {
+            return description?.Next(s => $"AddDate({s}, Interval {years} Year)");
+        }
+
+        /// <summary>
+        /// 加月
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="months"></param>
+        /// <returns></returns>
+        public static Description AddMonths(this Description description, int months)
+        {
+            return description?.Next(s => $"AddDate({s}, Interval {months} Month)");
+        }
+
+        /// <summary>
+        /// 加日
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="days"></param>
+        /// <returns></returns>
+        public static Description AddDays(this Description description, int days)
+        {
+            return description?.Next(s => $"AddDate({s}, Interval {days} Day)");
+        }
+
+        /// <summary>
+        /// 加小时
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="hours"></param>
+        /// <returns></returns>
+        public static Description AddHours(this Description description, int hours)
+        {
+            return description?.Next(s => $"AddDate({s}, Interval {hours} Hour)");
+        }
+
+        /// <summary>
+        /// 加分钟
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="minutes"></param>
+        /// <returns></returns>
+        public static Description AddMinutes(this Description description, int minutes)
+        {
+            return description?.Next(s => $"AddDate({s}, Interval {minutes} Minute)");
+        }
+
+        /// <summary>
+        /// 加秒
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        public static Description AddSeconds(this Description description, int seconds)
+        {
+            return description?.Next(s => $"AddDate({s}, Interval {seconds} Second)");
+        }
+
+        /// <summary>
+        /// 加时间
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static Description AddTime(this Description description, string time)
+        {
+            return description?.Next(s => $"AddTime({s}, '{time}')");
+        }
+
+        /// <summary>
+        /// 当前日期
+        /// </summary>
+        /// <returns></returns>
+        public static Description CurDate()
+        {
+            return new Description("CurDate()");
+        }
+
+        /// <summary>
+        /// 当前日期
+        /// </summary>
+        /// <returns></returns>
+        public static Description Current_Date()
+        {
+            return new Description("Current_Date()");
+        }
+
+        /// <summary>
+        /// 当前时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description CurTime()
+        {
+            return new Description("CurTime()");
+        }
+
+        /// <summary>
+        /// 当前时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description Current_Time()
+        {
+            return new Description("Current_Time()");
+        }
+
+        /// <summary>
+        /// 当前日期和时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description Current_TimeStamp()
+        {
+            return new Description("Current_TimeStamp()");
+        }
+
+        /// <summary>
+        /// 取日期
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Date(this Description description)
+        {
+            return description?.Next(s => $"Date({s})");
+        }
+
+        /// <summary>
+        /// 取天
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Day(this Description description)
+        {
+            return description?.Next(s => $"Day({s})");
+        }
+
+        /// <summary>
+        /// 取星期
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description DayName(this Description description)
+        {
+            return description?.Next(s => $"DayName({s})");
+        }
+
+        /// <summary>
+        /// 当年的第几天
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description DayOfYear(this Description description)
+        {
+            return description?.Next(s => $"DayOfYear({s})");
+        }
+
+        /// <summary>
+        /// 当月的第几天
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description DayOfMonth(this Description description)
+        {
+            return description?.Next(s => $"DayOfMonth({s})");
+        }
+
+        /// <summary>
+        /// 当前星期的第几天
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description DayOfWeek(this Description description)
+        {
+            return description?.Next(s => $"DayOfWeek({s})");
+        }
+
+        /// <summary>
+        /// 从 0000 年 1 月 1 日开始 n 天后的日期
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description From_Days(this Description description)
+        {
+            return description?.Next(s => $"From_Days({s})");
+        }
+
+        /// <summary>
+        /// 从 0000 年 1 月 1 日开始 n 天后的日期
+        /// </summary>
+        /// <param name="days"></param>
+        /// <returns></returns>
+        public static Description From_Days(int days)
+        {
+            return new Description($"From_Days({days})");
+        }
+
+        /// <summary>
+        /// 日期相减的天数
+        /// </summary>
+        /// <param name="date1"></param>
+        /// <param name="date2"></param>
+        /// <returns></returns>
+        public static Description DateDiff(this Description date1, Description date2)
+        {
+            return date1?.Next(s => $"DateDiff({s}, {date2})");
+        }
+
+        /// <summary>
+        /// 日期相减的天数
+        /// </summary>
+        /// <param name="date1"></param>
+        /// <param name="date2"></param>
+        /// <returns></returns>
+        public static Description DateDiff(this Description date1, string date2)
+        {
+            return date1?.Next(s => $"DateDiff({s}, {date2})");
+        }
+
+        /// <summary>
+        /// 日期格式化
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="format"></param>
+        /// <returns></returns>
+        public static Description Date_Format(this Description description, string format)
+        {
+            return description?.Next(s => $"Date_Format({s}, '{format}')");
+        }
+
+        /// <summary>
         /// 最后插入的Id
         /// </summary>
         /// <returns></returns>
-        public static Description LastInsertId()
+        public static Description Last_Insert_Id()
         {
             return new Description("Last_Insert_Id()");
         }
