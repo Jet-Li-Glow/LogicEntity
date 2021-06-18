@@ -204,14 +204,14 @@ namespace LogicEntity.Operator
 
                     if (column.Value is Description)
                     {
-                        updateSets.Add(column.FullContent + " = VALUES (" + (column.Value as Description).FullContent + ")");
+                        updateSets.Add(column.ToString() + " = VALUES (" + (column.Value as Description).ToString() + ")");
 
                         continue;
                     }
 
                     string key = "@param" + index.ToString();
 
-                    updateSets.Add(column.FullContent + " = " + key);
+                    updateSets.Add(column.ToString() + " = " + key);
 
                     command.Parameters.Add(KeyValuePair.Create(key, column.Value));
 

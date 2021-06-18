@@ -55,7 +55,7 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.FullContent));
+                    vs.AddRange(more.Select(m => m.ToString()));
 
                 return $"Concat({string.Join(", ", vs)})";
             });
@@ -94,7 +94,7 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.FullContent));
+                    vs.AddRange(more.Select(m => m.ToString()));
 
                 return $"Concat_Ws({separator}, {string.Join(", ", vs)})";
             });
@@ -133,7 +133,7 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.FullContent));
+                    vs.AddRange(more.Select(m => m.ToString()));
 
                 return $"Field({string.Join(", ", vs)})";
             });
@@ -858,7 +858,7 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.FullContent));
+                    vs.AddRange(more.Select(m => m.ToString()));
 
                 return $"Greatest({string.Join(", ", vs)})";
             });
@@ -877,7 +877,7 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.FullContent));
+                    vs.AddRange(more.Select(m => m.ToString()));
 
                 return $"Least({string.Join(", ", vs)})";
             });
@@ -1242,6 +1242,17 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 加时间
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static Description AddTime(this Description description, TimeSpan time)
+        {
+            return description?.Next(s => $"AddTime({s}, '{time}')");
+        }
+
+        /// <summary>
         /// 当前日期
         /// </summary>
         /// <returns></returns>
@@ -1287,6 +1298,42 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 当前日期和时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description LocalTime()
+        {
+            return new Description("LocalTime()");
+        }
+
+        /// <summary>
+        /// 当前日期和时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description LocalTimeStamp()
+        {
+            return new Description("LocalTimeStamp()");
+        }
+
+        /// <summary>
+        /// 当前日期和时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description Now()
+        {
+            return new Description("Now()");
+        }
+
+        /// <summary>
+        /// 当前日期和时间
+        /// </summary>
+        /// <returns></returns>
+        public static Description SysDate()
+        {
+            return new Description("SysDate()");
+        }
+
+        /// <summary>
         /// 取日期
         /// </summary>
         /// <param name="description"></param>
@@ -1294,6 +1341,36 @@ namespace LogicEntity.Model
         public static Description Date(this Description description)
         {
             return description?.Next(s => $"Date({s})");
+        }
+
+        /// <summary>
+        /// 取时间
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Time(this Description description)
+        {
+            return description?.Next(s => $"Time({s})");
+        }
+
+        /// <summary>
+        /// 取年
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Year(this Description description)
+        {
+            return description?.Next(s => $"Year({s})");
+        }
+
+        /// <summary>
+        /// 取月
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Month(this Description description)
+        {
+            return description?.Next(s => $"Month({s})");
         }
 
         /// <summary>
@@ -1307,13 +1384,93 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 取星期
+        /// 取小时
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Hour(this Description description)
+        {
+            return description?.Next(s => $"Hour({s})");
+        }
+
+        /// <summary>
+        /// 取分钟
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Minute(this Description description)
+        {
+            return description?.Next(s => $"Minute({s})");
+        }
+
+        /// <summary>
+        /// 取秒
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Second(this Description description)
+        {
+            return description?.Next(s => $"Second({s})");
+        }
+
+        /// <summary>
+        /// 取微秒
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description MicroSecond(this Description description)
+        {
+            return description?.Next(s => $"MicroSecond({s})");
+        }
+
+        /// <summary>
+        /// 当前月份的最后一天
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Last_Day(this Description description)
+        {
+            return description?.Next(s => $"Last_Day({s})");
+        }
+
+        /// <summary>
+        /// 星期几
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description WeekDay(this Description description)
+        {
+            return description?.Next(s => $"WeekDay({s})");
+        }
+
+        /// <summary>
+        /// 星期几的名称
         /// </summary>
         /// <param name="description"></param>
         /// <returns></returns>
         public static Description DayName(this Description description)
         {
             return description?.Next(s => $"DayName({s})");
+        }
+
+        /// <summary>
+        /// 月份的名称
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description MonthName(this Description description)
+        {
+            return description?.Next(s => $"MonthName({s})");
+        }
+
+        /// <summary>
+        /// 季度
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Quarter(this Description description)
+        {
+            return description?.Next(s => $"Quarter({s})");
         }
 
         /// <summary>
@@ -1347,6 +1504,26 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 当年的第几个星期
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Week(this Description description)
+        {
+            return description?.Next(s => $"Week({s})");
+        }
+
+        /// <summary>
+        /// 当年的第几个星期
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description WeekOfYear(this Description description)
+        {
+            return description?.Next(s => $"WeekOfYear({s})");
+        }
+
+        /// <summary>
         /// 从 0000 年 1 月 1 日开始 n 天后的日期
         /// </summary>
         /// <param name="description"></param>
@@ -1364,6 +1541,72 @@ namespace LogicEntity.Model
         public static Description From_Days(int days)
         {
             return new Description($"From_Days({days})");
+        }
+
+        /// <summary>
+        /// 距离 0000 年 1 月 1 日的天数
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description To_Days(this Description description)
+        {
+            return description?.Next(s => $"To_Days({s})");
+        }
+
+        /// <summary>
+        /// 根据 年 和 天数 创建日期
+        /// </summary>
+        /// <param name="year"></param>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static Description MakeDate(this Description year, Description day)
+        {
+            return year?.Next(s => $"MakeDate({s}, {day})");
+        }
+
+        /// <summary>
+        /// 根据 年 和 天数 创建日期
+        /// </summary>
+        /// <param name="year"></param>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static Description MakeDate(this Description year, int day)
+        {
+            return year?.Next(s => $"MakeDate({s}, {day})");
+        }
+
+        /// <summary>
+        /// 根据 年 和 天数 创建日期
+        /// </summary>
+        /// <param name="year"></param>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static Description MakeDate(int year, Description day)
+        {
+            return new Description($"MakeDate({year}, {day})");
+        }
+
+        /// <summary>
+        /// 根据 年 和 天数 创建日期
+        /// </summary>
+        /// <param name="year"></param>
+        /// <param name="day"></param>
+        /// <returns></returns>
+        public static Description MakeDate(int year, int day)
+        {
+            return new Description($"MakeDate({year}, {day})");
+        }
+
+        /// <summary>
+        /// 根据 时、分、秒 创建时间
+        /// </summary>
+        /// <param name="hour"></param>
+        /// <param name="minute"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        public static Description MakeTime(int hour, int minute, int second)
+        {
+            return new Description($"MakeTime({hour}, {minute}, {second})");
         }
 
         /// <summary>
@@ -1385,7 +1628,18 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description DateDiff(this Description date1, string date2)
         {
-            return date1?.Next(s => $"DateDiff({s}, {date2})");
+            return date1?.Next(s => $"DateDiff({s}, '{date2}')");
+        }
+
+        /// <summary>
+        /// 日期相减的天数
+        /// </summary>
+        /// <param name="date1"></param>
+        /// <param name="date2"></param>
+        /// <returns></returns>
+        public static Description DateDiff(this Description date1, DateTime date2)
+        {
+            return date1?.Next(s => $"DateDiff({s}, '{date2}')");
         }
 
         /// <summary>
@@ -1397,6 +1651,90 @@ namespace LogicEntity.Model
         public static Description Date_Format(this Description description, string format)
         {
             return description?.Next(s => $"Date_Format({s}, '{format}')");
+        }
+
+        /// <summary>
+        /// 时间格式化
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="format"></param>
+        /// <returns></returns>
+        public static Description Time_Format(this Description description, string format)
+        {
+            return description?.Next(s => $"Time_Format({s}, '{format}')");
+        }
+
+        /// <summary>
+        /// 秒 转换 时间
+        /// </summary>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        public static Description Sec_To_Time(this Description seconds)
+        {
+            return seconds?.Next(s => $"Sec_To_Time({s})");
+        }
+
+        /// <summary>
+        /// 秒 转换 时间
+        /// </summary>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
+        public static Description Sec_To_Time(int seconds)
+        {
+            return new Description($"Sec_To_Time({seconds})");
+        }
+
+        /// <summary>
+        /// 时间 转换 秒
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static Description Time_To_Sec(this Description time)
+        {
+            return time?.Next(s => $"Time_To_Sec({s})");
+        }
+
+        /// <summary>
+        /// 时间 转换 秒
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static Description Time_To_Sec(string time)
+        {
+            return new Description($"Time_To_Sec('{time}')");
+        }
+
+        /// <summary>
+        /// 时间差
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <returns></returns>
+        public static Description TimeDiff(this Description time1, Description time2)
+        {
+            return time1.Next(s => $"TimeDiff({s}, {time2})");
+        }
+
+        /// <summary>
+        /// 时间差
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <returns></returns>
+        public static Description TimeDiff(this Description time1, string time2)
+        {
+            return time1.Next(s => $"TimeDiff({s}, '{time2}')");
+        }
+
+        /// <summary>
+        /// 时间差
+        /// </summary>
+        /// <param name="time1"></param>
+        /// <param name="time2"></param>
+        /// <returns></returns>
+        public static Description TimeDiff(this Description time1, DateTime time2)
+        {
+            return time1.Next(s => $"TimeDiff({s}, '{time2}')");
         }
 
         /// <summary>

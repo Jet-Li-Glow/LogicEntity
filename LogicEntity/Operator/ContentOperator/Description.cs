@@ -55,7 +55,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 转换后的主体内容
         /// </summary>
-        internal string FullContent
+        string FullContent
         {
             get
             {

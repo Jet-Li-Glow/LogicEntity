@@ -438,7 +438,7 @@ namespace LogicEntity.Operator
             string columns = string.Empty;
 
             if (_columnDescriptions.Any())
-                columns = string.Join(",\n  ", _columnDescriptions.Select(s => s?.FullContent));
+                columns = string.Join(",\n  ", _columnDescriptions.Select(s => s?.ToString()));
             else
                 columns = "*";
 
@@ -482,7 +482,7 @@ namespace LogicEntity.Operator
 
             if (_groupBy.Any())
             {
-                groupBy = "\nGroup By " + string.Join(", ", _groupBy.Select(s => s?.FullContent));
+                groupBy = "\nGroup By " + string.Join(", ", _groupBy.Select(s => s?.ToString()));
             }
 
             //分组条件

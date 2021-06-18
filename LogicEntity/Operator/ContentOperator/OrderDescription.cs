@@ -32,7 +32,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public string Description()
         {
-            return _description?.FullContent + (_isAscending ? string.Empty : " Desc");
+            return _description?.ToString() + (_isAscending ? string.Empty : " Desc");
         }
     }
 }

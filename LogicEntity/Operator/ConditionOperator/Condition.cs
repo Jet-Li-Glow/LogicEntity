@@ -31,14 +31,14 @@ namespace LogicEntity.Operator
         {
             if (right is Description)
             {
-                _conditionStr = left?.FullContent + " " + comparator.Description() + " " + (right as Description).FullContent;
+                _conditionStr = left?.ToString() + " " + comparator.Description() + " " + (right as Description).ToString();
 
                 return;
             }
 
             if (right is null && comparator == Comparator.Equal)
             {
-                _conditionStr = left?.FullContent + " is Null";
+                _conditionStr = left?.ToString() + " is Null";
 
                 return;
             }
@@ -58,7 +58,7 @@ namespace LogicEntity.Operator
                         _parameters.Add(KeyValuePair.Create(selectorKey, parameter.Value));
                     }
 
-                    _conditionStr = left?.FullContent + " " + comparator.Description() + " (\n" + command.CommandText + "\n)";
+                    _conditionStr = left?.ToString() + " " + comparator.Description() + " (\n" + command.CommandText + "\n)";
 
                     return;
                 }
@@ -76,12 +76,12 @@ namespace LogicEntity.Operator
                         ekeys.Add(ekey);
                     }
 
-                    _conditionStr = left?.FullContent + " " + comparator.Description() + " (" + string.Join(", ", ekeys) + ")";
+                    _conditionStr = left?.ToString() + " " + comparator.Description() + " (" + string.Join(", ", ekeys) + ")";
 
                     return;
                 }
 
-                _conditionStr = left?.FullContent + " " + comparator.Description() + " (" + right + ")";
+                _conditionStr = left?.ToString() + " " + comparator.Description() + " (" + right + ")";
 
                 return;
             }
@@ -90,7 +90,7 @@ namespace LogicEntity.Operator
 
             _parameters.Add(KeyValuePair.Create(key, right));
 
-            _conditionStr = left?.FullContent + " " + comparator.Description() + " " + key;
+            _conditionStr = left?.ToString() + " " + comparator.Description() + " " + key;
         }
 
         /// <summary>

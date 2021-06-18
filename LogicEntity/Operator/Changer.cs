@@ -82,14 +82,14 @@ namespace LogicEntity.Operator
 
                 if (column.Value is Description)
                 {
-                    columns.Add(column.FullContent + " = " + (column.Value as Description).FullContent);
+                    columns.Add(column.ToString() + " = " + (column.Value as Description).ToString());
 
                     continue;
                 }
 
                 string key = "@param" + index.ToString();
 
-                columns.Add(column.FullContent + " = " + key);
+                columns.Add(column.ToString() + " = " + key);
 
                 command.Parameters.Add(KeyValuePair.Create(key, column.Value));
 
