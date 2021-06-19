@@ -26,9 +26,9 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 描述
+        /// 转为字符串
         /// </summary>
-        internal virtual string Description()
+        public override string ToString()
         {
             return default;
         }

@@ -72,9 +72,9 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 描述
+        /// 转为字符串
         /// </summary>
-        internal override string Description()
+        public override string ToString()
         {
             return FullName + (TableAlias is null ? string.Empty : " As " + TableAlias);
         }

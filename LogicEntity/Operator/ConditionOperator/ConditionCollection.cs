@@ -13,6 +13,9 @@ namespace LogicEntity.Operator
     /// </summary>
     public class ConditionCollection : ConditionDescription
     {
+        /// <summary>
+        /// 条件集合
+        /// </summary>
         private List<Condition> Conditions = new List<Condition>();
 
         /// <summary>
@@ -30,17 +33,17 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取条件集合字符串
+        /// 转为字符串
         /// </summary>
         /// <returns></returns>
-        internal override string Description()
+        public override string ToString()
         {
             return string.Join($" {LogicalOperator.Description()} ", Conditions.Select(c =>
             {
                 if (c is null)
                     return string.Empty;
 
-                return c.IsMultiple ? "(" + c.Description() + ")" : c.Description();
+                return c.IsMultiple ? "(" + c + ")" : c.ToString();
             }));
         }
 

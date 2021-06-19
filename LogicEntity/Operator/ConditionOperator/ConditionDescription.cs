@@ -12,10 +12,13 @@ namespace LogicEntity.Operator
     public abstract class ConditionDescription
     {
         /// <summary>
-        /// 描述
+        /// 转为字符串
         /// </summary>
         /// <returns></returns>
-        internal abstract string Description();
+        public override string ToString()
+        {
+            return default;
+        }
 
         /// <summary>
         /// 获取参数

@@ -66,12 +66,12 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 描述
+        /// 转为字符串
         /// </summary>
         /// <returns></returns>
-        internal string Description()
+        public override string ToString()
         {
-            return TableTier.Description() + " " + _relateTable?.Description() + (_isSetCondition ? "\n   On " + _condition?.Description() : string.Empty);
+            return TableTier.Description() + " " + _relateTable + (_isSetCondition ? "\n   On " + _condition : string.Empty);
         }
 
         /// <summary>

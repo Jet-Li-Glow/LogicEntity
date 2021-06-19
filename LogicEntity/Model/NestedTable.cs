@@ -65,10 +65,10 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 描述（延迟加载）
+        /// 转为字符串（延迟加载）
         /// </summary>
         /// <returns></returns>
-        internal override string Description()
+        public override string ToString()
         {
             if (_command is null)
                 _command = _selector?.GetCommand();

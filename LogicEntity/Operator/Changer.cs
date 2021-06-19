@@ -16,7 +16,7 @@ namespace LogicEntity.Operator
     {
         private Table _change;
 
-        private Condition _conditions;
+        private Condition _condition;
 
         private bool _hasConditons;
 
@@ -41,7 +41,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdater On(Condition condition)
         {
-            _conditions = condition;
+            _condition = condition;
 
             _hasConditons = true;
 
@@ -98,21 +98,21 @@ namespace LogicEntity.Operator
 
             string set = "\nSet " + string.Join(",\n    ", columns);
 
-            string conditions = string.Empty;
+            string condition = string.Empty;
 
             if (_hasConditons)
             {
-                conditions = "\nWhere ";
+                condition = "\nWhere ";
 
-                if (_conditions is not null)
+                if (_condition is not null)
                 {
-                    conditions += _conditions.Description();
+                    condition += _condition;
 
-                    foreach (KeyValuePair<string, object> parameter in _conditions.GetParameters())
+                    foreach (KeyValuePair<string, object> parameter in _condition.GetParameters())
                     {
                         string key = "@param" + index.ToString();
 
-                        conditions = conditions.Replace(parameter.Key, key);
+                        condition = condition.Replace(parameter.Key, key);
 
                         command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
 
@@ -121,7 +121,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"Update {_change.FullName}{set}{conditions}";
+            command.CommandText = $"Update {_change.FullName}{set}{condition}";
 
             command.CommandTimeout = _commandTimeout;
 

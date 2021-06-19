@@ -170,7 +170,7 @@ namespace LogicEntity.Operator
 
             if (_relations.Any())
             {
-                relations = "\n" + string.Join("\n", _relations.Select(r => r.Description()));
+                relations = "\n" + string.Join("\n", _relations);
 
                 foreach (KeyValuePair<string, object> parameter in _relations.SelectMany(r => r.GetParameters()))
                 {
@@ -230,7 +230,7 @@ namespace LogicEntity.Operator
 
                 if (_condition is not null)
                 {
-                    conditions += _condition.Description();
+                    conditions += _condition;
 
                     foreach (KeyValuePair<string, object> parameter in _condition.GetParameters())
                     {

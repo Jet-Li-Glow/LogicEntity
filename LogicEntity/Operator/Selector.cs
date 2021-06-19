@@ -447,7 +447,7 @@ namespace LogicEntity.Operator
 
             if (_hasMainTable)
             {
-                tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables.Select(t => t?.Description()));
+                tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables);
 
                 parameters.AddRange(_mainTables.SelectMany(t => t?.GetParameters() ?? new List<KeyValuePair<string, object>>()));
             }
@@ -457,7 +457,7 @@ namespace LogicEntity.Operator
 
             if (_relations.Any())
             {
-                relations = "\n" + string.Join("\n", _relations.Select(r => r.Description()));
+                relations = "\n" + string.Join("\n", _relations);
 
                 parameters.AddRange(_relations.SelectMany(r => r.GetParameters()));
             }
@@ -471,7 +471,7 @@ namespace LogicEntity.Operator
 
                 if (_condition is not null)
                 {
-                    conditions += _condition.Description();
+                    conditions += _condition;
 
                     parameters.AddRange(_condition.GetParameters());
                 }
@@ -494,7 +494,7 @@ namespace LogicEntity.Operator
 
                 if (_having is not null)
                 {
-                    having += _having.Description();
+                    having += _having;
 
                     parameters.AddRange(_having.GetParameters());
                 }

@@ -123,10 +123,10 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 描述
+        /// 转为字符串
         /// </summary>
         /// <returns></returns>
-        internal override string Description()
+        public override string ToString()
         {
             return _conditionStr;
         }
@@ -156,7 +156,7 @@ namespace LogicEntity.Operator
                 return this;
             }
 
-            string str = condition.IsMultiple ? "(" + condition.Description() + ")" : condition.Description();
+            string str = condition.IsMultiple ? "(" + condition + ")" : condition.ToString();
 
             _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + str;
 

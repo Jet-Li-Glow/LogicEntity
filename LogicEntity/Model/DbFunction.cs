@@ -13,6 +13,19 @@ namespace LogicEntity.Model
     public static partial class DbFunction
     {
         /// <summary>
+        /// 转为Sql字符串参数
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        static string ToStringParam(this object obj)
+        {
+            if (obj is string)
+                return $"'{obj}'";
+
+            return obj.ToString();
+        }
+
+        /// <summary>
         /// 第一个字符的ASCII码
         /// </summary>
         /// <param name="description"></param>
@@ -87,36 +100,16 @@ namespace LogicEntity.Model
         /// <param name="separator">分隔符</param>
         /// <param name="more">后续的字符</param>
         /// <returns></returns>
-        public static Description Concat_Ws(this Description description, string separator, params Description[] more)
+        public static Description Concat_Ws(this Description description, object separator, params object[] more)
         {
             return description?.Next(s =>
             {
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.ToString()));
+                    vs.AddRange(more.Select(m => m.ToStringParam()));
 
-                return $"Concat_Ws({separator}, {string.Join(", ", vs)})";
-            });
-        }
-
-        /// <summary>
-        /// 合并字符串
-        /// </summary>
-        /// <param name="description">第一个字符</param>
-        /// <param name="separator">分隔符</param>
-        /// <param name="more">后续的字符</param>
-        /// <returns></returns>
-        public static Description Concat_Ws(this Description description, string separator, params string[] more)
-        {
-            return description?.Next(s =>
-            {
-                List<string> vs = new() { s };
-
-                if (more is not null)
-                    vs.AddRange(more);
-
-                return $"Concat_Ws({separator}, {string.Join(", ", vs)})";
+                return $"Concat_Ws({separator.ToStringParam()}, {string.Join(", ", vs)})";
             });
         }
 
@@ -126,33 +119,14 @@ namespace LogicEntity.Model
         /// <param name="description">当前字符串</param>
         /// <param name="more">字符串列表</param>
         /// <returns></returns>
-        public static Description Field(this Description description, params Description[] more)
+        public static Description Field(this Description description, params object[] more)
         {
             return description?.Next(s =>
             {
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.ToString()));
-
-                return $"Field({string.Join(", ", vs)})";
-            });
-        }
-
-        /// <summary>
-        /// 当前字符串在字符串列表中的位置
-        /// </summary>
-        /// <param name="description">当前字符串</param>
-        /// <param name="more">字符串列表</param>
-        /// <returns></returns>
-        public static Description Field(this Description description, params string[] more)
-        {
-            return description?.Next(s =>
-            {
-                List<string> vs = new() { s };
-
-                if (more is not null)
-                    vs.AddRange(more);
+                    vs.AddRange(more.Select(m => m.ToStringParam()));
 
                 return $"Field({string.Join(", ", vs)})";
             });
@@ -164,20 +138,9 @@ namespace LogicEntity.Model
         /// <param name="description">当前字符串</param>
         /// <param name="strList">字符串列表（以 , 分隔）</param>
         /// <returns></returns>
-        public static Description Find_In_Set(this Description description, Description strList)
+        public static Description Find_In_Set(this Description description, object strList)
         {
-            return description?.Next(s => $"Find_In_Set({s}, {strList})");
-        }
-
-        /// <summary>
-        /// 当前字符串在字符串列表中的位置
-        /// </summary>
-        /// <param name="description">当前字符串</param>
-        /// <param name="strList">字符串列表（以 , 分隔）</param>
-        /// <returns></returns>
-        public static Description Find_In_Set(this Description description, string strList)
-        {
-            return description?.Next(s => $"Find_In_Set({s}, {strList})");
+            return description?.Next(s => $"Find_In_Set({s}, {strList.ToStringParam()})");
         }
 
         /// <summary>
@@ -199,9 +162,9 @@ namespace LogicEntity.Model
         /// <param name="length">替换长度</param>
         /// <param name="replace">字符串</param>
         /// <returns></returns>
-        public static Description Insert(this Description description, int start, int length, string replace)
+        public static Description Insert(this Description description, int start, int length, object replace)
         {
-            return description?.Next(s => $"Insert({s}, {start}, {length}, {replace})");
+            return description?.Next(s => $"Insert({s}, {start}, {length}, {replace.ToStringParam()})");
         }
 
         /// <summary>
@@ -210,20 +173,9 @@ namespace LogicEntity.Model
         /// <param name="description"></param>
         /// <param name="str">字符串</param>
         /// <returns></returns>
-        public static Description Locate(this Description description, Description str)
+        public static Description Locate(this Description description, object str)
         {
-            return description?.Next(s => $"Locate({s}, {str})");
-        }
-
-        /// <summary>
-        /// 在字符串中的开始位置
-        /// </summary>
-        /// <param name="description"></param>
-        /// <param name="str">字符串</param>
-        /// <returns></returns>
-        public static Description Locate(this Description description, string str)
-        {
-            return description?.Next(s => $"Locate({s}, {str})");
+            return description?.Next(s => $"Locate({s}, {str.ToStringParam()})");
         }
 
         /// <summary>
@@ -295,21 +247,9 @@ namespace LogicEntity.Model
         /// <param name="length">总长度</param>
         /// <param name="str">用于填充的字符串</param>
         /// <returns></returns>
-        public static Description LPad(this Description description, int length, Description str)
+        public static Description LPad(this Description description, int length, object str)
         {
-            return description?.Next(s => $"LPad({s}, {length}, {str})");
-        }
-
-        /// <summary>
-        /// 在字符串左侧填充字符串达到总长度
-        /// </summary>
-        /// <param name="description">字符串</param>
-        /// <param name="length">总长度</param>
-        /// <param name="str">用于填充的字符串</param>
-        /// <returns></returns>
-        public static Description LPad(this Description description, int length, string str)
-        {
-            return description?.Next(s => $"LPad({s}, {length}, {str})");
+            return description?.Next(s => $"LPad({s}, {length}, {str.ToStringParam()})");
         }
 
         /// <summary>
@@ -319,21 +259,9 @@ namespace LogicEntity.Model
         /// <param name="length">总长度</param>
         /// <param name="str">用于填充的字符串</param>
         /// <returns></returns>
-        public static Description RPad(this Description description, int length, Description str)
+        public static Description RPad(this Description description, int length, object str)
         {
-            return description?.Next(s => $"RPad({s}, {length}, {str})");
-        }
-
-        /// <summary>
-        /// 在字符串右侧填充字符串达到总长度
-        /// </summary>
-        /// <param name="description">字符串</param>
-        /// <param name="length">总长度</param>
-        /// <param name="str">用于填充的字符串</param>
-        /// <returns></returns>
-        public static Description RPad(this Description description, int length, string str)
-        {
-            return description?.Next(s => $"RPad({s}, {length}, {str})");
+            return description?.Next(s => $"RPad({s}, {length}, {str.ToStringParam()})");
         }
 
         /// <summary>
@@ -409,21 +337,9 @@ namespace LogicEntity.Model
         /// <param name="separator">分隔符</param>
         /// <param name="num">分隔符序号</param>
         /// <returns></returns>
-        public static Description SubString_Index(this Description description, Description separator, int num)
+        public static Description SubString_Index(this Description description, object separator, int num)
         {
-            return description?.Next(s => $"SubString_Index({s}, {separator}, {num})");
-        }
-
-        /// <summary>
-        /// 截取字符串
-        /// </summary>
-        /// <param name="description">字符串</param>
-        /// <param name="separator">分隔符</param>
-        /// <param name="num">分隔符序号</param>
-        /// <returns></returns>
-        public static Description SubString_Index(this Description description, string separator, int num)
-        {
-            return description?.Next(s => $"SubString_Index({s}, {separator}, {num})");
+            return description?.Next(s => $"SubString_Index({s}, {separator.ToStringParam()}, {num})");
         }
 
         /// <summary>
@@ -432,20 +348,9 @@ namespace LogicEntity.Model
         /// <param name="description">字符串1</param>
         /// <param name="str">字符串2</param>
         /// <returns></returns>
-        public static Description Position(this Description description, Description str)
+        public static Description Position(this Description description, object str)
         {
-            return description?.Next(s => $"Position({s} In {str})");
-        }
-
-        /// <summary>
-        /// 字符串1 在 字符串2 中的位置
-        /// </summary>
-        /// <param name="description">字符串1</param>
-        /// <param name="str">字符串2</param>
-        /// <returns></returns>
-        public static Description Position(this Description description, string str)
-        {
-            return description?.Next(s => $"Position({s} In {str})");
+            return description?.Next(s => $"Position({s} In {str.ToStringParam()})");
         }
 
         /// <summary>
@@ -466,45 +371,9 @@ namespace LogicEntity.Model
         /// <param name="original">旧字符串</param>
         /// <param name="replace">新字符串</param>
         /// <returns></returns>
-        public static Description Replace(this Description description, Description original, Description replace)
+        public static Description Replace(this Description description, object original, object replace)
         {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
-        }
-
-        /// <summary>
-        /// 替换字符串
-        /// </summary>
-        /// <param name="description">字符串</param>
-        /// <param name="original">旧字符串</param>
-        /// <param name="replace">新字符串</param>
-        /// <returns></returns>
-        public static Description Replace(this Description description, Description original, string replace)
-        {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
-        }
-
-        /// <summary>
-        /// 替换字符串
-        /// </summary>
-        /// <param name="description">字符串</param>
-        /// <param name="original">旧字符串</param>
-        /// <param name="replace">新字符串</param>
-        /// <returns></returns>
-        public static Description Replace(this Description description, string original, Description replace)
-        {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
-        }
-
-        /// <summary>
-        /// 替换字符串
-        /// </summary>
-        /// <param name="description">字符串</param>
-        /// <param name="original">旧字符串</param>
-        /// <param name="replace">新字符串</param>
-        /// <returns></returns>
-        public static Description Replace(this Description description, string original, string replace)
-        {
-            return description?.Next(s => $"Replace({s}, {original}, {replace})");
+            return description?.Next(s => $"Replace({s}, {original.ToStringParam()}, {replace.ToStringParam()})");
         }
 
         /// <summary>
@@ -1735,6 +1604,88 @@ namespace LogicEntity.Model
         public static Description TimeDiff(this Description time1, DateTime time2)
         {
             return time1.Next(s => $"TimeDiff({s}, '{time2}')");
+        }
+
+        /// <summary>
+        /// 二进制数字
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Bin(this Description description)
+        {
+            return description?.Next(s => $"Bin({s})");
+        }
+
+        /// <summary>
+        /// 二进制字符串
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Binary(this Description description)
+        {
+            return description?.Next(s => $"Binary({s})");
+        }
+
+        /// <summary>
+        /// Case
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Case(this Description description)
+        {
+            return description?.Next(s => $"Case {s}");
+        }
+
+        /// <summary>
+        /// Case
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Case(object obj)
+        {
+            return new Description($"Case {obj}");
+        }
+
+        /// <summary>
+        /// When
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description When(this Description description, object obj)
+        {
+            return description?.Next(s => $"{s}\n  When {obj.ToStringParam()}");
+        }
+
+        /// <summary>
+        /// Then
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static Description Then(this Description description, object obj)
+        {
+            return description?.Next(s => $"{s} Then {obj.ToStringParam()}");
+        }
+
+        /// <summary>
+        /// Else
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static Description Else(this Description description, object obj)
+        {
+            return description?.Next(s => $"{s}\n  Else {obj.ToStringParam()}");
+        }
+
+        /// <summary>
+        /// End
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description End(this Description description)
+        {
+            return description?.Next(s => $"{s}\nEnd");
         }
 
         /// <summary>

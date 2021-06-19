@@ -92,7 +92,7 @@ namespace LogicEntity.Operator
 
             if (_hasConditons)
             {
-                conditions = "\nWhere " + _conditions?.Description();
+                conditions = "\nWhere " + _conditions;
 
                 parameters.AddRange(_conditions?.GetParameters() ?? new List<KeyValuePair<string, object>>());
             }
