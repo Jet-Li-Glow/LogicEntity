@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Extension;
 using LogicEntity.Operator;
 
 namespace LogicEntity.Model
@@ -12,19 +13,6 @@ namespace LogicEntity.Model
     /// </summary>
     public static partial class DbFunction
     {
-        /// <summary>
-        /// 转为Sql字符串参数
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        static string ToStringParam(this object obj)
-        {
-            if (obj is string)
-                return $"'{obj}'";
-
-            return obj.ToString();
-        }
-
         /// <summary>
         /// 第一个字符的ASCII码
         /// </summary>
@@ -61,33 +49,14 @@ namespace LogicEntity.Model
         /// <param name="description">第一个字符</param>
         /// <param name="more">后续的字符</param>
         /// <returns></returns>
-        public static Description Concat(this Description description, params Description[] more)
+        public static Description Concat(this Description description, params object[] more)
         {
             return description?.Next(s =>
             {
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.ToString()));
-
-                return $"Concat({string.Join(", ", vs)})";
-            });
-        }
-
-        /// <summary>
-        /// 合并字符串
-        /// </summary>
-        /// <param name="description">第一个字符</param>
-        /// <param name="more">后续的字符</param>
-        /// <returns></returns>
-        public static Description Concat(this Description description, params string[] more)
-        {
-            return description?.Next(s =>
-            {
-                List<string> vs = new() { s };
-
-                if (more is not null)
-                    vs.AddRange(more);
+                    vs.AddRange(more.Select(m => m.ToSqlParam()));
 
                 return $"Concat({string.Join(", ", vs)})";
             });
@@ -107,10 +76,20 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.ToStringParam()));
+                    vs.AddRange(more.Select(m => m.ToSqlParam()));
 
-                return $"Concat_Ws({separator.ToStringParam()}, {string.Join(", ", vs)})";
+                return $"Concat_Ws({separator.ToSqlParam()}, {string.Join(", ", vs)})";
             });
+        }
+
+        /// <summary>
+        /// 合并字符串
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Group_Concat(this Description description)
+        {
+            return description?.Next(s => $"Group_Concat({s})");
         }
 
         /// <summary>
@@ -126,7 +105,7 @@ namespace LogicEntity.Model
                 List<string> vs = new() { s };
 
                 if (more is not null)
-                    vs.AddRange(more.Select(m => m.ToStringParam()));
+                    vs.AddRange(more.Select(m => m.ToSqlParam()));
 
                 return $"Field({string.Join(", ", vs)})";
             });
@@ -140,7 +119,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Find_In_Set(this Description description, object strList)
         {
-            return description?.Next(s => $"Find_In_Set({s}, {strList.ToStringParam()})");
+            return description?.Next(s => $"Find_In_Set({s}, {strList.ToSqlParam()})");
         }
 
         /// <summary>
@@ -164,7 +143,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Insert(this Description description, int start, int length, object replace)
         {
-            return description?.Next(s => $"Insert({s}, {start}, {length}, {replace.ToStringParam()})");
+            return description?.Next(s => $"Insert({s}, {start}, {length}, {replace.ToSqlParam()})");
         }
 
         /// <summary>
@@ -175,7 +154,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Locate(this Description description, object str)
         {
-            return description?.Next(s => $"Locate({s}, {str.ToStringParam()})");
+            return description?.Next(s => $"Locate({s}, {str.ToSqlParam()})");
         }
 
         /// <summary>
@@ -249,7 +228,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description LPad(this Description description, int length, object str)
         {
-            return description?.Next(s => $"LPad({s}, {length}, {str.ToStringParam()})");
+            return description?.Next(s => $"LPad({s}, {length}, {str.ToSqlParam()})");
         }
 
         /// <summary>
@@ -261,7 +240,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description RPad(this Description description, int length, object str)
         {
-            return description?.Next(s => $"RPad({s}, {length}, {str.ToStringParam()})");
+            return description?.Next(s => $"RPad({s}, {length}, {str.ToSqlParam()})");
         }
 
         /// <summary>
@@ -339,7 +318,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description SubString_Index(this Description description, object separator, int num)
         {
-            return description?.Next(s => $"SubString_Index({s}, {separator.ToStringParam()}, {num})");
+            return description?.Next(s => $"SubString_Index({s}, {separator.ToSqlParam()}, {num})");
         }
 
         /// <summary>
@@ -350,7 +329,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Position(this Description description, object str)
         {
-            return description?.Next(s => $"Position({s} In {str.ToStringParam()})");
+            return description?.Next(s => $"Position({s} In {str.ToSqlParam()})");
         }
 
         /// <summary>
@@ -373,7 +352,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Replace(this Description description, object original, object replace)
         {
-            return description?.Next(s => $"Replace({s}, {original.ToStringParam()}, {replace.ToStringParam()})");
+            return description?.Next(s => $"Replace({s}, {original.ToSqlParam()}, {replace.ToSqlParam()})");
         }
 
         /// <summary>
@@ -1653,7 +1632,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description When(this Description description, object obj)
         {
-            return description?.Next(s => $"{s}\n  When {obj.ToStringParam()}");
+            return description?.Next(s => $"{s}\n  When {obj.ToSqlParam()}");
         }
 
         /// <summary>
@@ -1664,7 +1643,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Then(this Description description, object obj)
         {
-            return description?.Next(s => $"{s} Then {obj.ToStringParam()}");
+            return description?.Next(s => $"{s} Then {obj.ToSqlParam()}");
         }
 
         /// <summary>
@@ -1675,7 +1654,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description Else(this Description description, object obj)
         {
-            return description?.Next(s => $"{s}\n  Else {obj.ToStringParam()}");
+            return description?.Next(s => $"{s}\n  Else {obj.ToSqlParam()}");
         }
 
         /// <summary>
@@ -1686,6 +1665,160 @@ namespace LogicEntity.Model
         public static Description End(this Description description)
         {
             return description?.Next(s => $"{s}\nEnd");
+        }
+
+        /// <summary>
+        /// 转换数据类型
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static Description Cast(this Description description, string type)
+        {
+            return description?.Next(s => $"Cast({s} As {type})");
+        }
+
+        /// <summary>
+        /// 转换字符串的字符集
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="charset"></param>
+        /// <returns></returns>
+        public static Description Convert(this Description description, string charset)
+        {
+            return description?.Next(s => $"Convert({s} Using {charset})");
+        }
+
+        /// <summary>
+        /// 返回第一个非空值
+        /// </summary>
+        /// <param name="objs"></param>
+        /// <returns></returns>
+        public static Description Coalesce(params object[] objs)
+        {
+            if (objs is null)
+                return new Description($"Coalesce(Null)");
+
+            return new Description($"Coalesce({string.Join(", ", objs.Select(o => o.ToSqlParam()))})");
+        }
+
+        /// <summary>
+        /// 进制转换
+        /// </summary>
+        /// <param name="description">被转换的值</param>
+        /// <param name="src">原始进制</param>
+        /// <param name="des">新进制</param>
+        /// <returns></returns>
+        public static Description Conv(this Description description, int src, int des)
+        {
+            return description?.Next(s => $"Conv({s}, {src}, {des})");
+        }
+
+        /// <summary>
+        /// IF条件表达式
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <param name="trueResult"></param>
+        /// <param name="falseResult"></param>
+        /// <returns></returns>
+        public static Description IF(ConditionDescription condition, Description trueResult, Description falseResult)
+        {
+            return new Description($"IF({condition.ConditionStr}, {trueResult}, {falseResult})");
+        }
+
+        /// <summary>
+        /// 空替代
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="replace"></param>
+        /// <returns></returns>
+        public static Description IFNull(this Description description, object replace)
+        {
+            return description?.Next(s => $"IFNull({s}, {replace.ToSqlParam()})");
+        }
+
+        /// <summary>
+        /// 是否为空
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description IsNull(this Description description)
+        {
+            return description?.Next(s => $"IsNull({s})");
+        }
+
+        /// <summary>
+        /// 相等时返回 Null，不等时返回原值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="compare"></param>
+        /// <returns></returns>
+        public static Description NullIF(this Description description, Description compare)
+        {
+            return description?.Next(s => $"NullIF({s}, {compare})");
+        }
+
+        /// <summary>
+        /// 版本
+        /// </summary>
+        /// <returns></returns>
+        public static Description Version()
+        {
+            return new Description("Version()");
+        }
+
+        /// <summary>
+        /// 连接Id
+        /// </summary>
+        /// <returns></returns>
+        public static Description Connection_Id()
+        {
+            return new Description("Connection_Id()");
+        }
+
+        /// <summary>
+        /// 当前用户
+        /// </summary>
+        /// <returns></returns>
+        public static Description Current_User()
+        {
+            return new Description("Current_User()");
+        }
+
+        /// <summary>
+        /// 当前用户
+        /// </summary>
+        /// <returns></returns>
+        public static Description Session_User()
+        {
+            return new Description("Session_User()");
+        }
+
+        /// <summary>
+        /// 当前用户
+        /// </summary>
+        /// <returns></returns>
+        public static Description System_User()
+        {
+            return new Description("System_User()");
+        }
+
+        /// <summary>
+        /// 当前用户
+        /// </summary>
+        /// <returns></returns>
+        public static Description User()
+        {
+            return new Description("User()");
+        }
+
+        /// <summary>
+        /// 当前数据库名
+        /// </summary>
+        /// <returns></returns>
+        public static Description Database()
+        {
+            return new Description("Database()");
         }
 
         /// <summary>
@@ -1700,11 +1833,77 @@ namespace LogicEntity.Model
 
         //自定义
 
+        /// <summary>
+        /// 去重
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
         public static Description Distinct(this Description description)
         {
             return description?.Next(s => "Distinct " + s);
         }
 
+        /// <summary>
+        /// 按升序排序
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public static Description OrderBy(this Description description, Description order)
+        {
+            return description?.Next(s => $"{s} Order By {order}");
+        }
+
+        /// <summary>
+        /// 按降序排序
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public static Description OrderByDescending(this Description description, Description order)
+        {
+            return description?.Next(s => $"{s} Order By {order} Desc");
+        }
+
+        /// <summary>
+        /// 后续按升序排序
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public static Description ThenBy(this Description description, Description order)
+        {
+            return description?.Next(s => $"{s}, {order}");
+        }
+
+        /// <summary>
+        /// 后续按降序排序
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
+        public static Description ThenByDescending(this Description description, Description order)
+        {
+            return description?.Next(s => $"{s}, {order} Desc");
+        }
+
+        /// <summary>
+        /// 添加分隔符
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="sep"></param>
+        /// <returns></returns>
+        public static Description Separator(this Description description, string sep)
+        {
+            return description?.Next(s => $"{s} Separator '{sep}'");
+        }
+
+        /// <summary>
+        /// 设置别名
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="alias"></param>
+        /// <returns></returns>
         public static Description As(this Description description, string alias)
         {
             return description?.Next(s => s + " As " + alias);

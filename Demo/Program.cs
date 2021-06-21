@@ -46,7 +46,8 @@ namespace DataBaseAccess
                student.StudentName,
                student.MajorId,
                studentMajor.MajorType,
-               major.MajorName)
+               major.MajorName,
+               student.StudentName.Distinct().OrderBy(student.StudentId).ThenByDescending(student.StudentName).Separator("*").Group_Concat())
                .From(nested,
                studentMajor,
                student.As("cStudent"))

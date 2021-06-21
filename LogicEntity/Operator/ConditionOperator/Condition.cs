@@ -19,7 +19,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 参数
         /// </summary>
-        private List<KeyValuePair<string, object>> _parameters = new();
+        List<KeyValuePair<string, object>> _parameters = new();
 
         /// <summary>
         /// 条件

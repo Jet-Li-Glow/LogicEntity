@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Extension;
 
 namespace LogicEntity.Operator
 {
@@ -25,5 +26,23 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <returns></returns>
         internal abstract IEnumerable<KeyValuePair<string, object>> GetParameters();
+
+        /// <summary>
+        /// 直接获取字符串（没有参数）
+        /// </summary>
+        internal string ConditionStr
+        {
+            get
+            {
+                string result = ToString();
+
+                foreach (KeyValuePair<string, object> p in GetParameters())
+                {
+                    result = result.Replace(p.Key, p.Value.ToSqlParam());
+                }
+
+                return result;
+            }
+        }
     }
 }
