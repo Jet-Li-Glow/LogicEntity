@@ -73,7 +73,7 @@ namespace LogicEntity.Model
             if (_command is null)
                 _command = _selector?.GetCommand();
 
-            return "(" + _command?.CommandText.Replace("\n", "\n   ") + ") As " + _alias;
+            return "(\n    " + _command?.CommandText.Replace("\n", "\n    ") + "\n  ) As " + _alias;
         }
 
         /// <summary>

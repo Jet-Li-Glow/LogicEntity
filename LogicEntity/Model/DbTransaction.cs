@@ -149,13 +149,17 @@ namespace LogicEntity.Model
 
             IDbCommand command = _connection.CreateCommand();
 
-            command.Connection = _connection;
-
             command.Transaction = _transaction;
 
             foreach (KeyValuePair<string, object> kv in keyValues)
             {
-                command.Parameters.Add(_dataBase.GetDbParameter(kv.Key, kv.Value));
+                IDbDataParameter parameter = command.CreateParameter();
+
+                parameter.ParameterName = kv.Key;
+
+                parameter.Value = kv.Value;
+
+                command.Parameters.Add(parameter);
             }
 
             command.CommandText = sql;
@@ -343,13 +347,17 @@ namespace LogicEntity.Model
         {
             IDbCommand command = _connection.CreateCommand();
 
-            command.Connection = _connection;
-
             command.Transaction = _transaction;
 
             foreach (KeyValuePair<string, object> kv in keyValues)
             {
-                command.Parameters.Add(_dataBase.GetDbParameter(kv.Key, kv.Value));
+                IDbDataParameter parameter = command.CreateParameter();
+
+                parameter.ParameterName = kv.Key;
+
+                parameter.Value = kv.Value;
+
+                command.Parameters.Add(parameter);
             }
 
             command.CommandText = sql;
@@ -423,13 +431,17 @@ namespace LogicEntity.Model
         {
             IDbCommand command = _connection.CreateCommand();
 
-            command.Connection = _connection;
-
             command.Transaction = _transaction;
 
             foreach (KeyValuePair<string, object> kv in keyValues)
             {
-                command.Parameters.Add(_dataBase.GetDbParameter(kv.Key, kv.Value));
+                IDbDataParameter parameter = command.CreateParameter();
+
+                parameter.ParameterName = kv.Key;
+
+                parameter.Value = kv.Value;
+
+                command.Parameters.Add(parameter);
             }
 
             command.CommandText = sql;
@@ -558,13 +570,17 @@ namespace LogicEntity.Model
         {
             IDbCommand command = _connection.CreateCommand();
 
-            command.Connection = _connection;
-
             command.Transaction = _transaction;
 
             foreach (KeyValuePair<string, object> kv in keyValues)
             {
-                command.Parameters.Add(_dataBase.GetDbParameter(kv.Key, kv.Value));
+                IDbDataParameter parameter = command.CreateParameter();
+
+                parameter.ParameterName = kv.Key;
+
+                parameter.Value = kv.Value;
+
+                command.Parameters.Add(parameter);
             }
 
             command.CommandText = sql;

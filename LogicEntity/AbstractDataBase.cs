@@ -43,14 +43,6 @@ namespace LogicEntity
         public abstract IDbConnection GetDbConnection();
 
         /// <summary>
-        /// 获取数据库参数
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public abstract IDataParameter GetDbParameter(string key, object value);
-
-        /// <summary>
         /// 使用查询操作器查询，并返回 T 类型的集合
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -153,7 +145,13 @@ namespace LogicEntity
 
                 foreach (KeyValuePair<string, object> kv in keyValues)
                 {
-                    command.Parameters.Add(GetDbParameter(kv.Key, kv.Value));
+                    IDbDataParameter parameter = command.CreateParameter();
+
+                    parameter.ParameterName = kv.Key;
+
+                    parameter.Value = kv.Value;
+
+                    command.Parameters.Add(parameter);
                 }
 
                 command.CommandText = sql;
@@ -349,7 +347,13 @@ namespace LogicEntity
 
                 foreach (KeyValuePair<string, object> kv in keyValues)
                 {
-                    command.Parameters.Add(GetDbParameter(kv.Key, kv.Value));
+                    IDbDataParameter parameter = command.CreateParameter();
+
+                    parameter.ParameterName = kv.Key;
+
+                    parameter.Value = kv.Value;
+
+                    command.Parameters.Add(parameter);
                 }
 
                 command.CommandText = sql;
@@ -430,7 +434,13 @@ namespace LogicEntity
 
                 foreach (KeyValuePair<string, object> kv in keyValues)
                 {
-                    command.Parameters.Add(GetDbParameter(kv.Key, kv.Value));
+                    IDbDataParameter parameter = command.CreateParameter();
+
+                    parameter.ParameterName = kv.Key;
+
+                    parameter.Value = kv.Value;
+
+                    command.Parameters.Add(parameter);
                 }
 
                 command.CommandText = sql;
@@ -566,7 +576,13 @@ namespace LogicEntity
 
                 foreach (KeyValuePair<string, object> kv in keyValues)
                 {
-                    command.Parameters.Add(GetDbParameter(kv.Key, kv.Value));
+                    IDbDataParameter parameter = command.CreateParameter();
+
+                    parameter.ParameterName = kv.Key;
+
+                    parameter.Value = kv.Value;
+
+                    command.Parameters.Add(parameter);
                 }
 
                 command.CommandText = sql;
@@ -637,8 +653,6 @@ namespace LogicEntity
 
                 IDbCommand command = connection.CreateCommand();
 
-                command.Connection = connection;
-
                 command.Transaction = connection.BeginTransaction();
 
                 try
@@ -651,9 +665,15 @@ namespace LogicEntity
 
                         command.Parameters.Clear();
 
-                        foreach (KeyValuePair<string, object> dbParameter in cmd.Parameters)
+                        foreach (KeyValuePair<string, object> kv in cmd.Parameters)
                         {
-                            command.Parameters.Add(GetDbParameter(dbParameter.Key, dbParameter.Value));
+                            IDbDataParameter parameter = command.CreateParameter();
+
+                            parameter.ParameterName = kv.Key;
+
+                            parameter.Value = kv.Value;
+
+                            command.Parameters.Add(parameter);
                         }
 
                         command.CommandTimeout = 30;

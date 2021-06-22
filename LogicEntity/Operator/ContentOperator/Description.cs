@@ -225,7 +225,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Condition In(IEnumerable vs)
         {
-            return new Condition(this, Comparator.In, vs);
+            return Condition.In(this, vs);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Condition In(params object[] vs)
         {
-            return new Condition(this, Comparator.In, vs);
+            return Condition.In(this, vs);
         }
 
         /// <summary>
@@ -245,7 +245,18 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Condition In(ISelector selector)
         {
-            return new Condition(this, Comparator.In, selector);
+            return Condition.In(this, selector);
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public Condition Between(object left, object right)
+        {
+            return Condition.Between(this, left, right);
         }
 
         /// <summary>

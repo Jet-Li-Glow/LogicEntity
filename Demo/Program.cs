@@ -309,10 +309,5 @@ namespace DataBaseAccess
         {
             return new MySqlConnection(_connectionStr);
         }
-
-        public override IDataParameter GetDbParameter(string key, object value)
-        {
-            return new MySqlParameter(key, value);
-        }
     }
 }

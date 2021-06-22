@@ -58,12 +58,6 @@ namespace LogicEntity.EnumCollection
         /// 小于等于
         /// </summary>
         [Description("<=")]
-        LessThanOrEqual = 7,
-
-        /// <summary>
-        /// 枚举值内
-        /// </summary>
-        [Description("In")]
-        In = 8
+        LessThanOrEqual = 7
     }
 }

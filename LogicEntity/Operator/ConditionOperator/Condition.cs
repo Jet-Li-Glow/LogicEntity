@@ -17,6 +17,11 @@ namespace LogicEntity.Operator
     public class Condition : ConditionDescription
     {
         /// <summary>
+        /// 条件字符串
+        /// </summary>
+        string _conditionStr;
+
+        /// <summary>
         /// 参数
         /// </summary>
         List<KeyValuePair<string, object>> _parameters = new();
@@ -31,7 +36,7 @@ namespace LogicEntity.Operator
         {
             if (right is Description)
             {
-                _conditionStr = left?.ToString() + " " + comparator.Description() + " " + (right as Description).ToString();
+                _conditionStr = $"{left} {comparator.Description()} {right as Description}";
 
                 return;
             }
@@ -43,45 +48,9 @@ namespace LogicEntity.Operator
                 return;
             }
 
-            if (comparator == Comparator.In)
+            if (right is null && comparator == Comparator.NotEqual)
             {
-                if (right is ISelector)
-                {
-                    Command command = (right as ISelector).GetCommand();
-
-                    foreach (KeyValuePair<string, object> parameter in command.Parameters)
-                    {
-                        string selectorKey = "@param" + DateTime.Now.Ticks;
-
-                        command.CommandText = command.CommandText.Replace(parameter.Key, selectorKey);
-
-                        _parameters.Add(KeyValuePair.Create(selectorKey, parameter.Value));
-                    }
-
-                    _conditionStr = left?.ToString() + " " + comparator.Description() + " (\n" + command.CommandText + "\n)";
-
-                    return;
-                }
-
-                if (right is IEnumerable)
-                {
-                    List<string> ekeys = new List<string>();
-
-                    foreach (object obj in right as IEnumerable)
-                    {
-                        string ekey = "@param" + DateTime.Now.Ticks;
-
-                        _parameters.Add(KeyValuePair.Create(ekey, obj));
-
-                        ekeys.Add(ekey);
-                    }
-
-                    _conditionStr = left?.ToString() + " " + comparator.Description() + " (" + string.Join(", ", ekeys) + ")";
-
-                    return;
-                }
-
-                _conditionStr = left?.ToString() + " " + comparator.Description() + " (" + right + ")";
+                _conditionStr = left?.ToString() + " is Not Null";
 
                 return;
             }
@@ -90,7 +59,7 @@ namespace LogicEntity.Operator
 
             _parameters.Add(KeyValuePair.Create(key, right));
 
-            _conditionStr = left?.ToString() + " " + comparator.Description() + " " + key;
+            _conditionStr = $"{left} {comparator.Description()} {key}";
         }
 
         /// <summary>
@@ -103,9 +72,131 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 条件字符串
+        /// 条件
         /// </summary>
-        private string _conditionStr;
+        internal Condition()
+        { 
+        }
+
+        /// <summary>
+        /// 生成 In 条件
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        internal static Condition In(Description left, ISelector right)
+        {
+            if (right is null)
+                return new Condition($"{left} In (Null)");
+
+            Condition condition = new();
+
+            Command command = right.GetCommand();
+
+            foreach (KeyValuePair<string, object> parameter in command.Parameters)
+            {
+                string selectorKey = "@param" + DateTime.Now.Ticks;
+
+                command.CommandText = command.CommandText.Replace(parameter.Key, selectorKey);
+
+                condition._parameters.Add(KeyValuePair.Create(selectorKey, parameter.Value));
+            }
+
+            condition._conditionStr = $"{left} In \n    (\n      {command.CommandText.Replace("\n", "\n      ")}\n    )";
+
+            return condition;
+        }
+
+        /// <summary>
+        /// 生成 In 条件
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        internal static Condition In(Description left, IEnumerable right)
+        {
+            if (right is null)
+                return new Condition($"{left} In (Null)");
+
+            Condition condition = new();
+
+            List<string> keys = new List<string>();
+
+            foreach (object obj in right)
+            {
+                string key = "@param" + DateTime.Now.Ticks;
+
+                condition._parameters.Add(KeyValuePair.Create(key, obj));
+
+                keys.Add(key);
+            }
+
+            condition._conditionStr = $"{left} In ({string.Join(", ", keys)})";
+
+            return condition;
+        }
+
+        /// <summary>
+        /// 生成 In 条件
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        internal static Condition In(Description left, object right)
+        {
+            if (right is null)
+                return new Condition($"{left} In (Null)");
+
+            if (right is ISelector)
+                return In(left, right as ISelector);
+
+            if (right is IEnumerable)
+                return In(left, right as IEnumerable);
+
+            return new Condition($"{left} In ({right})");
+        }
+
+        /// <summary>
+        /// 生成 Between 条件
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        internal static Condition Between(Description description, object left, object right)
+        {
+            Condition condition = new();
+
+            string keyLeft;
+
+            if (left is Description)
+            {
+                keyLeft = left.ToString();
+            }
+            else
+            {
+                keyLeft = "@param" + DateTime.Now.Ticks;
+
+                condition._parameters.Add(KeyValuePair.Create(keyLeft, left));
+            }
+
+            string keyRight;
+
+            if (right is Description)
+            {
+                keyRight = right.ToString();
+            }
+            else
+            {
+                keyRight = "@param" + DateTime.Now.Ticks;
+
+                condition._parameters.Add(KeyValuePair.Create(keyRight, right));
+            }
+
+            condition._conditionStr = $"{description} Between {keyLeft} And {keyRight}";
+
+            return condition;
+        }
 
         /// <summary>
         /// 是否有多个表达式

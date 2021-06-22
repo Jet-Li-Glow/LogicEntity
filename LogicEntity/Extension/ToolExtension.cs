@@ -11,7 +11,7 @@ namespace LogicEntity.Extension
     /// <summary>
     /// 扩展方法
     /// </summary>
-    public static class ToolExtension
+    internal static class ToolExtension
     {
         public static string Description(this Enum enumValue)
         {

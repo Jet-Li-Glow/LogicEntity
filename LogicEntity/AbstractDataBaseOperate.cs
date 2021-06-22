@@ -32,7 +32,13 @@ namespace LogicEntity
 
                 foreach (KeyValuePair<string, object> kv in insert.Parameters)
                 {
-                    command.Parameters.Add(GetDbParameter(kv.Key, kv.Value));
+                    IDbDataParameter parameter = command.CreateParameter();
+
+                    parameter.ParameterName = kv.Key;
+
+                    parameter.Value = kv.Value;
+
+                    command.Parameters.Add(parameter);
                 }
 
                 command.CommandText = insert.CommandText;
