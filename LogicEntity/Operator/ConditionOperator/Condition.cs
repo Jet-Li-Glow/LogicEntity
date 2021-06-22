@@ -199,6 +199,48 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 生成 Not Between 条件
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        internal static Condition NotBetween(Description description, object left, object right)
+        {
+            Condition condition = new();
+
+            string keyLeft;
+
+            if (left is Description)
+            {
+                keyLeft = left.ToString();
+            }
+            else
+            {
+                keyLeft = "@param" + DateTime.Now.Ticks;
+
+                condition._parameters.Add(KeyValuePair.Create(keyLeft, left));
+            }
+
+            string keyRight;
+
+            if (right is Description)
+            {
+                keyRight = right.ToString();
+            }
+            else
+            {
+                keyRight = "@param" + DateTime.Now.Ticks;
+
+                condition._parameters.Add(KeyValuePair.Create(keyRight, right));
+            }
+
+            condition._conditionStr = $"{description} Not Between {keyLeft} And {keyRight}";
+
+            return condition;
+        }
+
+        /// <summary>
         /// 是否有多个表达式
         /// </summary>
         internal bool IsMultiple { get; private set; }

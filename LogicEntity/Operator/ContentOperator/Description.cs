@@ -260,6 +260,17 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public Condition NotBetween(object left, object right)
+        {
+            return Condition.NotBetween(this, left, right);
+        }
+
+        /// <summary>
         /// 相似
         /// </summary>
         /// <param name="str"></param>
