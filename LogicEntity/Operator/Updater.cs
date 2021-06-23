@@ -13,22 +13,32 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 更新操作器
     /// </summary>
-    public class Updater<T> : IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table, new()
+    internal class Updater<T> : OperatorBase, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table, new()
     {
-        private T _table;
-
-        private List<Relation> _relations = new();
-
-        private Action<T> _setValue;
-
-        private ConditionDescription _condition;
-
-        private bool _hasConditions;
+        /// <summary>
+        /// 表
+        /// </summary>
+        T _table;
 
         /// <summary>
-        /// 超时时间（秒）
+        /// 关联关系
         /// </summary>
-        private int _commandTimeout = 0;
+        List<Relation> _relations = new();
+
+        /// <summary>
+        /// 设置值
+        /// </summary>
+        Action<T> _setValue;
+
+        /// <summary>
+        /// 条件
+        /// </summary>
+        ConditionDescription _condition;
+
+        /// <summary>
+        /// 是否有条件
+        /// </summary>
+        bool _hasConditions;
 
         /// <summary>
         /// 更新操作器
@@ -71,6 +81,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 左连接
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
         public IUpdaterOn<T> LeftJoin(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.LeftJoin };
@@ -82,6 +97,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 右连接
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
         public IUpdaterOn<T> RightJoin(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.RightJoin };
@@ -93,6 +113,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 全连接
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
         public IUpdaterOn<T> FullJoin(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.FullJoin };
@@ -104,6 +129,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 自然连接
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
         public IUpdaterOn<T> NaturalJoin(TableDescription table)
         {
             Relation relation = new Relation() { TableTier = TableTier.NaturalJoin };
@@ -115,6 +145,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 添加关联条件
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         public IUpdaterJoin<T> On(Condition condition)
         {
             Relation relation = _relations.LastOrDefault();
@@ -125,6 +160,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 设置值
+        /// </summary>
+        /// <param name="setValue"></param>
+        /// <returns></returns>
         public IUpdaterWhere Set(Action<T> setValue)
         {
             _setValue = setValue;
@@ -132,6 +172,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 添加条件
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         public IUpdater Where(Condition condition)
         {
             _condition = condition;
@@ -141,6 +186,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 添加条件
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         public IUpdater With(ConditionCollection condition)
         {
             _condition = condition;
@@ -150,14 +200,7 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public IUpdater SetCommandTimeout(int seconds)
-        {
-            _commandTimeout = seconds;
-
-            return this;
-        }
-
-        public Command GetCommand()
+        public override Command GetCommand()
         {
             int index = 0;
 
@@ -247,7 +290,9 @@ namespace LogicEntity.Operator
 
             command.CommandText = $"Update {_table.FullName}{relations}{set}{conditions}";
 
-            command.CommandTimeout = _commandTimeout;
+            command.Parameters.AddRange(ExtraParameters);
+
+            command.CommandTimeout = CommandTimeout;
 
             return command;
         }

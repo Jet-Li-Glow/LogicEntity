@@ -11,7 +11,7 @@ using LogicEntity.Operator;
 namespace LogicEntity
 {
     /// <summary>
-    /// 数据库操作
+    /// 数据库抽象模型
     /// </summary>
     public abstract partial class AbstractDataBase
     {

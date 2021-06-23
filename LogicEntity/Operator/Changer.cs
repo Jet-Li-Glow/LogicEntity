@@ -12,18 +12,22 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 更新操作器
     /// </summary>
-    public class Changer : IChangerOn
+    internal class Changer : OperatorBase, IChanger
     {
-        private Table _change;
-
-        private Condition _condition;
-
-        private bool _hasConditons;
+        /// <summary>
+        /// 表
+        /// </summary>
+        Table _change;
 
         /// <summary>
-        /// 超时时间（秒）
+        /// 条件
         /// </summary>
-        private int _commandTimeout = 0;
+        Condition _condition;
+
+        /// <summary>
+        /// 是否有条件
+        /// </summary>
+        bool _hasConditons;
 
         /// <summary>
         /// 更新操作器
@@ -35,7 +39,7 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 在特定条件上更新
+        /// 添加更新条件
         /// </summary>
         /// <param name="condition"></param>
         /// <returns></returns>
@@ -48,14 +52,7 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public IUpdater SetCommandTimeout(int seconds)
-        {
-            _commandTimeout = seconds;
-
-            return this;
-        }
-
-        public Command GetCommand()
+        public override Command GetCommand()
         {
             Command command = new Command();
 
@@ -123,7 +120,9 @@ namespace LogicEntity.Operator
 
             command.CommandText = $"Update {_change.FullName}{set}{condition}";
 
-            command.CommandTimeout = _commandTimeout;
+            command.Parameters.AddRange(ExtraParameters);
+
+            command.CommandTimeout = CommandTimeout;
 
             return command;
         }

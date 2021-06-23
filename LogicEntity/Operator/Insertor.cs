@@ -12,22 +12,32 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 插入操作器
     /// </summary>
-    public class Insertor<T> : IInsertorColumns<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table, new()
+    internal class Insertor<T> : OperatorBase, IInsertorColumns<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table, new()
     {
-        private T _table;
-
-        private List<string> _columns = new();
-
-        private ValueDescription _valueDescription = new();
-
-        private bool _isUpdateOnDuplicateKey;
-
-        private Action<T> _updateValue;
+        /// <summary>
+        /// 表
+        /// </summary>
+        T _table;
 
         /// <summary>
-        /// 超时时间（秒）
+        /// 列
         /// </summary>
-        private int _commandTimeout = 0;
+        List<string> _columns = new();
+
+        /// <summary>
+        /// 值描述
+        /// </summary>
+        ValueDescription _valueDescription = new();
+
+        /// <summary>
+        /// 主键冲突时是否更新
+        /// </summary>
+        bool _isUpdateOnDuplicateKey;
+
+        /// <summary>
+        /// 设置值
+        /// </summary>
+        Action<T> _updateValue;
 
         /// <summary>
         /// 插入操作器
@@ -139,18 +149,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public IInsertor SetCommandTimeout(int seconds)
-        {
-            _commandTimeout = seconds;
-
-            return this;
-        }
-
         /// <summary>
         /// 获取操作命令
         /// </summary>
         /// <returns></returns>
-        public Command GetCommand()
+        public override Command GetCommand()
         {
             Command command = new Command();
 
@@ -204,7 +207,7 @@ namespace LogicEntity.Operator
 
                     if (column.Value is Description)
                     {
-                        updateSets.Add(column.ToString() + " = VALUES (" + (column.Value as Description).ToString() + ")");
+                        updateSets.Add($"{column} = VALUES ({column.Value as Description})");
 
                         continue;
                     }
@@ -223,12 +226,14 @@ namespace LogicEntity.Operator
 
             command.CommandText = $"Insert Into {_table.FullName} ({columns}){_valueDescription.Description}{update}";
 
-            command.CommandTimeout = _commandTimeout;
+            command.Parameters.AddRange(ExtraParameters);
+
+            command.CommandTimeout = CommandTimeout;
 
             return command;
         }
 
-        private class ValueDescription
+        class ValueDescription
         {
             /// <summary>
             /// 值描述

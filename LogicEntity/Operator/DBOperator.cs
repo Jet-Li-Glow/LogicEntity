@@ -15,7 +15,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 数据库操作器
     /// </summary>
-    public abstract class DBOperator
+    public static class DBOperator
     {
         /// <summary>
         /// 查询操作器
@@ -124,7 +124,7 @@ namespace LogicEntity.Operator
         /// 更新操作器
         /// </summary>
         /// <returns></returns>
-        public static Changer ApplyChanges(Table change)
+        public static IChanger ApplyChanges(Table change)
         {
             return new Changer(change);
         }

@@ -17,82 +17,77 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 查询操作器
     /// </summary>
-    public class Selector : DBOperator, IFrom, IJoin, IOn, IThenBy, IHaving, ISelector
+    internal class Selector : OperatorBase, IFrom, IJoin, IOn, IThenBy, IHaving, ISelector
     {
         /// <summary>
         /// 是否去重
         /// </summary>
-        private bool _distinct;
+        bool _distinct;
 
         /// <summary>
         /// 列
         /// </summary>
-        private List<Description> _columnDescriptions = new();
+        List<Description> _columnDescriptions = new();
 
         /// <summary>
         /// 主表
         /// </summary>
-        private List<TableDescription> _mainTables = new();
+        List<TableDescription> _mainTables = new();
 
         /// <summary>
         /// 是否有主表
         /// </summary>
-        private bool _hasMainTable;
+        bool _hasMainTable;
 
         /// <summary>
         /// 从表
         /// </summary>
-        private List<Relation> _relations = new();
+        List<Relation> _relations = new();
 
         /// <summary>
         /// 条件
         /// </summary>
-        private ConditionDescription _condition;
+        ConditionDescription _condition;
 
         /// <summary>
         /// 是否有条件
         /// </summary>
-        private bool _hasConditions;
+        bool _hasConditions;
 
         /// <summary>
         /// 分组
         /// </summary>
-        private List<Description> _groupBy = new();
+        List<Description> _groupBy = new();
 
         /// <summary>
         /// 分组筛选条件
         /// </summary>
-        private ConditionDescription _having;
+        ConditionDescription _having;
 
         /// <summary>
         /// 是否有分组筛选条件
         /// </summary>
-        private bool _hasHaving;
+        bool _hasHaving;
 
         /// <summary>
         /// 排序
         /// </summary>
-        private List<OrderDescription> _orderBy = new();
+        List<OrderDescription> _orderBy = new();
 
         /// <summary>
         /// 限制条数
         /// </summary>
-        private string _limit;
+        string _limit;
 
         /// <summary>
-        /// 加锁
+        /// 是否进行更新
         /// </summary>
-        private bool _isForUpdate;
+        bool _isForUpdate;
 
         /// <summary>
         /// 联合表
         /// </summary>
-        private List<UnionDescription> _unionDescriptions = new();
-
-        /// <summary>
-        /// 超时时间（秒）
-        /// </summary>
-        private int _commandTimeout = 0;
+        List<UnionDescription> _unionDescriptions = new();
 
         /// <summary>
         /// 查询操作器
@@ -415,18 +410,11 @@ namespace LogicEntity.Operator
             return new NestedTable(this, alias);
         }
 
-        public ISelector SetCommandTimeout(int seconds)
-        {
-            _commandTimeout = seconds;
-
-            return this;
-        }
-
         /// <summary>
         /// 获取操作命令
         /// </summary>
         /// <returns></returns>
-        public Command GetCommand()
+        public override Command GetCommand()
         {
             //参数
             List<KeyValuePair<string, object>> parameters = new();
@@ -553,7 +541,9 @@ namespace LogicEntity.Operator
                 command.CommandText += "\n\n" + union.TableTier.Description() + "\n\n" + unionCommand.CommandText;
             }
 
-            command.CommandTimeout = _commandTimeout;
+            command.Parameters.AddRange(ExtraParameters);
+
+            command.CommandTimeout = CommandTimeout;
 
             return command;
         }
@@ -561,8 +551,8 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 联合表描述
         /// </summary>
-        private class UnionDescription
-        { 
+        class UnionDescription
+        {
             /// <summary>
             /// 表级别
             /// </summary>

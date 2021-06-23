@@ -8,6 +8,9 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
+    /// <summary>
+    /// 数据库操作器
+    /// </summary>
     public interface IDbOperator
     {
         /// <summary>
@@ -15,5 +18,19 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <returns></returns>
         public Command GetCommand();
+
+        /// <summary>
+        /// 添加参数
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void AddParameter(string key, object value);
+
+        /// <summary>
+        /// 设置超时时间
+        /// </summary>
+        /// <param name="seconds">超时时间（秒）</param>
+        /// <returns></returns>
+        public void SetCommandTimeout(int seconds);
     }
 }

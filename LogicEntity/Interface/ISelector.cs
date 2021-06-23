@@ -7,19 +7,30 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
+    /// <summary>
+    /// 查询操作器
+    /// </summary>
     public interface ISelector : IDbOperator
     {
+        /// <summary>
+        /// 联合
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
         public ISelector Union(ISelector selector);
 
+        /// <summary>
+        /// 联合所有
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
         public ISelector UnionAll(ISelector selector);
 
-        public NestedTable As(string alias);
-
         /// <summary>
-        /// 设置超时时间
+        /// 生成嵌套表
         /// </summary>
-        /// <param name="seconds">超时时间（秒）</param>
+        /// <param name="alias"></param>
         /// <returns></returns>
-        public ISelector SetCommandTimeout(int seconds);
+        public NestedTable As(string alias);
     }
 }

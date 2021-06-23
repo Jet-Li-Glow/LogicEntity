@@ -7,7 +7,10 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IChangerOn : IUpdater
+    /// <summary>
+    /// 更新操作器
+    /// </summary>
+    public interface IChanger : IUpdater
     {
         public IUpdater On(Condition condition);
     }

@@ -23,8 +23,6 @@ namespace DataBaseAccess
             Console.WriteLine("-- Start --");
 
 
-            TestDb testDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
-
             Student student = new();
 
             Major major = new();
@@ -88,34 +86,36 @@ namespace DataBaseAccess
             string tests = testselector.GetCommand().CommandText;
 
             //查询
-            //List<StudentInfo> students = testDb.Query<StudentInfo>(testselector).ToList();
+            //List<StudentInfo> students = Database.TestDb.Query<StudentInfo>(testselector).ToList();
 
-            //DataTable dt = testDb.Query(testselector);
+            //DataTable dt = Database.TestDb.Query(testselector);
 
-            Student joinStudent = new Student();
+            Student joinStudent = new Student(2019, 5);  //月表
 
             Major joinMajor = new Major();
 
-            ISelector joinSelect = DBOperator.Select().From(joinStudent).FullJoin(joinMajor).SetCommandTimeout(20);
+            ISelector joinSelect = DBOperator.Select().From(joinStudent).FullJoin(joinMajor);
+
+            joinSelect.SetCommandTimeout(20);
 
             string joinText = joinSelect.GetCommand().CommandText;
 
-            //List<StudentInfo> joinResult = testDb.Query<StudentInfo>(joinSelect).ToList();
+            //List<StudentInfo> joinResult = Database.TestDb.Query<StudentInfo>(joinSelect).ToList();
 
 
             ISelector njoinSelect = DBOperator.Select().From(joinStudent).Limit(1).ForUpdate();
 
             string njoinText = njoinSelect.GetCommand().CommandText;
 
-            //List<StudentInfo> njoinResult = testDb.Query<StudentInfo>(njoinSelect).ToList();
+            //List<StudentInfo> njoinResult = Database.TestDb.Query<StudentInfo>(njoinSelect).ToList();
 
 
-            //List<Guid?> Ids = testDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
+            //List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
 
 
-            //List<StudentInfo> students = testDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+            //List<StudentInfo> students = Database.TestDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
 
-            //int sc = testDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.LastInsertId()));
+            //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.LastInsertId()));
 
             //联合查询
 
@@ -128,7 +128,7 @@ namespace DataBaseAccess
 
             string unionText = unionSelect.GetCommand().CommandText;
 
-            //List<StudentInfo> unionResult = testDb.Query<StudentInfo>(unionSelect).ToList();
+            //List<StudentInfo> unionResult = Database.TestDb.Query<StudentInfo>(unionSelect).ToList();
 
             //插入
 
@@ -143,9 +143,9 @@ namespace DataBaseAccess
 
             string insertText = insertor.GetCommand().CommandText;
 
-            //int insertAffected = testDb.ExecuteNonQuery(DBOperator.Insert(data));
+            //int insertAffected = Database.TestDb.ExecuteNonQuery(DBOperator.Insert(data));
 
-            //ulong newId = testDb.InsertNext(data);
+            //ulong newId = Database.TestDb.InsertNext(data);
 
             //保存
 
@@ -160,7 +160,7 @@ namespace DataBaseAccess
 
             string saverText = saver.GetCommand().CommandText;
 
-            //int saveAffected = testDb.ExecuteNonQuery(saver);
+            //int saveAffected = Database.TestDb.ExecuteNonQuery(saver);
 
             //批量插入
             Student insertTable = new Student();
@@ -195,7 +195,7 @@ namespace DataBaseAccess
 
             string batchText = batch.GetCommand().CommandText;
 
-            //int batchAffected = testDb.ExecuteNonQuery(batch);
+            //int batchAffected = Database.TestDb.ExecuteNonQuery(batch);
 
             //查询插入
 
@@ -212,7 +212,7 @@ namespace DataBaseAccess
 
             string selectInsertText = selectInsert.GetCommand().CommandText;
 
-            //int selectInsertAffected = testDb.ExecuteNonQuery(selectInsert);
+            //int selectInsertAffected = Database.TestDb.ExecuteNonQuery(selectInsert);
 
             //更新
             Student changedStudent = new Student();
@@ -226,7 +226,7 @@ namespace DataBaseAccess
 
             string changerText = changer.GetCommand().CommandText;
 
-            //int changeAffected = testDb.ExecuteNonQuery(changer);
+            //int changeAffected = Database.TestDb.ExecuteNonQuery(changer);
 
             Major updateMajor = new Major();
 
@@ -237,7 +237,7 @@ namespace DataBaseAccess
 
             string updaterText = updater.GetCommand().CommandText;
 
-            //int updateAffected = testDb.ExecuteNonQuery(updater);
+            //int updateAffected = Database.TestDb.ExecuteNonQuery(updater);
 
             //删除
             Student deleteTable = new Student();
@@ -246,7 +246,7 @@ namespace DataBaseAccess
 
             string testdel = deleter.GetCommand().CommandText;
 
-            //int delAffected = testDb.ExecuteNonQuery(deleter);
+            //int delAffected = Database.TestDb.ExecuteNonQuery(deleter);
 
             //事务
             Student traStu = new Student();
@@ -259,12 +259,12 @@ namespace DataBaseAccess
 
             IInsertor traInsert = DBOperator.Insert(traStuB);
 
-            //bool success = testDb.ExecuteTransaction(new List<IDbOperator>() { traDel, traInsert }, out int affected, out Exception exception);
+            //bool success = Database.TestDb.ExecuteTransaction(new List<IDbOperator>() { traDel, traInsert }, out int affected, out Exception exception);
 
-            //bool successB = testDb.ExecuteTransaction(traDel, traInsert);
+            //bool successB = Database.TestDb.ExecuteTransaction(traDel, traInsert);
 
             //事务2
-            //using (DbTransaction transaction = testDb.BeginTransaction())
+            //using (DbTransaction transaction = Database.TestDb.BeginTransaction())
             //{
             //    try
             //    {
@@ -296,11 +296,11 @@ namespace DataBaseAccess
         }
     }
 
-    class TestDb : AbstractDataBase
+    class MySqlDb : AbstractDataBase
     {
         private readonly string _connectionStr;
 
-        public TestDb(string connectionStr)
+        public MySqlDb(string connectionStr)
         {
             _connectionStr = connectionStr;
         }
@@ -309,5 +309,10 @@ namespace DataBaseAccess
         {
             return new MySqlConnection(_connectionStr);
         }
+    }
+
+    static class DataBase
+    {
+        public static MySqlDb TestDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
     }
 }

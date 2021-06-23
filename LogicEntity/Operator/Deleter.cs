@@ -11,7 +11,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 删除操作器
     /// </summary>
-    public class Deleter : IDeleteWhere
+    internal class Deleter : OperatorBase, IDeleteWhere
     {
         /// <summary>
         /// 主表
@@ -27,11 +27,6 @@ namespace LogicEntity.Operator
         /// 是否有条件
         /// </summary>
         private bool _hasConditons;
-
-        /// <summary>
-        /// 超时时间（秒）
-        /// </summary>
-        private int _commandTimeout = 0;
 
         /// <summary>
         /// 删除操作器
@@ -71,18 +66,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public IDeleter SetCommandTimeout(int seconds)
-        {
-            _commandTimeout = seconds;
-
-            return this;
-        }
-
         /// <summary>
         /// 获取操作命令
         /// </summary>
         /// <returns></returns>
-        public Command GetCommand()
+        public override Command GetCommand()
         {
             Command command = new Command();
 
@@ -110,7 +98,9 @@ namespace LogicEntity.Operator
                 command.Parameters.Add(KeyValuePair.Create(key, parameters[i].Value));
             }
 
-            command.CommandTimeout = _commandTimeout;
+            command.Parameters.AddRange(ExtraParameters);
+
+            command.CommandTimeout = CommandTimeout;
 
             return command;
         }
