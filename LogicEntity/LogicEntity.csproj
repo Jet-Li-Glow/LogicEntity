@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <Version>0.5.0</Version>
+    <Authors>Jet</Authors>
+    <Company />
+    <Description>Build SQL and Execute with .NET 5</Description>
   </PropertyGroup>
 
 </Project>
