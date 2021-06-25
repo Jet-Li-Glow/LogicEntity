@@ -113,9 +113,9 @@ namespace DataBaseAccess
             //List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
 
 
-            //List<StudentInfo> students = Database.TestDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+            //List<StudentInfo> allStudents = Database.TestDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
 
-            //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.LastInsertId()));
+            //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.Last_Insert_Id()));
 
             //联合查询
 
@@ -136,7 +136,7 @@ namespace DataBaseAccess
             //data.StudentId.Value = 5;
             data.StudentName.Value = "小刘";
             data.MajorId.Value = 2;
-            data.Birthday.Value = new DateTime(2007, 9, 7);
+            data.Birthday.Value = DateTime.Now;
             data.Guid.Value = Guid.NewGuid();
 
             IInsertor insertor = DBOperator.Insert(data);
@@ -242,7 +242,7 @@ namespace DataBaseAccess
             //删除
             Student deleteTable = new Student();
 
-            IDeleter deleter = DBOperator.Delete(deleteTable).Where(deleteTable.StudentId == 71124);
+            IDeleter deleter = DBOperator.Delete(deleteTable).Where(deleteTable.StudentId == 71116);
 
             string testdel = deleter.GetCommand().CommandText;
 
@@ -311,7 +311,7 @@ namespace DataBaseAccess
         }
     }
 
-    static class DataBase
+    static class Database
     {
         public static MySqlDb TestDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
     }
