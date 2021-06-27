@@ -153,7 +153,7 @@ namespace DataBaseAccess
             saveData.StudentId.Value = 71126;
             saveData.StudentName.Value = "小刘";
             saveData.MajorId.Value = 2;
-            saveData.Birthday.Value = new DateTime(2007, 9, 7);
+            saveData.Birthday.Value = DateTime.Now;
             saveData.Guid.Value = Guid.NewGuid();
 
             IInsertor saver = DBOperator.Save(saveData);
@@ -167,30 +167,30 @@ namespace DataBaseAccess
 
             Student data1 = new Student();
             data1.StudentId.Value = 14;
-            data1.StudentName.Value = "小喵11";
-            data1.Birthday.Value = new DateTime(1995, 5, 10);
-            data1.MajorId.Value = 1;
+            data1.StudentName.Value = "小喵111";
+            data1.Birthday.Value = new DateTime(1895, 5, 10);
+            data1.MajorId.Value = 7;
 
             Student data2 = new Student();
             data2.StudentId.Value = 15;
-            data2.StudentName.Value = "小喵22";
-            data2.Birthday.Value = new DateTime(1996, 5, 10);
-            data2.MajorId.Value = 2;
+            data2.StudentName.Value = "小喵222";
+            data2.Birthday.Value = new DateTime(1896, 5, 10);
+            data2.MajorId.Value = 7;
 
             Student data3 = new Student();
             data3.StudentId.Value = 16;
-            data3.StudentName.Value = "小喵33";
-            data3.Birthday.Value = new DateTime(1997, 5, 10);
-            data3.MajorId.Value = 3;
+            data3.StudentName.Value = "小喵333";
+            data3.Birthday.Value = new DateTime(1897, 5, 10);
+            data3.MajorId.Value = 7;
 
             IInsertor batch = DBOperator.InsertInto(insertTable)
                 .Columns(insertTable.StudentId, insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
                 .Row(data1, data2, data3)
-                .OnDuplicateKeyUpdate(s =>
+                .OnDuplicateKeyUpdate((s, row) =>
                 {
-                    s.StudentName.Value = s.StudentName;
-                    s.Birthday.Value = s.Birthday;
-                    s.MajorId.Value = 5;
+                    s.StudentName.Value = row.StudentName;
+                    s.Birthday.Value = row.Birthday;
+                    s.MajorId.Value = s.MajorId;
                 });
 
             string batchText = batch.GetCommand().CommandText;

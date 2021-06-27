@@ -9,6 +9,6 @@ namespace LogicEntity.Interface
 {
     public interface IOnDuplicateKeyUpdate<T> : IInsertor where T : Table
     {
-        public IInsertor OnDuplicateKeyUpdate(Action<T> updateValue);
+        public IInsertor OnDuplicateKeyUpdate(Action<T, T> updateValue);
     }
 }

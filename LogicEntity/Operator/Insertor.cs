@@ -37,7 +37,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 设置值
         /// </summary>
-        Action<T> _updateValue;
+        Action<T, T> _updateValue;
 
         /// <summary>
         /// 插入操作器
@@ -140,7 +140,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="updateValue"></param>
         /// <returns></returns>
-        public IInsertor OnDuplicateKeyUpdate(Action<T> updateValue)
+        public IInsertor OnDuplicateKeyUpdate(Action<T, T> updateValue)
         {
             _isUpdateOnDuplicateKey = true;
 
@@ -187,15 +187,21 @@ namespace LogicEntity.Operator
 
             if (_isUpdateOnDuplicateKey)
             {
+                Type type = typeof(T);
+
                 T t = new();
 
-                _updateValue?.Invoke(t);
+                T row = new();
 
-                var properties = t.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
+                _updateValue?.Invoke(t, row);
+
+                string rowName = type.Name + "Data";
+
+                row.As(rowName);
 
                 List<string> updateSets = new List<string>();
 
-                foreach (PropertyInfo property in properties)
+                foreach (PropertyInfo property in type.GetProperties())
                 {
                     Column column = property.GetValue(t) as Column;
 
@@ -207,7 +213,7 @@ namespace LogicEntity.Operator
 
                     if (column.Value is Description)
                     {
-                        updateSets.Add($"{column} = VALUES ({column.Value as Description})");
+                        updateSets.Add($"{column} = {column.Value as Description}");
 
                         continue;
                     }
@@ -221,7 +227,7 @@ namespace LogicEntity.Operator
                     index++;
                 }
 
-                update = "\nON DUPLICATE KEY UPDATE\n" + string.Join(",\n", updateSets);
+                update = $"\nAs {rowName}\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
             }
 
             command.CommandText = $"Insert Into {_table.FullName} ({columns}){_valueDescription.Description}{update}";
