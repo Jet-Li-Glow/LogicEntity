@@ -1899,6 +1899,16 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 列值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Values(this Description description)
+        {
+            return description?.Next(s => $"Values({s})");
+        }
+
+        /// <summary>
         /// 设置别名
         /// </summary>
         /// <param name="description"></param>

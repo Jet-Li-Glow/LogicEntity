@@ -85,7 +85,7 @@ namespace LogicEntity.Operator
                 colums.Add(column);
             }
 
-            return InsertInto(row).Columns(colums.ToArray()).Row(row).OnDuplicateKeyUpdate((t, row) =>
+            return InsertInto(row).Columns(colums.ToArray()).Row(row).OnDuplicateKeyUpdate((t) =>
             {
                 Type type = row.GetType();
 
@@ -96,9 +96,7 @@ namespace LogicEntity.Operator
                     if (col is null)
                         continue;
 
-                    Column val = type.GetProperty(column.ColumnName)?.GetValue(row) as Column;
-
-                    col.Value = val;
+                    col.Value = col.Values();
                 }
             });
         }

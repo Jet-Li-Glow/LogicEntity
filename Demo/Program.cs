@@ -168,19 +168,19 @@ namespace DataBaseAccess
             Student data1 = new Student();
             data1.StudentId.Value = 14;
             data1.StudentName.Value = "小喵111";
-            data1.Birthday.Value = new DateTime(1895, 5, 10);
+            data1.Birthday.Value = DateTime.Now;
             data1.MajorId.Value = 7;
 
             Student data2 = new Student();
             data2.StudentId.Value = 15;
             data2.StudentName.Value = "小喵222";
-            data2.Birthday.Value = new DateTime(1896, 5, 10);
+            data2.Birthday.Value = DateTime.Now;
             data2.MajorId.Value = 7;
 
             Student data3 = new Student();
             data3.StudentId.Value = 16;
             data3.StudentName.Value = "小喵333";
-            data3.Birthday.Value = new DateTime(1897, 5, 10);
+            data3.Birthday.Value = DateTime.Now;
             data3.MajorId.Value = 7;
 
             IInsertor batch = DBOperator.InsertInto(insertTable)

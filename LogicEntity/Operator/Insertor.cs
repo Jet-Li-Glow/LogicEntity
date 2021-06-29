@@ -37,7 +37,12 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 设置值
         /// </summary>
-        Action<T, T> _updateValue;
+        Action<T> _updateValue;
+
+        /// <summary>
+        /// 设置值
+        /// </summary>
+        Action<T, T> _updateValueWithRow;
 
         /// <summary>
         /// 插入操作器
@@ -140,11 +145,25 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="updateValue"></param>
         /// <returns></returns>
-        public IInsertor OnDuplicateKeyUpdate(Action<T, T> updateValue)
+        public IInsertor OnDuplicateKeyUpdate(Action<T> updateValue)
         {
             _isUpdateOnDuplicateKey = true;
 
             _updateValue = updateValue;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 当键值冲突时更新
+        /// </summary>
+        /// <param name="updateValue"></param>
+        /// <returns></returns>
+        public IInsertor OnDuplicateKeyUpdate(Action<T, T> updateValueWithRow)
+        {
+            _isUpdateOnDuplicateKey = true;
+
+            _updateValueWithRow = updateValueWithRow;
 
             return this;
         }
@@ -191,43 +210,82 @@ namespace LogicEntity.Operator
 
                 T t = new();
 
-                T row = new();
+                var properties = type.GetProperties();
 
-                _updateValue?.Invoke(t, row);
-
-                string rowName = type.Name + "Data";
-
-                row.As(rowName);
-
-                List<string> updateSets = new List<string>();
-
-                foreach (PropertyInfo property in type.GetProperties())
+                if (_updateValue is not null)
                 {
-                    Column column = property.GetValue(t) as Column;
+                    _updateValue?.Invoke(t);
 
-                    if (column is null)
-                        continue;
+                    List<string> updateSets = new List<string>();
 
-                    if (column.IsValueSet == false)
-                        continue;
-
-                    if (column.Value is Description)
+                    foreach (PropertyInfo property in properties)
                     {
-                        updateSets.Add($"{column} = {column.Value as Description}");
+                        Column column = property.GetValue(t) as Column;
 
-                        continue;
+                        if (column is null)
+                            continue;
+
+                        if (column.IsValueSet == false)
+                            continue;
+
+                        if (column.Value is Description)
+                        {
+                            updateSets.Add($"{column} = {column.Value as Description}");
+
+                            continue;
+                        }
+
+                        string key = "@param" + index.ToString();
+
+                        updateSets.Add(column.ToString() + " = " + key);
+
+                        command.Parameters.Add(KeyValuePair.Create(key, column.Value));
+
+                        index++;
                     }
 
-                    string key = "@param" + index.ToString();
-
-                    updateSets.Add(column.ToString() + " = " + key);
-
-                    command.Parameters.Add(KeyValuePair.Create(key, column.Value));
-
-                    index++;
+                    update = $"\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
                 }
+                else if (_updateValueWithRow is not null)
+                {
+                    T row = new();
 
-                update = $"\nAs {rowName}\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
+                    _updateValueWithRow?.Invoke(t, row);
+
+                    string rowName = type.Name + "Data";
+
+                    row.As(rowName);
+
+                    List<string> updateSets = new List<string>();
+
+                    foreach (PropertyInfo property in properties)
+                    {
+                        Column column = property.GetValue(t) as Column;
+
+                        if (column is null)
+                            continue;
+
+                        if (column.IsValueSet == false)
+                            continue;
+
+                        if (column.Value is Description)
+                        {
+                            updateSets.Add($"{column} = {column.Value as Description}");
+
+                            continue;
+                        }
+
+                        string key = "@param" + index.ToString();
+
+                        updateSets.Add(column.ToString() + " = " + key);
+
+                        command.Parameters.Add(KeyValuePair.Create(key, column.Value));
+
+                        index++;
+                    }
+
+                    update = $"\nAs {rowName}\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
+                }
             }
 
             command.CommandText = $"Insert Into {_table.FullName} ({columns}){_valueDescription.Description}{update}";
