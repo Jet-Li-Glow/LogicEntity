@@ -25,5 +25,15 @@ namespace DataBaseAccess.Operator
         public Guid? Guid { get; set; }
 
         public byte[] Bytes { get; set; }
+
+        public float Float { get; set; }
+
+        public double Double { get; set; }
+
+        public decimal Decimal { get; set; }
+
+        public bool Bool { get; set; }
+
+        public long Long { get; set; }
     }
 }

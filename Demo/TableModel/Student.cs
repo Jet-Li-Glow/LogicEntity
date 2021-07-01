@@ -18,7 +18,7 @@ namespace DataBaseAccess.TableModel
         int _month;
 
         public Student()
-        { 
+        {
         }
 
         public Student(int year, int month)
@@ -42,5 +42,15 @@ namespace DataBaseAccess.TableModel
         public Column Guid { get; init; }
 
         public Column Bytes { get; set; }
+
+        public Column Float { get; set; }
+
+        public Column Double { get; set; }
+
+        public Column Decimal { get; set; }
+
+        public Column Bool { get; set; }
+
+        public Column Long { get; set; }
     }
 }
