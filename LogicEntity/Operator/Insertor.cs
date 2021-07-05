@@ -12,7 +12,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 插入操作器
     /// </summary>
-    internal class Insertor<T> : OperatorBase, IInsertorColumns<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table, new()
+    internal class Insertor<T> : OperatorBase, IInsertorColumns<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table
     {
         /// <summary>
         /// 表
@@ -208,7 +208,7 @@ namespace LogicEntity.Operator
             {
                 Type type = typeof(T);
 
-                T t = new();
+                T t = Activator.CreateInstance<T>();
 
                 var properties = type.GetProperties();
 
@@ -248,7 +248,7 @@ namespace LogicEntity.Operator
                 }
                 else if (_updateValueWithRow is not null)
                 {
-                    T row = new();
+                    T row = Activator.CreateInstance<T>();
 
                     _updateValueWithRow?.Invoke(t, row);
 

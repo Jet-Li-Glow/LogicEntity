@@ -13,7 +13,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 更新操作器
     /// </summary>
-    internal class Updater<T> : OperatorBase, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table, new()
+    internal class Updater<T> : OperatorBase, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table
     {
         /// <summary>
         /// 表
@@ -228,15 +228,13 @@ namespace LogicEntity.Operator
             }
 
             //值
-            T t = new();
+            T t = Activator.CreateInstance<T>();
 
             _setValue?.Invoke(t);
 
-            var properties = t.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
-
             List<string> columns = new();
 
-            foreach (PropertyInfo property in properties)
+            foreach (PropertyInfo property in typeof(T).GetProperties())
             {
                 Column column = property.GetValue(t) as Column;
 

@@ -218,6 +218,7 @@ namespace DataBaseAccess
             Student changedStudent = new Student();
 
             changedStudent.StudentName.Value = changedStudent.StudentName;
+            changedStudent.Birthday.Value = DateTime.Now;
             changedStudent.MajorId.Value = changedStudent.MajorId - 1;
             changedStudent.Guid.Value = Guid.NewGuid();
             changedStudent.Bytes.Value = Encoding.UTF8.GetBytes("Bytes");
@@ -232,7 +233,11 @@ namespace DataBaseAccess
 
             IUpdater updater = DBOperator.Update(changedStudent)
                 .LeftJoin(updateMajor).On(changedStudent.MajorId == updateMajor.MajorId & updateMajor.MajorId == 1)
-                .Set(s => s.StudentName.Value = updateMajor.MajorName)
+                .Set(s =>
+                {
+                    s.StudentName.Value = updateMajor.MajorName;
+                    s.Birthday.Value = DateTime.Now;
+                })
                 .Where(changedStudent.StudentId == 4);
 
             string updaterText = updater.GetCommand().CommandText;

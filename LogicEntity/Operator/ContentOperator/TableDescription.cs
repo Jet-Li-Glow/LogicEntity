@@ -9,7 +9,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 表描述
     /// </summary>
-    public class TableDescription
+    public abstract class TableDescription
     {
         /// <summary>
         /// 最后的表名
