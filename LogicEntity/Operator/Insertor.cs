@@ -30,19 +30,9 @@ namespace LogicEntity.Operator
         ValueDescription _valueDescription = new();
 
         /// <summary>
-        /// 主键冲突时是否更新
+        /// 更新描述
         /// </summary>
-        bool _isUpdateOnDuplicateKey;
-
-        /// <summary>
-        /// 设置值
-        /// </summary>
-        Action<T> _updateValue;
-
-        /// <summary>
-        /// 设置值
-        /// </summary>
-        Action<T, T> _updateValueWithRow;
+        OnDuplicateKeyUpdateDescription _updateDescription;
 
         /// <summary>
         /// 插入操作器
@@ -147,9 +137,43 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IInsertor OnDuplicateKeyUpdate(Action<T> updateValue)
         {
-            _isUpdateOnDuplicateKey = true;
+            _updateDescription = new OnDuplicateKeyUpdateDescription();
 
-            _updateValue = updateValue;
+            _updateDescription.Parameters = new();
+
+            Type type = typeof(T);
+
+            T t = Activator.CreateInstance<T>();
+
+            updateValue?.Invoke(t);
+
+            List<string> updateSets = new List<string>();
+
+            foreach (PropertyInfo property in type.GetProperties())
+            {
+                Column column = property.GetValue(t) as Column;
+
+                if (column is null)
+                    continue;
+
+                if (column.IsValueSet == false)
+                    continue;
+
+                if (column.Value is Description)
+                {
+                    updateSets.Add($"{column} = {column.Value as Description}");
+
+                    continue;
+                }
+
+                string key = "@param" + DateTime.Now.Ticks;
+
+                updateSets.Add(column.ToString() + " = " + key);
+
+                _updateDescription.Parameters.Add(KeyValuePair.Create(key, column.Value));
+            }
+
+            _updateDescription.Description = $"\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
 
             return this;
         }
@@ -161,9 +185,49 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IInsertor OnDuplicateKeyUpdate(Action<T, T> updateValueWithRow)
         {
-            _isUpdateOnDuplicateKey = true;
+            _updateDescription = new OnDuplicateKeyUpdateDescription();
 
-            _updateValueWithRow = updateValueWithRow;
+            _updateDescription.Parameters = new();
+
+            Type type = typeof(T);
+
+            T t = Activator.CreateInstance<T>();
+
+            T row = Activator.CreateInstance<T>();
+
+            updateValueWithRow?.Invoke(t, row);
+
+            string rowName = type.Name + "Data";
+
+            row.As(rowName);
+
+            List<string> updateSets = new List<string>();
+
+            foreach (PropertyInfo property in type.GetProperties())
+            {
+                Column column = property.GetValue(t) as Column;
+
+                if (column is null)
+                    continue;
+
+                if (column.IsValueSet == false)
+                    continue;
+
+                if (column.Value is Description)
+                {
+                    updateSets.Add($"{column} = {column.Value as Description}");
+
+                    continue;
+                }
+
+                string key = "@param" + DateTime.Now.Ticks;
+
+                updateSets.Add(column.ToString() + " = " + key);
+
+                _updateDescription.Parameters.Add(KeyValuePair.Create(key, column.Value));
+            }
+
+            _updateDescription.Description = $"\nAs {rowName}\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
 
             return this;
         }
@@ -184,16 +248,15 @@ namespace LogicEntity.Operator
             string columns = string.Join(", ", _columns);
 
             //值
+            string valueDescription = _valueDescription.Description ?? string.Empty;
+
             if (_valueDescription.Parameters is not null)
             {
-                if (_valueDescription.Description is null)
-                    _valueDescription.Description = string.Empty;
-
                 foreach (KeyValuePair<string, object> parameter in _valueDescription.Parameters)
                 {
                     string key = "@param" + index.ToString();
 
-                    _valueDescription.Description = _valueDescription.Description.Replace(parameter.Key, key);
+                    valueDescription = valueDescription.Replace(parameter.Key, key);
 
                     command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
 
@@ -204,91 +267,23 @@ namespace LogicEntity.Operator
             //更新
             string update = string.Empty;
 
-            if (_isUpdateOnDuplicateKey)
+            if (_updateDescription is not null)
             {
-                Type type = typeof(T);
+                update = _updateDescription.Description ?? string.Empty;
 
-                T t = Activator.CreateInstance<T>();
-
-                var properties = type.GetProperties();
-
-                if (_updateValue is not null)
+                foreach (KeyValuePair<string, object> parameter in _updateDescription.Parameters)
                 {
-                    _updateValue?.Invoke(t);
+                    string key = "@param" + index.ToString();
 
-                    List<string> updateSets = new List<string>();
+                    update = update.Replace(parameter.Key, key);
 
-                    foreach (PropertyInfo property in properties)
-                    {
-                        Column column = property.GetValue(t) as Column;
+                    command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
 
-                        if (column is null)
-                            continue;
-
-                        if (column.IsValueSet == false)
-                            continue;
-
-                        if (column.Value is Description)
-                        {
-                            updateSets.Add($"{column} = {column.Value as Description}");
-
-                            continue;
-                        }
-
-                        string key = "@param" + index.ToString();
-
-                        updateSets.Add(column.ToString() + " = " + key);
-
-                        command.Parameters.Add(KeyValuePair.Create(key, column.Value));
-
-                        index++;
-                    }
-
-                    update = $"\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
-                }
-                else if (_updateValueWithRow is not null)
-                {
-                    T row = Activator.CreateInstance<T>();
-
-                    _updateValueWithRow?.Invoke(t, row);
-
-                    string rowName = type.Name + "Data";
-
-                    row.As(rowName);
-
-                    List<string> updateSets = new List<string>();
-
-                    foreach (PropertyInfo property in properties)
-                    {
-                        Column column = property.GetValue(t) as Column;
-
-                        if (column is null)
-                            continue;
-
-                        if (column.IsValueSet == false)
-                            continue;
-
-                        if (column.Value is Description)
-                        {
-                            updateSets.Add($"{column} = {column.Value as Description}");
-
-                            continue;
-                        }
-
-                        string key = "@param" + index.ToString();
-
-                        updateSets.Add(column.ToString() + " = " + key);
-
-                        command.Parameters.Add(KeyValuePair.Create(key, column.Value));
-
-                        index++;
-                    }
-
-                    update = $"\nAs {rowName}\nON DUPLICATE KEY UPDATE\n{string.Join(",\n", updateSets)}";
+                    index++;
                 }
             }
 
-            command.CommandText = $"Insert Into {_table.FullName} ({columns}){_valueDescription.Description}{update}";
+            command.CommandText = $"Insert Into {_table.FullName} ({columns}){valueDescription}{update}";
 
             command.Parameters.AddRange(ExtraParameters);
 
@@ -297,10 +292,29 @@ namespace LogicEntity.Operator
             return command;
         }
 
+        /// <summary>
+        /// 值描述
+        /// </summary>
         class ValueDescription
         {
             /// <summary>
             /// 值描述
+            /// </summary>
+            public string Description { get; set; }
+
+            /// <summary>
+            /// 参数
+            /// </summary>
+            public List<KeyValuePair<string, object>> Parameters { get; set; }
+        }
+
+        /// <summary>
+        /// 更新描述
+        /// </summary>
+        class OnDuplicateKeyUpdateDescription
+        {
+            /// <summary>
+            /// 更新描述
             /// </summary>
             public string Description { get; set; }
 

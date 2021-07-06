@@ -14,6 +14,7 @@ using LogicEntity.Interface;
 using System.Threading.Tasks;
 using System.Text;
 using LogicEntity.EnumCollection;
+using System.IO;
 
 namespace DataBaseAccess
 {
@@ -151,7 +152,7 @@ namespace DataBaseAccess
 
             Student data = new Student();
             //data.StudentId.Value = 5;
-            data.StudentName.Value = "小刘";
+            data.StudentName.Value = Path.GetRandomFileName();
             data.MajorId.Value = 2;
             data.Birthday.Value = DateTime.Now;
             data.Guid.Value = Guid.NewGuid();
