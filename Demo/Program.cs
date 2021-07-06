@@ -13,6 +13,7 @@ using LogicEntity.Model;
 using LogicEntity.Interface;
 using System.Threading.Tasks;
 using System.Text;
+using LogicEntity.EnumCollection;
 
 namespace DataBaseAccess
 {
@@ -108,6 +109,22 @@ namespace DataBaseAccess
             string njoinText = njoinSelect.GetCommand().CommandText;
 
             //List<StudentInfo> njoinResult = Database.TestDb.Query<StudentInfo>(njoinSelect).ToList();
+
+            //多条件查询
+            Student mulStudent = new Student();
+
+            ConditionCollection conditions = new ConditionCollection();
+
+            conditions.Add(mulStudent.StudentId == 10);
+            conditions.Add(mulStudent.StudentId == 11);
+
+            conditions.LogicalOperator = LogicalOperator.Or;
+
+            ISelector mulConditon = DBOperator.Select().From(mulStudent).With(conditions);
+
+            string nulCondText = mulConditon.GetCommand().CommandText;
+
+            //List<StudentInfo> mulCondResult = Database.TestDb.Query<StudentInfo>(mulConditon).ToList();
 
 
             //List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();

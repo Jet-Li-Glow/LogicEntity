@@ -38,7 +38,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public override string ToString()
         {
-            return string.Join($" {LogicalOperator.Description()} ", Conditions.Select(c =>
+            return string.Join($"\n   {LogicalOperator.Description()} ", Conditions.Select(c =>
             {
                 if (c is null)
                     return string.Empty;
