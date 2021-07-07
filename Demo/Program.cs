@@ -131,7 +131,7 @@ namespace DataBaseAccess
             //List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
 
 
-            //List<StudentInfo> allStudents = Database.TestDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+            //List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
 
             //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.Last_Insert_Id()));
 
@@ -319,6 +319,17 @@ namespace DataBaseAccess
         }
     }
 
+    /// <summary>
+    /// 自定义函数
+    /// </summary>
+    static class MyDbFunction
+    {
+        public static Description MyFunction(this Description description)
+        {
+            return description?.Next(s => $"MyFunction({s})");
+        }
+    }
+
     class MySqlDb : AbstractDataBase
     {
         private readonly string _connectionStr;
@@ -337,5 +348,10 @@ namespace DataBaseAccess
     static class Database
     {
         public static MySqlDb TestDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
+
+        /// <summary>
+        /// 只读库
+        /// </summary>
+        public static MySqlDb TestReadOnlyDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
     }
 }

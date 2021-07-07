@@ -11,7 +11,7 @@ namespace LogicEntity.Model
     /// <summary>
     /// 数据库函数
     /// </summary>
-    public static partial class DbFunction
+    public static class DbFunction
     {
         /// <summary>
         /// 第一个字符的ASCII码
