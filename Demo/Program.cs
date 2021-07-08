@@ -211,6 +211,16 @@ namespace DataBaseAccess
                     s.MajorId.Value = s.MajorId;
                 });
 
+            IInsertor batchB = DBOperator.InsertInto(insertTable)
+                .Columns(insertTable.StudentId, insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
+                .Row(data1, data2, data3)
+                .OnDuplicateKeyUpdate((s) =>
+                {
+                    s.StudentName.Value = s.StudentName.Values();
+                    s.Birthday.Value = s.Birthday.Values();
+                    s.MajorId.Value = s.MajorId;
+                });
+
             string batchText = batch.GetCommand().CommandText;
 
             //int batchAffected = Database.TestDb.ExecuteNonQuery(batch);
