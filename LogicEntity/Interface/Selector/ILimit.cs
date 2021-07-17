@@ -11,5 +11,7 @@ namespace LogicEntity.Interface
         public IForUpdate Limit(int limit);
 
         public IForUpdate Limit(int offset, int limit);
+
+        public IForUpdate Top(int limit);
     }
 }

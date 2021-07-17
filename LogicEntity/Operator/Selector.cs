@@ -366,6 +366,16 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 返回前指定数量的条目
+        /// </summary>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public IForUpdate Top(int limit)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// 加锁
         /// </summary>
         /// <returns></returns>
