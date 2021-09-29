@@ -163,6 +163,43 @@ namespace DataBaseAccess
 
             //int insertAffected = Database.TestDb.ExecuteNonQuery(DBOperator.Insert(data));
 
+            //插入 忽略冲突
+
+            Student ignoreStudent = new Student();
+
+            ignoreStudent.StudentId.Value = 5;
+            ignoreStudent.StudentName.Value = Path.GetRandomFileName();
+            ignoreStudent.MajorId.Value = 2;
+            ignoreStudent.Birthday.Value = DateTime.Now;
+            ignoreStudent.Guid.Value = Guid.NewGuid();
+
+            IInsertor ignoreInsertor = DBOperator.InsertIgnore(ignoreStudent)
+                .Columns(ignoreStudent.StudentId, ignoreStudent.StudentName, ignoreStudent.MajorId, ignoreStudent.Birthday, ignoreStudent.Guid)
+                .Row(ignoreStudent);
+
+            string ignoreText = ignoreInsertor.GetCommand().CommandText;
+
+            //int ignoreAffected = Database.TestDb.ExecuteNonQuery(ignoreInsertor);
+
+            //插入 冲突时替换
+
+            Student replaceStudent = new Student();
+
+            replaceStudent.StudentId.Value = 5;
+            replaceStudent.StudentName.Value = Path.GetRandomFileName();
+            replaceStudent.MajorId.Value = 2;
+            replaceStudent.Birthday.Value = DateTime.Now;
+            replaceStudent.Guid.Value = Guid.NewGuid();
+
+            IInsertor replaceInsertor = DBOperator.ReplaceInto(replaceStudent)
+                .Columns(replaceStudent.StudentId, replaceStudent.StudentName, replaceStudent.MajorId, replaceStudent.Birthday, replaceStudent.Guid)
+                .Row(replaceStudent);
+
+            string replaceText = replaceInsertor.GetCommand().CommandText;
+
+            //int replaceAffected = Database.TestDb.ExecuteNonQuery(replaceInsertor);
+
+            //插入并返回自增主键
             //ulong newId = Database.TestDb.InsertNext(data);
 
             //保存
@@ -213,7 +250,7 @@ namespace DataBaseAccess
 
             IInsertor batchB = DBOperator.InsertInto(insertTable)
                 .Columns(insertTable.StudentId, insertTable.StudentName, insertTable.MajorId, insertTable.Birthday)
-                .Row(data1, data2, data3)
+                .Rows(new List<Student>() { data1, data2, data3, data3, data3, data3, data3, data3, data3, data3, data3 })
                 .OnDuplicateKeyUpdate((s) =>
                 {
                     s.StudentName.Value = s.StudentName.Values();
@@ -222,6 +259,8 @@ namespace DataBaseAccess
                 });
 
             string batchText = batch.GetCommand().CommandText;
+
+            string batchBText = batchB.GetCommand().CommandText;
 
             //int batchAffected = Database.TestDb.ExecuteNonQuery(batch);
 

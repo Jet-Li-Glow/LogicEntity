@@ -25,6 +25,16 @@ namespace LogicEntity.Operator
         List<string> _columns = new();
 
         /// <summary>
+        /// 是否忽略冲突
+        /// </summary>
+        bool _isIgnore = false;
+
+        /// <summary>
+        /// 是否替换
+        /// </summary>
+        bool _isReplace = false;
+
+        /// <summary>
         /// 值描述
         /// </summary>
         ValueDescription _valueDescription = new();
@@ -41,6 +51,21 @@ namespace LogicEntity.Operator
         public Insertor(T table)
         {
             _table = table;
+        }
+
+        /// <summary>
+        /// 插入操作器
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="isIgnore"></param>
+        /// <param name="isReplace"></param>
+        internal Insertor(T table, bool isIgnore, bool isReplace)
+        {
+            _table = table;
+
+            _isIgnore = isIgnore;
+
+            _isReplace = isReplace;
         }
 
         /// <summary>
@@ -244,6 +269,15 @@ namespace LogicEntity.Operator
 
             int index = 0;
 
+            //操作
+            string operate = "Insert Into";
+
+            if (_isIgnore)
+                operate = "Insert Ignore";
+
+            if (_isReplace)
+                operate = "Replace Into";
+
             //列
             string columns = string.Join(", ", _columns);
 
@@ -283,7 +317,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"Insert Into {_table.FullName} ({columns}){valueDescription}{update}";
+            command.CommandText = $"{operate} {_table.FullName} ({columns}){valueDescription}{update}";
 
             command.Parameters.AddRange(ExtraParameters);
 

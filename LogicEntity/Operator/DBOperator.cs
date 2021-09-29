@@ -104,11 +104,34 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 插入操作器
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
         /// <returns></returns>
         public static IInsertorColumns<T> InsertInto<T>(T table) where T : Table
         {
             return new Insertor<T>(table);
+        }
+
+        /// <summary>
+        /// 插入操作器
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="table">插入的表</param>
+        /// <returns></returns>
+        public static IInsertorColumns<T> InsertIgnore<T>(T table) where T : Table
+        {
+            return new Insertor<T>(table, true, false);
+        }
+
+        /// <summary>
+        /// 插入操作器
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="table">插入的表</param>
+        /// <returns></returns>
+        public static IInsertorColumns<T> ReplaceInto<T>(T table) where T : Table
+        {
+            return new Insertor<T>(table, false, true);
         }
 
         /// <summary>
