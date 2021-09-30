@@ -6,12 +6,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity.Extension
+namespace LogicEntity.Tool
 {
     /// <summary>
     /// 扩展方法
     /// </summary>
-    internal static class ToolExtension
+    internal static class ToolService
     {
         public static string Description(this Enum enumValue)
         {
@@ -42,6 +42,15 @@ namespace LogicEntity.Extension
                 return $"'{obj}'";
 
             return obj.ToString();
+        }
+
+        /// <summary>
+        /// 唯一名称
+        /// </summary>
+        /// <returns></returns>
+        public static string UniqueName()
+        {
+            return "@param" + Guid.NewGuid().ToString("N");
         }
     }
 }

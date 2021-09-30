@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Interface;
 using LogicEntity.Model;
+using LogicEntity.Tool;
 
 namespace LogicEntity.Operator
 {
@@ -124,7 +125,7 @@ namespace LogicEntity.Operator
                         v = (v as Column).Value;
                     }
 
-                    string key = "@param" + DateTime.Now.Ticks;
+                    string key = ToolService.UniqueName();
 
                     parameters.Add(key);
 
@@ -191,7 +192,7 @@ namespace LogicEntity.Operator
                     continue;
                 }
 
-                string key = "@param" + DateTime.Now.Ticks;
+                string key = ToolService.UniqueName();
 
                 updateSets.Add(column.ToString() + " = " + key);
 
@@ -245,7 +246,7 @@ namespace LogicEntity.Operator
                     continue;
                 }
 
-                string key = "@param" + DateTime.Now.Ticks;
+                string key = ToolService.UniqueName();
 
                 updateSets.Add(column.ToString() + " = " + key);
 

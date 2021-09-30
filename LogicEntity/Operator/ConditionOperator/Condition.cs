@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Extension;
+using LogicEntity.Tool;
 using LogicEntity.Model;
 using LogicEntity.EnumCollection;
 using LogicEntity.Interface;
@@ -55,7 +55,7 @@ namespace LogicEntity.Operator
                 return;
             }
 
-            string key = "@param" + DateTime.Now.Ticks;
+            string key = ToolService.UniqueName();
 
             _parameters.Add(KeyValuePair.Create(key, right));
 
@@ -95,7 +95,7 @@ namespace LogicEntity.Operator
 
             foreach (KeyValuePair<string, object> parameter in command.Parameters)
             {
-                string selectorKey = "@param" + DateTime.Now.Ticks;
+                string selectorKey = ToolService.UniqueName();
 
                 command.CommandText = command.CommandText.Replace(parameter.Key, selectorKey);
 
@@ -124,7 +124,7 @@ namespace LogicEntity.Operator
 
             foreach (object obj in right)
             {
-                string key = "@param" + DateTime.Now.Ticks;
+                string key = ToolService.UniqueName();
 
                 condition._parameters.Add(KeyValuePair.Create(key, obj));
 
@@ -175,7 +175,7 @@ namespace LogicEntity.Operator
             }
             else
             {
-                keyLeft = "@param" + DateTime.Now.Ticks;
+                keyLeft = ToolService.UniqueName();
 
                 condition._parameters.Add(KeyValuePair.Create(keyLeft, left));
             }
@@ -188,7 +188,7 @@ namespace LogicEntity.Operator
             }
             else
             {
-                keyRight = "@param" + DateTime.Now.Ticks;
+                keyRight = ToolService.UniqueName();
 
                 condition._parameters.Add(KeyValuePair.Create(keyRight, right));
             }
@@ -217,7 +217,7 @@ namespace LogicEntity.Operator
             }
             else
             {
-                keyLeft = "@param" + DateTime.Now.Ticks;
+                keyLeft = ToolService.UniqueName();
 
                 condition._parameters.Add(KeyValuePair.Create(keyLeft, left));
             }
@@ -230,7 +230,7 @@ namespace LogicEntity.Operator
             }
             else
             {
-                keyRight = "@param" + DateTime.Now.Ticks;
+                keyRight = ToolService.UniqueName();
 
                 condition._parameters.Add(KeyValuePair.Create(keyRight, right));
             }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Extension;
+using LogicEntity.Tool;
 using LogicEntity.Operator;
 
 namespace LogicEntity.Model
