@@ -25,15 +25,49 @@ namespace DataBaseAccess
             Console.WriteLine("-- Start --");
 
 
+            //
+
+            MySqlDb myDb = Database.TestDb;
+
             Student student = new();
 
             Major major = new();
+
+            ISelector selector = DBOperator.Select(
+                student.StudentId,
+                (student.StudentId + 1).As("StudentIdPlus"),
+                student.StudentId.As("Alpha"),
+                student.StudentId.As("Beta"),
+                new Description("student.StudentId").As("Gamma"),
+                student.StudentName,
+                student.Birthday,
+                student.Guid,
+                student.Double.Sum().As("Double"),
+                student.Decimal.Max().As("Decimal")
+                )
+                .From(student)
+                .LeftJoin(major).On(major.MajorId == student.MajorId)
+                .Where(true & (student.StudentId == 5 | student.StudentName == "小明")
+                            & student.Birthday < DateTime.Now
+                            & student.StudentId.In(5, 6, 7, "8", ")a")
+                            & student.StudentName.Like("%小明%"))
+                .GroupBy(student.StudentId, major.MajorId)
+                .Having(student.StudentId > 0)
+                .OrderBy(student.StudentId);
+
+            List<StudentInfo> students = myDb.Query<StudentInfo>(selector).ToList();
+
+            int Id = students[0].StudentId;
+
+            //
+
+            Major testMajor = new();
 
             Major studentMajor = new();
 
             var nested = DBOperator.Select(student.StudentId).From(student).Where(student.StudentId == 1).As("nestedStudent");
 
-            ISelector selector = DBOperator.Select(
+            ISelector joinSelector = DBOperator.Select(
                student.All(),
                nested.All(),
                nested.Column("nestedId").As("nestedTableId"),
@@ -46,23 +80,23 @@ namespace DataBaseAccess
                student.StudentName,
                student.MajorId,
                studentMajor.MajorType,
-               major.MajorName,
+               testMajor.MajorName,
                student.StudentName.Distinct().OrderBy(student.StudentId).ThenByDescending(student.StudentName).Separator("*").Group_Concat())
                .From(nested,
                studentMajor,
                student.As("cStudent"))
-               .LeftJoin(major).On(student.MajorId == major.MajorId)
+               .LeftJoin(testMajor).On(student.MajorId == testMajor.MajorId)
                .LeftJoin(studentMajor.As("StudentMajor")).On(student.MajorId == studentMajor.MajorId)
                .Where((student.StudentId >= 10 & student.StudentId <= 20 | student.StudentId == 1) | (student.StudentId >= 50 & student.StudentId <= 60 & student.StudentId == null) | student.StudentName.Like("张三")
                | student.StudentId.In(new List<int>() { 1, 2, 3, 4, 5 }))
-               .GroupBy(student.StudentId, major.MajorId)
+               .GroupBy(student.StudentId, testMajor.MajorId)
                .Having(studentMajor.MajorType == 1 & new Description("myId").Max() == 2 & student.StudentId.Min() > 1)
                .OrderBy(student.StudentId)
                .ThenBy(studentMajor.MajorId)
                .ThenByDescending(studentMajor.MajorType)
                .Limit(5, 10);
 
-            Command command = selector.GetCommand();
+            Command command = joinSelector.GetCommand();
 
             string entitySql = command.CommandText;
 
@@ -75,11 +109,11 @@ namespace DataBaseAccess
                     student.MajorId,
                     student.Guid,
                     student.Bytes,
-                    major.MajorName,
-                    major.MajorType
+                    testMajor.MajorName,
+                    testMajor.MajorType
                     )
                 .From(student)
-                .LeftJoin(major).On(true & (major.MajorId == student.MajorId & major.MajorId > 0) & true)
+                .LeftJoin(testMajor).On(true & (testMajor.MajorId == student.MajorId & testMajor.MajorId > 0) & true)
                 .Where(student.StudentId.In(1, ")3", 2, 4) &
                 student.StudentId.In(DBOperator.Select(student.StudentId)
                                      .From(student)
@@ -396,11 +430,11 @@ namespace DataBaseAccess
 
     static class Database
     {
-        public static MySqlDb TestDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
+        public readonly static MySqlDb TestDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
 
         /// <summary>
         /// 只读库
         /// </summary>
-        public static MySqlDb TestReadOnlyDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
+        public readonly static MySqlDb TestReadOnlyDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
     }
 }
