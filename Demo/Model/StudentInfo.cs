@@ -4,9 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DataBaseAccess.TableModel;
 
-namespace DataBaseAccess.Operator
+namespace Demo.Model
 {
     public class StudentInfo
     {
@@ -15,6 +14,8 @@ namespace DataBaseAccess.Operator
         public string StudentName { get; set; }
 
         public DateTime? Birthday { get; set; }
+
+        public Gender Gender { get; set; }
 
         public int MajorId { get; set; }
 

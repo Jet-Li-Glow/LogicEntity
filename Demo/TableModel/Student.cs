@@ -4,9 +4,10 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Demo.Model;
 using LogicEntity.Model;
 
-namespace DataBaseAccess.TableModel
+namespace Demo.TableModel
 {
     public class Student : Table
     {
@@ -27,7 +28,7 @@ namespace DataBaseAccess.TableModel
             _month = month;
         }
 
-        public override string schemaName => "testdb";
+        public override string SchemaName => "testdb";
 
         public override string TableName => "Student";
 
@@ -35,9 +36,11 @@ namespace DataBaseAccess.TableModel
 
         public Column StudentName { get; init; }
 
-        public Column MajorId { get; init; }
-
         public Column Birthday { get; init; }
+
+        public Column Gender { get; init; }
+
+        public Column MajorId { get; init; }
 
         public Column Guid { get; init; }
 

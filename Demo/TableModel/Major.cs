@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Model;
 
-namespace DataBaseAccess.TableModel
+namespace Demo.TableModel
 {
     /// <summary>
     /// 专业

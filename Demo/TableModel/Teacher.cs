@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataBaseAccess.TableModel
+namespace Demo.TableModel
 {
     public class Teacher
     {

@@ -1,22 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using DataBaseAccess.TableModel;
-using MySql.Data.MySqlClient;
-using LogicEntity;
-using DataBaseAccess.Operator;
-using System.Linq.Expressions;
-using System.Reflection;
-using LogicEntity.Operator;
-using LogicEntity.Model;
-using LogicEntity.Interface;
-using System.Threading.Tasks;
-using System.Text;
-using LogicEntity.EnumCollection;
 using System.IO;
+using System.Linq;
+using System.Text;
+using Demo.Model;
+using Demo.TableModel;
+using LogicEntity;
+using LogicEntity.EnumCollection;
+using LogicEntity.Interface;
+using LogicEntity.Model;
+using LogicEntity.Operator;
+using MySql.Data.MySqlClient;
 
-namespace DataBaseAccess
+namespace Demo
 {
     class Program
     {
@@ -41,16 +38,17 @@ namespace DataBaseAccess
                 new Description("student.StudentId").As("Gamma"),
                 student.StudentName,
                 student.Birthday,
+                student.Gender,
                 student.Guid,
                 student.Double.Sum().As("Double"),
                 student.Decimal.Max().As("Decimal")
                 )
                 .From(student)
                 .LeftJoin(major).On(major.MajorId == student.MajorId)
-                .Where(true & (student.StudentId == 5 | student.StudentName == "小明")
+                .Where(true & (student.StudentId == 2 | student.StudentName == "小红")
                             & student.Birthday < DateTime.Now
-                            & student.StudentId.In(5, 6, 7, "8", ")a")
-                            & student.StudentName.Like("%小明%"))
+                            & student.StudentId.In(2, 5, 6, 7, "8", ")a")
+                            & student.StudentName.Like("%小红%"))
                 .GroupBy(student.StudentId, major.MajorId)
                 .Having(student.StudentId > 0)
                 .OrderBy(student.StudentId);
@@ -121,10 +119,11 @@ namespace DataBaseAccess
 
             string tests = testselector.GetCommand().CommandText;
 
+            
             //查询
-            //List<StudentInfo> students = Database.TestDb.Query<StudentInfo>(testselector).ToList();
+            List<StudentInfo> testStudents = Database.TestDb.Query<StudentInfo>(testselector).ToList();
 
-            //DataTable dt = Database.TestDb.Query(testselector);
+            DataTable dt = Database.TestDb.Query(testselector);
 
             Student joinStudent = new Student(2019, 5);  //月表
 
@@ -143,7 +142,7 @@ namespace DataBaseAccess
 
             string njoinText = njoinSelect.GetCommand().CommandText;
 
-            //List<StudentInfo> njoinResult = Database.TestDb.Query<StudentInfo>(njoinSelect).ToList();
+            List<StudentInfo> njoinResult = Database.TestDb.Query<StudentInfo>(njoinSelect).ToList();
 
             //多条件查询
             Student mulStudent = new Student();
@@ -159,13 +158,13 @@ namespace DataBaseAccess
 
             string nulCondText = mulConditon.GetCommand().CommandText;
 
-            //List<StudentInfo> mulCondResult = Database.TestDb.Query<StudentInfo>(mulConditon).ToList();
+            List<StudentInfo> mulCondResult = Database.TestDb.Query<StudentInfo>(mulConditon).ToList();
 
 
-            //List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
+            List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
 
 
-            //List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+            List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
 
             //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.Last_Insert_Id()));
 
@@ -180,7 +179,7 @@ namespace DataBaseAccess
 
             string unionText = unionSelect.GetCommand().CommandText;
 
-            //List<StudentInfo> unionResult = Database.TestDb.Query<StudentInfo>(unionSelect).ToList();
+            List<StudentInfo> unionResult = Database.TestDb.Query<StudentInfo>(unionSelect).ToList();
 
             //插入
 
@@ -195,7 +194,7 @@ namespace DataBaseAccess
 
             string insertText = insertor.GetCommand().CommandText;
 
-            //int insertAffected = Database.TestDb.ExecuteNonQuery(DBOperator.Insert(data));
+            int insertAffected = Database.TestDb.ExecuteNonQuery(DBOperator.Insert(data));
 
             //插入 忽略冲突
 
@@ -213,7 +212,7 @@ namespace DataBaseAccess
 
             string ignoreText = ignoreInsertor.GetCommand().CommandText;
 
-            //int ignoreAffected = Database.TestDb.ExecuteNonQuery(ignoreInsertor);
+            int ignoreAffected = Database.TestDb.ExecuteNonQuery(ignoreInsertor);
 
             //插入 冲突时替换
 
@@ -231,10 +230,10 @@ namespace DataBaseAccess
 
             string replaceText = replaceInsertor.GetCommand().CommandText;
 
-            //int replaceAffected = Database.TestDb.ExecuteNonQuery(replaceInsertor);
+            int replaceAffected = Database.TestDb.ExecuteNonQuery(replaceInsertor);
 
             //插入并返回自增主键
-            //ulong newId = Database.TestDb.InsertNext(data);
+            ulong newId = Database.TestDb.InsertNext(data);
 
             //保存
 
@@ -249,7 +248,7 @@ namespace DataBaseAccess
 
             string saverText = saver.GetCommand().CommandText;
 
-            //int saveAffected = Database.TestDb.ExecuteNonQuery(saver);
+            int saveAffected = Database.TestDb.ExecuteNonQuery(saver);
 
             //批量插入
             Student insertTable = new Student();
@@ -296,7 +295,9 @@ namespace DataBaseAccess
 
             string batchBText = batchB.GetCommand().CommandText;
 
-            //int batchAffected = Database.TestDb.ExecuteNonQuery(batch);
+            int batchAffected = Database.TestDb.ExecuteNonQuery(batch);
+
+            int batchAffectedB = Database.TestDb.ExecuteNonQuery(batchB);
 
             //查询插入
 
@@ -313,14 +314,14 @@ namespace DataBaseAccess
 
             string selectInsertText = selectInsert.GetCommand().CommandText;
 
-            //int selectInsertAffected = Database.TestDb.ExecuteNonQuery(selectInsert);
+            int selectInsertAffected = Database.TestDb.ExecuteNonQuery(selectInsert);
 
             //更新
             Student changedStudent = new Student();
 
             changedStudent.StudentName.Value = changedStudent.StudentName;
             changedStudent.Birthday.Value = DateTime.Now;
-            changedStudent.MajorId.Value = changedStudent.MajorId - 1;
+            changedStudent.MajorId.Value = changedStudent.MajorId - 1 + 1;
             changedStudent.Guid.Value = Guid.NewGuid();
             changedStudent.Bytes.Value = Encoding.UTF8.GetBytes("Bytes");
 
@@ -328,7 +329,7 @@ namespace DataBaseAccess
 
             string changerText = changer.GetCommand().CommandText;
 
-            //int changeAffected = Database.TestDb.ExecuteNonQuery(changer);
+            int changeAffected = Database.TestDb.ExecuteNonQuery(changer);
 
             Major updateMajor = new Major();
 
@@ -343,12 +344,12 @@ namespace DataBaseAccess
 
             string updaterText = updater.GetCommand().CommandText;
 
-            //int updateAffected = Database.TestDb.ExecuteNonQuery(updater);
+            int updateAffected = Database.TestDb.ExecuteNonQuery(updater);
 
             //删除
             Student deleteTable = new Student();
 
-            IDeleter deleter = DBOperator.Delete(deleteTable).Where(deleteTable.StudentId == 71116);
+            IDeleter deleter = DBOperator.Delete(deleteTable).Where(deleteTable.StudentId.In(71116, newId));
 
             string testdel = deleter.GetCommand().CommandText;
 
@@ -365,36 +366,36 @@ namespace DataBaseAccess
 
             IInsertor traInsert = DBOperator.Insert(traStuB);
 
-            //bool success = Database.TestDb.ExecuteTransaction(new List<IDbOperator>() { traDel, traInsert }, out int affected, out Exception exception);
+            bool success = Database.TestDb.ExecuteTransaction(new List<IDbOperator>() { traDel, traInsert }, out int affected, out Exception exception);
 
-            //bool successB = Database.TestDb.ExecuteTransaction(traDel, traInsert);
+            bool successB = Database.TestDb.ExecuteTransaction(traDel, traInsert);
 
             //事务2
-            //using (DbTransaction transaction = Database.TestDb.BeginTransaction())
-            //{
-            //    try
-            //    {
-            //        List<Student> s = transaction.Query<Student>("select * from student where studentId < {0}", 10).ToList();
+            using (DbTransaction transaction = Database.TestDb.BeginTransaction())
+            {
+                try
+                {
+                    List<Student> s = transaction.Query<Student>("select * from student where studentId < {0}", 10).ToList();
 
-            //        List<DateTime?> ds = transaction.Query<DateTime?>("select birthday from student where studentId < {0}", 10).ToList();
+                    List<DateTime?> ds = transaction.Query<DateTime?>("select birthday from student where studentId < {0}", 10).ToList();
 
-            //        Student first = new Student();
+                    Student first = new Student();
 
-            //        first.Birthday.Value = (s.First().Birthday.Value as DateTime?).Value.AddMonths(1);
+                    first.Birthday.Value = (s.First().Birthday.Value as DateTime?).Value.AddMonths(1);
 
-            //        transaction.ExecuteNonQuery(DBOperator.ApplyChanges(first).On(first.StudentId == 2));
+                    transaction.ExecuteNonQuery(DBOperator.ApplyChanges(first).On(first.StudentId == 2));
 
-            //        transaction.ExecuteNonQuery("select");
+                    transaction.ExecuteNonQuery("select");
 
-            //        transaction.Commit();
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        transaction.Rollback();
-            //    }
-            //}
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                }
+            }
 
-            int a = 0;
+            Console.WriteLine("测试通过");
 
             Console.WriteLine("-- End --");
 

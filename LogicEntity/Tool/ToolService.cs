@@ -50,7 +50,7 @@ namespace LogicEntity.Tool
         /// <returns></returns>
         public static string UniqueName()
         {
-            return "@param" + Guid.NewGuid().ToString("N");
+            return "@Guid_" + Guid.NewGuid().ToString("N");
         }
     }
 }

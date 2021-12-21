@@ -37,7 +37,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 库名
         /// </summary>
-        public virtual string schemaName => string.Empty;
+        public virtual string SchemaName => string.Empty;
 
         /// <summary>
         /// 表名
@@ -47,7 +47,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 表全名
         /// </summary>
-        public string FullName => schemaName.IsValid() ? schemaName + "." + TableName : TableName;
+        public string FullName => SchemaName.IsValid() ? SchemaName + "." + TableName : TableName;
 
         /// <summary>
         /// 别名
