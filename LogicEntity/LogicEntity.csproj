@@ -5,11 +5,11 @@
     <Version>0.6.0</Version>
     <Authors>Jet Li</Authors>
     <Company />
-    <Description>Build SQL and Execute with .NET 5</Description>
+    <Description>Build SQL and Execute</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Jet-Li-Glow/LogicEntity</PackageProjectUrl>
-    <PackageTags>sql, ado.net, .net5</PackageTags>
+    <PackageTags>sql, ado.net</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
