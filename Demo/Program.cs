@@ -39,9 +39,14 @@ namespace Demo
                 student.StudentName,
                 student.Birthday,
                 student.Gender,
+                student.MajorId,
                 student.Guid,
+                student.Bytes,
+                student.Float,
                 student.Double.Sum().As("Double"),
-                student.Decimal.Max().As("Decimal")
+                student.Decimal.Max().As("Decimal"),
+                student.Bool,
+                student.Long
                 )
                 .From(student)
                 .LeftJoin(major).On(major.MajorId == student.MajorId)

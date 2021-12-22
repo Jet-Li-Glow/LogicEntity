@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -34,6 +35,40 @@ namespace LogicEntity
             typeof(ulong),
             typeof(string),
         };
+
+        /// <summary>
+        /// sql转Command
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        static Command ConvertToCommand(string sql, object[] args)
+        {
+            List<KeyValuePair<string, object>> keyValues = new();
+
+            int index = 0;
+
+            foreach (object obj in args)
+            {
+                keyValues.Add(KeyValuePair.Create("@param" + index.ToString(), obj));
+
+                index++;
+            }
+
+            sql = string.Format(sql, keyValues.Select(s => s.Key).ToArray());
+
+            return new Command() { CommandText = sql, Parameters = keyValues };
+        }
+
+        /// <summary>
+        /// 是否是数据库数据类型
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        static bool IsDbBaseType(Type type)
+        {
+            return BaseTypes.Contains(type);
+        }
 
         /// <summary>
         /// 使用查询操作器查询，并返回 T 类型的集合
@@ -179,44 +214,28 @@ namespace LogicEntity
             {
                 if (IsDbBaseType(type) == false)
                 {
+                    List<Action<T, IDataReader>> fillActions = new();
+
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        PropertyInfo property = type.GetProperty(reader.GetName(i), BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                        if (property is null)
+                            continue;
+
+                        if (property.CanWrite == false)
+                            continue;
+
+                        fillActions.Add(_GetFillAction(property, i));
+                    }
+
                     while (reader.Read())
                     {
                         T t = Activator.CreateInstance<T>();
 
-                        for (int i = 0; i < reader.FieldCount; i++)
+                        foreach (Action<T, IDataReader> fill in fillActions)
                         {
-                            PropertyInfo property = type.GetProperty(reader.GetName(i), BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                            if (property is null)
-                                continue;
-
-                            if (property.CanWrite == false)
-                                continue;
-
-                            if (property.PropertyType == typeof(Column))
-                            {
-                                (property.GetValue(t) as Column).Value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-
-                                continue;
-                            }
-
-                            if (reader.IsDBNull(i))
-                            {
-                                property.SetValue(t, null);
-
-                                continue;
-                            }
-
-                            Type dataType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-
-                            try
-                            {
-                                property.SetValue(t, _ReadValue(reader, dataType, i));
-                            }
-                            catch (Exception exception)
-                            {
-                                throw new InvalidCastException("属性 " + property.Name + " 类型转换异常", exception);
-                            }
+                            fill(t, reader);
                         }
 
                         yield return t;
@@ -224,6 +243,8 @@ namespace LogicEntity
                 }
                 else
                 {
+                    Func<IDataReader, object> cellReader = _GetCellReader(type, 0);
+
                     while (reader.Read())
                     {
                         if (reader.IsDBNull(0))
@@ -237,7 +258,7 @@ namespace LogicEntity
 
                         try
                         {
-                            t = _ReadValue(reader, type, 0);
+                            t = cellReader(reader);
                         }
                         catch (Exception exception)
                         {
@@ -249,48 +270,95 @@ namespace LogicEntity
                 }
             }
 
-            object _ReadValue(IDataReader reader, Type type, int i)
+            Action<T, IDataReader> _GetFillAction(PropertyInfo property, int i)
             {
+                if (property.PropertyType == typeof(Column))
+                    return (t, reader) =>
+                    {
+                        (property.GetValue(t) as Column).Value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    };
+
+                Type dataType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+                Func<IDataReader, object> cellReader = _GetCellReader(dataType, i);
+
+                return (t, reader) =>
+                {
+                    if (reader.IsDBNull(i))
+                    {
+                        property.SetValue(t, null);
+
+                        return;
+                    }
+
+                    object cell = null;
+
+                    try
+                    {
+                        cell = cellReader(reader);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new InvalidCastException("属性 " + property.Name + " 类型转换异常", exception);
+                    }
+
+                    property.SetValue(t, cell);
+                };
+            }
+
+            Func<IDataReader, object> _GetCellReader(Type type, int i)
+            {
+                if (type == typeof(Column))
+                    return (reader) => reader.IsDBNull(i) ? null : reader.GetValue(i);
+
                 if (type == typeof(bool))
-                    return reader.GetBoolean(i);
+                    return (reader) => reader.GetBoolean(i);
 
                 if (type == typeof(byte))
-                    return reader.GetByte(i);
+                    return (reader) => reader.GetByte(i);
 
                 if (type == typeof(char))
-                    return reader.GetChar(i);
+                    return (reader) => reader.GetChar(i);
 
                 if (type == typeof(DateTime))
-                    return reader.GetDateTime(i);
+                    return (reader) => reader.GetDateTime(i);
 
                 if (type == typeof(decimal))
-                    return reader.GetDecimal(i);
+                    return (reader) => reader.GetDecimal(i);
 
                 if (type == typeof(double))
-                    return reader.GetDouble(i);
+                    return (reader) => reader.GetDouble(i);
 
                 if (type == typeof(float))
-                    return reader.GetFloat(i);
+                    return (reader) => reader.GetFloat(i);
 
                 if (type == typeof(Guid))
-                    return reader.GetGuid(i);
+                    return (reader) => reader.GetGuid(i);
 
                 if (type == typeof(short))
-                    return reader.GetInt16(i);
+                    return (reader) => reader.GetInt16(i);
 
                 if (type == typeof(int))
-                    return reader.GetInt32(i);
+                    return (reader) => reader.GetInt32(i);
 
                 if (type == typeof(long))
-                    return reader.GetInt64(i);
+                    return (reader) => reader.GetInt64(i);
 
                 if (type == typeof(string))
-                    return reader.GetString(i);
+                    return (reader) => reader.GetString(i);
 
                 if (type.IsSubclassOf(typeof(Enum)))
-                    return Enum.Parse(type, reader.GetString(i));
+                    return (reader) =>
+                    {
+                        object enumValue = Enum.Parse(type, reader.GetString(i));
 
-                return Convert.ChangeType(reader.GetValue(i), type);
+                        if (Enum.IsDefined(type, enumValue) == false)
+                            throw new InvalidEnumArgumentException("尝试将【" + reader.GetString(i) + "】转换为 " + type.Name);
+
+                        return enumValue;
+                    };
+
+                return (reader) => Convert.ChangeType(reader.GetValue(i), type);
             }
         }
 
@@ -621,34 +689,6 @@ namespace LogicEntity
                 command.CommandTimeout = commandTimeout;
 
             return command.ExecuteScalar();
-        }
-
-        protected static Command ConvertToCommand(string sql, object[] args)
-        {
-            List<KeyValuePair<string, object>> keyValues = new();
-
-            int index = 0;
-
-            foreach (object obj in args)
-            {
-                keyValues.Add(KeyValuePair.Create("@param" + index.ToString(), obj));
-
-                index++;
-            }
-
-            sql = string.Format(sql, keyValues.Select(s => s.Key).ToArray());
-
-            return new Command() { CommandText = sql, Parameters = keyValues };
-        }
-
-        /// <summary>
-        /// 是否是数据库数据类型
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        protected static bool IsDbBaseType(Type type)
-        {
-            return BaseTypes.Contains(type);
         }
     }
 }
