@@ -20,7 +20,7 @@ namespace LogicEntity.Operator
         /// 所有的列
         /// </summary>
         /// <returns></returns>
-        public virtual Description All()
+        public Description All()
         {
             return new AllColumnDescription(this);
         }

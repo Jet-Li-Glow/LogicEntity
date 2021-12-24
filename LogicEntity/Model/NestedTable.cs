@@ -56,15 +56,6 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 所有的列
-        /// </summary>
-        /// <returns></returns>
-        public override Description All()
-        {
-            return new AllColumnDescription(this);
-        }
-
-        /// <summary>
         /// 转为字符串（延迟加载）
         /// </summary>
         /// <returns></returns>
