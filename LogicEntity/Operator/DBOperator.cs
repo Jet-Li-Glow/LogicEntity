@@ -42,7 +42,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="table">数据实体</param>
         /// <returns></returns>
-        public static IInsertor Insert<T>(T row) where T : Table
+        public static IInsertor Insert<T>(T row) where T : Table, new()
         {
             List<Column> colums = new();
 
@@ -68,7 +68,7 @@ namespace LogicEntity.Operator
         /// <typeparam name="T"></typeparam>
         /// <param name="row"></param>
         /// <returns></returns>
-        public static IInsertor Save<T>(T row) where T : Table
+        public static IInsertor Save<T>(T row) where T : Table, new()
         {
             List<Column> colums = new();
 
@@ -107,7 +107,7 @@ namespace LogicEntity.Operator
         /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
         /// <returns></returns>
-        public static IInsertorColumns<T> InsertInto<T>(T table) where T : Table
+        public static IInsertorColumns<T> InsertInto<T>(T table) where T : Table, new()
         {
             return new Insertor<T>(table);
         }
@@ -118,7 +118,7 @@ namespace LogicEntity.Operator
         /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
         /// <returns></returns>
-        public static IInsertorColumns<T> InsertIgnore<T>(T table) where T : Table
+        public static IInsertorColumns<T> InsertIgnore<T>(T table) where T : Table, new()
         {
             return new Insertor<T>(table, true, false);
         }
@@ -129,7 +129,7 @@ namespace LogicEntity.Operator
         /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
         /// <returns></returns>
-        public static IInsertorColumns<T> ReplaceInto<T>(T table) where T : Table
+        public static IInsertorColumns<T> ReplaceInto<T>(T table) where T : Table, new()
         {
             return new Insertor<T>(table, false, true);
         }

@@ -22,12 +22,6 @@ namespace Demo.TableModel
         {
         }
 
-        public Student(int year, int month)
-        {
-            _year = year;
-            _month = month;
-        }
-
         public override string SchemaName => "testdb";
 
         public override string TableName => "Student";

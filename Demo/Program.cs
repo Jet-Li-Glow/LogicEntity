@@ -130,7 +130,7 @@ namespace Demo
 
             DataTable dt = Database.TestDb.Query(testselector);
 
-            Student joinStudent = new Student(2019, 5);  //月表
+            Student joinStudent = new Student();
 
             Major joinMajor = new Major();
 
@@ -303,6 +303,39 @@ namespace Demo
             int batchAffected = Database.TestDb.ExecuteNonQuery(batch);
 
             int batchAffectedB = Database.TestDb.ExecuteNonQuery(batchB);
+
+            //月表
+            Monthly monthly_2021_12 = new Monthly(new DateTime(2021, 12, 1));
+
+            IInsertor monthlyInsertor = DBOperator.InsertInto(monthly_2021_12)
+                .Columns(monthly_2021_12.Guid, monthly_2021_12.DateTime, monthly_2021_12.Description)
+                .Row(new
+                {
+                    Guid = new Guid("{5954B812-D34B-4F10-8A07-B17A146FAB5C}"),
+                    DateTime = DateTime.Now,
+                    Description = Path.GetRandomFileName()
+                }).OnDuplicateKeyUpdate(s =>
+                {
+                    s.DateTime.Value = s.DateTime.Values();
+                    s.Description.Value = s.Description.Values();
+                });
+
+            int monthlyInserted = Database.TestDb.ExecuteNonQuery(monthlyInsertor);
+
+            monthlyInsertor = DBOperator.InsertInto(monthly_2021_12)
+                .Columns(monthly_2021_12.Guid, monthly_2021_12.DateTime, monthly_2021_12.Description)
+                .Row(new
+                {
+                    Guid = new Guid("{2AA827DA-149B-46B7-89B0-A8515BEAB1C7}"),
+                    DateTime = DateTime.Now,
+                    Description = Path.GetRandomFileName()
+                }).OnDuplicateKeyUpdate((s, row) =>
+                {
+                    s.DateTime.Value = row.DateTime;
+                    s.Description.Value = row.Description;
+                });
+
+            monthlyInserted = Database.TestDb.ExecuteNonQuery(monthlyInsertor);
 
             //查询插入
 

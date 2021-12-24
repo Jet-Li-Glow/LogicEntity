@@ -169,15 +169,13 @@ namespace LogicEntity.Operator
 
             Type type = typeof(T);
 
-            T t = Activator.CreateInstance<T>();
-
-            updateValue?.Invoke(t);
+            updateValue?.Invoke(_table);
 
             List<string> updateSets = new List<string>();
 
             foreach (PropertyInfo property in type.GetProperties())
             {
-                Column column = property.GetValue(t) as Column;
+                Column column = property.GetValue(_table) as Column;
 
                 if (column is null)
                     continue;
@@ -217,11 +215,9 @@ namespace LogicEntity.Operator
 
             Type type = typeof(T);
 
-            T t = Activator.CreateInstance<T>();
-
             T row = Activator.CreateInstance<T>();
 
-            updateValueWithRow?.Invoke(t, row);
+            updateValueWithRow?.Invoke(_table, row);
 
             string rowName = type.Name + "Data";
 
@@ -231,7 +227,7 @@ namespace LogicEntity.Operator
 
             foreach (PropertyInfo property in type.GetProperties())
             {
-                Column column = property.GetValue(t) as Column;
+                Column column = property.GetValue(_table) as Column;
 
                 if (column is null)
                     continue;
