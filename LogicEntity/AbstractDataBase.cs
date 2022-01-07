@@ -244,12 +244,18 @@ namespace LogicEntity
         }
 
         /// <summary>
-        /// 创建事务
+        /// 执行事务
         /// </summary>
-        /// <returns></returns>
-        public DbTransaction BeginTransaction()
+        /// <param name="action"></param>
+        public void ExecuteTransaction(Action<DbTransaction> action)
         {
-            return new DbTransaction(this);
+            if (action is null)
+                return;
+
+            using (DbTransaction transaction = new DbTransaction(this))
+            {
+                action(transaction);
+            }
         }
     }
 }

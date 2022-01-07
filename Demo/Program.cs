@@ -409,7 +409,7 @@ namespace Demo
             bool successB = Database.TestDb.ExecuteTransaction(traDel, traInsert);
 
             //事务2
-            using (DbTransaction transaction = Database.TestDb.BeginTransaction())
+            Database.TestDb.ExecuteTransaction(transaction =>
             {
                 try
                 {
@@ -431,7 +431,7 @@ namespace Demo
                 {
                     transaction.Rollback();
                 }
-            }
+            });
 
             Console.WriteLine("测试通过");
 
