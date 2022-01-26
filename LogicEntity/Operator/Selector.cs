@@ -555,6 +555,14 @@ namespace LogicEntity.Operator
 
             command.CommandTimeout = CommandTimeout;
 
+            command.Readers = new Dictionary<int, Func<object, object>>();
+
+            for (int i = 0; i < _columnDescriptions.Count; i++)
+            {
+                if (_columnDescriptions[i].Reader is not null)
+                    command.Readers[i] = _columnDescriptions[i].Reader;
+            }
+
             return command;
         }
 

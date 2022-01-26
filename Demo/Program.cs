@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Demo.Model;
 using Demo.TableModel;
 using LogicEntity;
@@ -112,6 +113,13 @@ namespace Demo
                     student.MajorId,
                     student.Guid,
                     student.Bytes,
+                    student.Json.As("JsonObject").Read(j =>
+                    {
+                        if (j is null || j is DBNull)
+                            return null;
+
+                        return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
+                    }),
                     testMajor.MajorName,
                     testMajor.MajorType
                     )
@@ -169,7 +177,40 @@ namespace Demo
             List<Guid?> Ids = Database.TestDb.Query<Guid?>(DBOperator.Select(student.Guid).From(student).Where(student.StudentId < 10)).ToList();
 
 
-            List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(DBOperator.Select().From(new Student())).ToList();
+            Student allStudent = new Student();
+
+            List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(
+                DBOperator.Select(
+                    allStudent.StudentId,
+                    allStudent.StudentName,
+                    allStudent.Birthday,
+                    allStudent.Gender,
+                    allStudent.MajorId,
+                    allStudent.Guid,
+                    allStudent.Bytes,
+                    allStudent.Float,
+                    allStudent.Double,
+                    allStudent.Decimal,
+                    allStudent.Bool,
+                    allStudent.Long,
+                    allStudent.Json.As("JsonObject").Read(j =>
+                    {
+                        if (j is null)
+                            return null;
+
+                        return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
+                    })
+                    ).From(allStudent)).ToList();
+
+            Dictionary<string, object> keyValues = Database.TestReadOnlyDb.ExecuteScalar<Dictionary<string, object>>(
+                DBOperator.Select
+                (allStudent.Json.As("JsonObject").Read(j =>
+                {
+                    if (j is null)
+                        return null;
+
+                    return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
+                })).From(allStudent).Limit(1));
 
             //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.Last_Insert_Id()));
 
@@ -469,11 +510,13 @@ namespace Demo
 
     static class Database
     {
-        public readonly static MySqlDb TestDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
+        static string connectionStr = File.ReadAllText("ConnectionString.txt");
+
+        public readonly static MySqlDb TestDb = new(connectionStr);
 
         /// <summary>
         /// 只读库
         /// </summary>
-        public readonly static MySqlDb TestReadOnlyDb = new("Database=testdb;Data Source=localhost;Port=1530;User Id=testuser;Password=logicentity2021;");
+        public readonly static MySqlDb TestReadOnlyDb = new(connectionStr);
     }
 }

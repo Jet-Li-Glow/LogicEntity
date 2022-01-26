@@ -49,5 +49,7 @@ namespace Demo.TableModel
         public Column Bool { get; set; }
 
         public Column Long { get; set; }
+
+        public Column Json { get; set; }
     }
 }

@@ -25,5 +25,15 @@ namespace LogicEntity.Model
         /// 命令超时时间（秒）
         /// </summary>
         public int CommandTimeout { get; set; }
+
+        /// <summary>
+        /// 读取器
+        /// </summary>
+        public Dictionary<int, Func<object, object>> Readers { get; set; }
+
+        /// <summary>
+        /// 写入器
+        /// </summary>
+        public Dictionary<int, Func<object, object>> Writers { get; set; }
     }
 }

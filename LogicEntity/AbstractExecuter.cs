@@ -99,7 +99,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(Command command)
         {
-            return Query<T>(command.CommandText, command.Parameters, command.CommandTimeout);
+            return Query<T>(command.CommandText, command.Parameters, command.CommandTimeout, command.Readers);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace LogicEntity
         /// <returns></returns>
         public DataTable Query(Command command)
         {
-            return Query(command.CommandText, command.Parameters, command.CommandTimeout);
+            return Query(command.CommandText, command.Parameters, command.CommandTimeout, command.Readers);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
         {
-            return Query<T>(sql, keyValues, 0);
+            return Query<T>(sql, keyValues, 0, new Dictionary<int, Func<object, object>>());
         }
 
         /// <summary>
@@ -158,10 +158,11 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
-            return AbstractQuery<T>(sql, keyValues, commandTimeout);
+            return AbstractQuery<T>(sql, keyValues, commandTimeout, clientReaders);
         }
 
         /// <summary>
@@ -171,8 +172,9 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal abstract IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout);
+        protected internal abstract IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders);
 
         /// <summary>
         /// 使用SQL语句查询，并返回 T 类型的集合
@@ -184,7 +186,7 @@ namespace LogicEntity
         /// <param name="commandTimeout"></param>
         /// <returns></returns>
         /// <exception cref="InvalidCastException"></exception>
-        protected internal IEnumerable<T> Query<T>(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal IEnumerable<T> Query<T>(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
             Type type = typeof(T);
 
@@ -192,15 +194,18 @@ namespace LogicEntity
 
             IDbCommand command = connection.CreateCommand();
 
-            foreach (KeyValuePair<string, object> kv in keyValues)
+            if (keyValues is not null)
             {
-                IDbDataParameter parameter = command.CreateParameter();
+                foreach (KeyValuePair<string, object> kv in keyValues)
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
 
-                parameter.ParameterName = kv.Key;
+                    parameter.ParameterName = kv.Key;
 
-                parameter.Value = kv.Value;
+                    parameter.Value = kv.Value;
 
-                command.Parameters.Add(parameter);
+                    command.Parameters.Add(parameter);
+                }
             }
 
             command.CommandText = sql;
@@ -281,6 +286,19 @@ namespace LogicEntity
                 Type dataType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
 
                 Func<IDataReader, object> cellReader = _GetCellReader(dataType, i);
+
+                if (clientReaders is not null && clientReaders.TryGetValue(i, out Func<object, object> clientReader))
+                {
+                    cellReader = reader =>
+                    {
+                        object obj = reader.GetValue(i);
+
+                        if (obj is DBNull)
+                            obj = null;
+
+                        return clientReader(obj);
+                    };
+                }
 
                 return (t, reader) =>
                 {
@@ -370,7 +388,7 @@ namespace LogicEntity
         /// <returns></returns>
         public DataTable Query(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
         {
-            return Query(sql, keyValues, 0);
+            return Query(sql, keyValues, 0, new Dictionary<int, Func<object, object>>());
         }
 
         /// <summary>
@@ -379,10 +397,11 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        public DataTable Query(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        public DataTable Query(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
-            return AbstractQuery(sql, keyValues, commandTimeout);
+            return AbstractQuery(sql, keyValues, commandTimeout, clientReaders);
         }
 
         /// <summary>
@@ -391,8 +410,9 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal abstract DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout);
+        protected internal abstract DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders);
 
         /// <summary>
         /// 使用SQL语句查询，并返回 DataTable
@@ -401,20 +421,24 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal DataTable Query(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal DataTable Query(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
             IDbCommand command = connection.CreateCommand();
 
-            foreach (KeyValuePair<string, object> kv in keyValues)
+            if (keyValues is not null)
             {
-                IDbDataParameter parameter = command.CreateParameter();
+                foreach (KeyValuePair<string, object> kv in keyValues)
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
 
-                parameter.ParameterName = kv.Key;
+                    parameter.ParameterName = kv.Key;
 
-                parameter.Value = kv.Value;
+                    parameter.Value = kv.Value;
 
-                command.Parameters.Add(parameter);
+                    command.Parameters.Add(parameter);
+                }
             }
 
             command.CommandText = sql;
@@ -424,14 +448,25 @@ namespace LogicEntity
             if (commandTimeout > 0)
                 command.CommandTimeout = commandTimeout;
 
+            DataTable result = new();
+
             using (IDataReader reader = command.ExecuteReader())
             {
-                DataTable result = new();
-
                 result.Load(reader);
-
-                return result;
             }
+
+            if (clientReaders is not null)
+            {
+                foreach (KeyValuePair<int, Func<object, object>> clientReader in clientReaders)
+                {
+                    foreach (DataRow row in result.Rows)
+                    {
+                        row[clientReader.Key] = clientReader.Value(row[clientReader.Key]);
+                    }
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -511,15 +546,18 @@ namespace LogicEntity
         {
             IDbCommand command = connection.CreateCommand();
 
-            foreach (KeyValuePair<string, object> kv in keyValues)
+            if (keyValues is not null)
             {
-                IDbDataParameter parameter = command.CreateParameter();
+                foreach (KeyValuePair<string, object> kv in keyValues)
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
 
-                parameter.ParameterName = kv.Key;
+                    parameter.ParameterName = kv.Key;
 
-                parameter.Value = kv.Value;
+                    parameter.Value = kv.Value;
 
-                command.Parameters.Add(parameter);
+                    command.Parameters.Add(parameter);
+                }
             }
 
             command.CommandText = sql;
@@ -561,7 +599,7 @@ namespace LogicEntity
         /// <returns></returns>
         public T ExecuteScalar<T>(Command command)
         {
-            return ExecuteScalar<T>(command.CommandText, command.Parameters, command.CommandTimeout);
+            return ExecuteScalar<T>(command.CommandText, command.Parameters, command.CommandTimeout, command.Readers?.FirstOrDefault().Value);
         }
 
         /// <summary>
@@ -571,7 +609,7 @@ namespace LogicEntity
         /// <returns></returns>
         public object ExecuteScalar(Command command)
         {
-            return ExecuteScalar(command.CommandText, command.Parameters, command.CommandTimeout);
+            return ExecuteScalar(command.CommandText, command.Parameters, command.CommandTimeout, command.Readers?.FirstOrDefault().Value);
         }
 
         /// <summary>
@@ -610,7 +648,7 @@ namespace LogicEntity
         /// <returns></returns>
         public T ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
         {
-            return ExecuteScalar<T>(sql, keyValues, 0);
+            return ExecuteScalar<T>(sql, keyValues, 0, null);
         }
 
         /// <summary>
@@ -621,7 +659,7 @@ namespace LogicEntity
         /// <returns></returns>
         public object ExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
         {
-            return ExecuteScalar(sql, keyValues, 0);
+            return ExecuteScalar(sql, keyValues, 0, null);
         }
 
         /// <summary>
@@ -632,9 +670,9 @@ namespace LogicEntity
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
         /// <returns></returns>
-        public T ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        public T ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader)
         {
-            return (T)Convert.ChangeType(ExecuteScalar(sql, keyValues, commandTimeout), typeof(T));
+            return (T)Convert.ChangeType(ExecuteScalar(sql, keyValues, commandTimeout, clientReader), typeof(T));
         }
 
         /// <summary>
@@ -643,10 +681,11 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReader"></param>
         /// <returns></returns>
-        public object ExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        public object ExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader)
         {
-            return AbstractExecuteScalar(sql, keyValues, commandTimeout);
+            return AbstractExecuteScalar(sql, keyValues, commandTimeout, clientReader);
         }
 
         /// <summary>
@@ -655,8 +694,9 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReader"></param>
         /// <returns></returns>
-        protected internal abstract object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout);
+        protected internal abstract object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader);
 
         /// <summary>
         /// 执行SQL语句，并返回查询结果的第一行的第一列
@@ -665,20 +705,24 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReader"></param>
         /// <returns></returns>
-        protected internal object ExecuteScalar(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal object ExecuteScalar(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader)
         {
             IDbCommand command = connection.CreateCommand();
 
-            foreach (KeyValuePair<string, object> kv in keyValues)
+            if (keyValues is not null)
             {
-                IDbDataParameter parameter = command.CreateParameter();
+                foreach (KeyValuePair<string, object> kv in keyValues)
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
 
-                parameter.ParameterName = kv.Key;
+                    parameter.ParameterName = kv.Key;
 
-                parameter.Value = kv.Value;
+                    parameter.Value = kv.Value;
 
-                command.Parameters.Add(parameter);
+                    command.Parameters.Add(parameter);
+                }
             }
 
             command.CommandText = sql;
@@ -688,7 +732,12 @@ namespace LogicEntity
             if (commandTimeout > 0)
                 command.CommandTimeout = commandTimeout;
 
-            return command.ExecuteScalar();
+            object result = command.ExecuteScalar();
+
+            if (clientReader is not null)
+                result = clientReader(result);
+
+            return result;
         }
     }
 }

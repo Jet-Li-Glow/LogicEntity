@@ -18,6 +18,16 @@ namespace LogicEntity.Operator
         private string _content;
 
         /// <summary>
+        /// 读取器
+        /// </summary>
+        internal Func<object, object> Reader { get; private set; }
+
+        /// <summary>
+        /// 写入器
+        /// </summary>
+        internal Func<object, object> Writer { get; private set; }
+
+        /// <summary>
         /// 查询前转换器
         /// </summary>
         protected List<Func<string, string>> BeforeConvertors = new List<Func<string, string>>();
@@ -278,6 +288,20 @@ namespace LogicEntity.Operator
         public Condition Like(string str)
         {
             return new Condition(this, Comparator.Like, str);
+        }
+
+        public Description Read(Func<object, object> reader)
+        {
+            Reader = reader;
+
+            return this;
+        }
+
+        public Description Write(Func<object, object> writer)
+        {
+            Writer = writer;
+
+            return this;
         }
 
         public override bool Equals(object obj)

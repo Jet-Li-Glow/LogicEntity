@@ -59,10 +59,11 @@ namespace LogicEntity.Model
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
-            return Query<T>(_connection, sql, keyValues, commandTimeout);
+            return Query<T>(_connection, sql, keyValues, commandTimeout, clientReaders);
         }
 
         /// <summary>
@@ -71,10 +72,11 @@ namespace LogicEntity.Model
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal override DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal override DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
-            return Query(_connection, sql, keyValues, commandTimeout);
+            return Query(_connection, sql, keyValues, commandTimeout, clientReaders);
         }
 
         /// <summary>
@@ -95,10 +97,11 @@ namespace LogicEntity.Model
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
+        /// <param name="clientReader"></param>
         /// <returns></returns>
-        protected internal override object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal override object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader)
         {
-            return ExecuteScalar(_connection, sql, keyValues, commandTimeout);
+            return ExecuteScalar(_connection, sql, keyValues, commandTimeout, clientReader);
         }
 
         /// <summary>
