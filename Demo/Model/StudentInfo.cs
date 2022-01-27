@@ -37,6 +37,6 @@ namespace Demo.Model
 
         public long Long { get; set; }
 
-        public Dictionary<string, object> JsonObject { get; set; }
+        public Dictionary<string, object> Json { get; set; }
     }
 }

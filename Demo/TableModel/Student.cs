@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Demo.Model;
 using LogicEntity.Model;
@@ -20,6 +21,21 @@ namespace Demo.TableModel
 
         public Student()
         {
+            Json.Read(j =>
+            {
+                if (j is null || j is DBNull)
+                    return null;
+
+                return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
+            });
+
+            Json.Write(j =>
+            {
+                if (j is null || j is string)
+                    return j;
+
+                return JsonSerializer.Serialize(j);
+            });
         }
 
         public override string SchemaName => "testdb";

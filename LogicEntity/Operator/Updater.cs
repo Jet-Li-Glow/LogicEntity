@@ -13,7 +13,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 更新操作器
     /// </summary>
-    internal class Updater<T> : OperatorBase, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table
+    internal class Updater<T> : OperatorBase, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table, new()
     {
         /// <summary>
         /// 表
@@ -228,7 +228,7 @@ namespace LogicEntity.Operator
             }
 
             //值
-            T t = Activator.CreateInstance<T>();
+            T t = new();
 
             _setValue?.Invoke(t);
 
@@ -243,6 +243,9 @@ namespace LogicEntity.Operator
 
                 if (column.IsValueSet == false)
                     continue;
+
+                if (column.Writer is not null)
+                    column.Value = column.Writer(column.Value);
 
                 if (column.Value is Description)
                 {

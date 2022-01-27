@@ -13,7 +13,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 插入操作器
     /// </summary>
-    internal class Insertor<T> : OperatorBase, IInsertorColumns<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table
+    internal class Insertor<T> : OperatorBase, IInsertorColumns<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table, new()
     {
         /// <summary>
         /// 表
@@ -23,7 +23,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 列
         /// </summary>
-        List<string> _columns = new();
+        List<Column> _columns = new();
 
         /// <summary>
         /// 是否忽略冲突
@@ -79,7 +79,7 @@ namespace LogicEntity.Operator
             if (columns is null)
                 return this;
 
-            _columns.AddRange(columns.Select(c => c?.ColumnName ?? string.Empty));
+            _columns.AddRange(columns);
 
             return this;
         }
@@ -101,12 +101,11 @@ namespace LogicEntity.Operator
 
             Type type = typeof(TRow);
 
-            List<PropertyInfo> properties = new List<PropertyInfo>();
-
-            foreach (string columnName in _columns)
+            var properties = _columns.Select(c => new
             {
-                properties.Add(type.GetProperty(columnName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
-            }
+                PropertyInfo = type.GetProperty(c?.ColumnName ?? string.Empty, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase),
+                Writer = c.Writer
+            }).ToList();
 
             _valueDescription.Parameters = new();
 
@@ -116,14 +115,17 @@ namespace LogicEntity.Operator
             {
                 List<string> parameters = new();
 
-                foreach (PropertyInfo property in properties)
+                foreach (var property in properties)
                 {
-                    object v = property?.GetValue(row);
+                    object v = property.PropertyInfo?.GetValue(row);
 
                     if (v is Column)
                     {
                         v = (v as Column).Value;
                     }
+
+                    if (property.Writer is not null)
+                        v = property.Writer(v);
 
                     string key = ToolService.UniqueName();
 
@@ -215,7 +217,7 @@ namespace LogicEntity.Operator
 
             Type type = typeof(T);
 
-            T row = Activator.CreateInstance<T>();
+            T row = new();
 
             updateValueWithRow?.Invoke(_table, row);
 
@@ -276,7 +278,7 @@ namespace LogicEntity.Operator
                 operate = "Replace Into";
 
             //列
-            string columns = string.Join(", ", _columns);
+            string columns = string.Join(", ", _columns.Select(c => c?.ColumnName ?? string.Empty));
 
             //值
             string valueDescription = _valueDescription.Description ?? string.Empty;

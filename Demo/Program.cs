@@ -47,7 +47,8 @@ namespace Demo
                 student.Double.Sum().As("Double"),
                 student.Decimal.Max().As("Decimal"),
                 student.Bool,
-                student.Long
+                student.Long.Read(l => (long)l + 1),
+                student.Json          //可在构造函数中通过 Read 和 Write 设置序列化和反序列化方法 或 显式调用这两个方法
                 )
                 .From(student)
                 .LeftJoin(major).On(major.MajorId == student.MajorId)
@@ -113,13 +114,7 @@ namespace Demo
                     student.MajorId,
                     student.Guid,
                     student.Bytes,
-                    student.Json.As("JsonObject").Read(j =>
-                    {
-                        if (j is null || j is DBNull)
-                            return null;
-
-                        return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
-                    }),
+                    student.Json,
                     testMajor.MajorName,
                     testMajor.MajorType
                     )
@@ -151,7 +146,7 @@ namespace Demo
             //List<StudentInfo> joinResult = Database.TestDb.Query<StudentInfo>(joinSelect).ToList();
 
 
-            ISelector njoinSelect = DBOperator.Select().From(joinStudent).Limit(1).ForUpdate();
+            ISelector njoinSelect = DBOperator.Select(joinStudent.StudentId).From(joinStudent).Limit(1).ForUpdate();
 
             string njoinText = njoinSelect.GetCommand().CommandText;
 
@@ -167,7 +162,7 @@ namespace Demo
 
             conditions.LogicalOperator = LogicalOperator.Or;
 
-            ISelector mulConditon = DBOperator.Select().From(mulStudent).With(conditions);
+            ISelector mulConditon = DBOperator.Select(mulStudent.StudentId).From(mulStudent).With(conditions);
 
             string nulCondText = mulConditon.GetCommand().CommandText;
 
@@ -193,24 +188,11 @@ namespace Demo
                     allStudent.Decimal,
                     allStudent.Bool,
                     allStudent.Long,
-                    allStudent.Json.As("JsonObject").Read(j =>
-                    {
-                        if (j is null)
-                            return null;
-
-                        return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
-                    })
+                    allStudent.Json
                     ).From(allStudent)).ToList();
 
             Dictionary<string, object> keyValues = Database.TestReadOnlyDb.ExecuteScalar<Dictionary<string, object>>(
-                DBOperator.Select
-                (allStudent.Json.As("JsonObject").Read(j =>
-                {
-                    if (j is null)
-                        return null;
-
-                    return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
-                })).From(allStudent).Limit(1));
+                DBOperator.Select(allStudent.Json).From(allStudent).Limit(1));
 
             //int sc = Database.TestDb.ExecuteScalar<int>(DBOperator.Select(DbFunction.Last_Insert_Id()));
 
@@ -220,8 +202,8 @@ namespace Demo
 
             Student unionB = new Student();
 
-            ISelector unionSelect = DBOperator.Select().From(unionA).Where(unionA.StudentId == 1)
-                .UnionAll(DBOperator.Select().From(unionB).Where(unionB.StudentId == 2));
+            ISelector unionSelect = DBOperator.Select(unionA.StudentId).From(unionA).Where(unionA.StudentId == 1)
+                .UnionAll(DBOperator.Select(unionB.StudentId).From(unionB).Where(unionB.StudentId == 2));
 
             string unionText = unionSelect.GetCommand().CommandText;
 
@@ -235,6 +217,10 @@ namespace Demo
             data.MajorId.Value = 2;
             data.Birthday.Value = DateTime.Now;
             data.Guid.Value = Guid.NewGuid();
+
+            //可在构造函数中通过 Read 和 Write 设置序列化和反序列化方法 或 显式调用这两个方法
+            data.Json.Value = new Dictionary<string, object>() { { "Number", new Random().NextDouble() }, { "Object", new object() } };
+            
 
             IInsertor insertor = DBOperator.Insert(data);
 
@@ -403,6 +389,7 @@ namespace Demo
             changedStudent.MajorId.Value = changedStudent.MajorId - 1 + 1;
             changedStudent.Guid.Value = Guid.NewGuid();
             changedStudent.Bytes.Value = Encoding.UTF8.GetBytes("Bytes");
+            changedStudent.Json.Value = new Dictionary<string, object>() { { "Number", new Random().NextDouble() }, { "Object", new object() } };
 
             IUpdater changer = DBOperator.ApplyChanges(changedStudent).On(changedStudent.StudentId == 2 & changedStudent.MajorId > 0);
 
@@ -418,6 +405,7 @@ namespace Demo
                 {
                     s.StudentName.Value = updateMajor.MajorName;
                     s.Birthday.Value = DateTime.Now;
+                    s.Json.Value = new Dictionary<string, object>() { { "Number", new Random().NextDouble() }, { "Object", new object() } };
                 })
                 .Where(changedStudent.StudentId == 4);
 

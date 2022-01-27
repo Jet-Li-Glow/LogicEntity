@@ -77,6 +77,9 @@ namespace LogicEntity.Operator
                 if (column.IsValueSet == false)
                     continue;
 
+                if (column.Writer is not null)
+                    column.Value = column.Writer(column.Value);
+
                 if (column.Value is Description)
                 {
                     columns.Add(column.ToString() + " = " + (column.Value as Description).ToString());

@@ -76,7 +76,7 @@ namespace LogicEntity
         /// <typeparam name="T"></typeparam>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public IEnumerable<T> Query<T>(ISelector selector)
+        public IEnumerable<T> Query<T>(ISelector selector) where T : new()
         {
             return Query<T>(selector.GetCommand());
         }
@@ -97,7 +97,7 @@ namespace LogicEntity
         /// <typeparam name="T"></typeparam>
         /// <param name="command"></param>
         /// <returns></returns>
-        public IEnumerable<T> Query<T>(Command command)
+        public IEnumerable<T> Query<T>(Command command) where T : new()
         {
             return Query<T>(command.CommandText, command.Parameters, command.CommandTimeout, command.Readers);
         }
@@ -119,7 +119,7 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        public IEnumerable<T> Query<T>(string sql, params object[] args)
+        public IEnumerable<T> Query<T>(string sql, params object[] args) where T : new()
         {
             Command command = ConvertToCommand(sql, args);
 
@@ -146,7 +146,7 @@ namespace LogicEntity
         /// <param name="sql"></param>
         /// <param name="keyValues"></param>
         /// <returns></returns>
-        public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues)
+        public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues) where T : new()
         {
             return Query<T>(sql, keyValues, 0, new Dictionary<int, Func<object, object>>());
         }
@@ -160,7 +160,7 @@ namespace LogicEntity
         /// <param name="commandTimeout"></param>
         /// <param name="clientReaders"></param>
         /// <returns></returns>
-        public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
+        public IEnumerable<T> Query<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders) where T : new()
         {
             return AbstractQuery<T>(sql, keyValues, commandTimeout, clientReaders);
         }
@@ -174,7 +174,7 @@ namespace LogicEntity
         /// <param name="commandTimeout"></param>
         /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal abstract IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders);
+        protected internal abstract IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders) where T : new();
 
         /// <summary>
         /// 使用SQL语句查询，并返回 T 类型的集合
@@ -186,7 +186,7 @@ namespace LogicEntity
         /// <param name="commandTimeout"></param>
         /// <returns></returns>
         /// <exception cref="InvalidCastException"></exception>
-        protected internal IEnumerable<T> Query<T>(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
+        protected internal IEnumerable<T> Query<T>(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders) where T : new()
         {
             Type type = typeof(T);
 
@@ -236,7 +236,7 @@ namespace LogicEntity
 
                     while (reader.Read())
                     {
-                        T t = Activator.CreateInstance<T>();
+                        T t = new();
 
                         foreach (Action<T, IDataReader> fill in fillActions)
                         {

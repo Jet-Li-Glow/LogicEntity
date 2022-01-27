@@ -138,7 +138,7 @@ namespace LogicEntity.Operator
         /// 更新操作器
         /// </summary>
         /// <returns></returns>
-        public static IUpdaterJoin<T> Update<T>(T table) where T : Table
+        public static IUpdaterJoin<T> Update<T>(T table) where T : Table, new()
         {
             return new Updater<T>(table);
         }
