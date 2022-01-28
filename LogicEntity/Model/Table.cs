@@ -14,23 +14,26 @@ namespace LogicEntity.Model
     /// </summary>
     public abstract class Table : TableDescription
     {
+        private readonly List<Column> _columns = new();
+
         /// <summary>
         /// 表
         /// </summary>
         public Table()
         {
-            Type type = GetType();
-
-            var properties = type.GetProperties().Where(p => p.PropertyType == typeof(Column) || p.PropertyType.IsSubclassOf(typeof(Column)));
+            var properties = GetType().GetProperties().Where(p => p.PropertyType == typeof(Column) || p.PropertyType.IsSubclassOf(typeof(Column)));
 
             foreach (PropertyInfo property in properties)
             {
                 Column column = Activator.CreateInstance(property.PropertyType) as Column;
 
                 column.Table = this;
+
                 column.ColumnName = property.Name;
 
                 property.SetValue(this, column);
+
+                _columns.Add(column);
             }
         }
 
@@ -58,6 +61,11 @@ namespace LogicEntity.Model
         /// 最后的表名
         /// </summary>
         internal override string FinalTableName => TableAlias ?? FullName;
+
+        /// <summary>
+        /// 列
+        /// </summary>
+        internal override IEnumerable<Description> Columns => _columns.AsEnumerable();
 
         /// <summary>
         /// 添加别名

@@ -99,6 +99,37 @@ namespace LogicEntity.Operator
                 _columnDescriptions.AddRange(columnDescriptions);
         }
 
+        public IEnumerable<Description> Columns
+        {
+            get
+            {
+                List<Description> columns = new();
+
+                if (_columnDescriptions.Any())
+                {
+                    foreach (Description column in _columnDescriptions)
+                    {
+                        if (column is not AllColumnDescription)
+                        {
+                            columns.Add(column);
+
+                            continue;
+                        }
+
+                        columns.AddRange((column as AllColumnDescription).Table?.Columns ?? Enumerable.Empty<Description>());
+                    }
+
+                    return columns;
+                }
+
+                columns.AddRange(_mainTables.SelectMany(s => s?.Columns ?? Enumerable.Empty<Description>()));
+
+                columns.AddRange(_relations.SelectMany(s => s.Table?.Columns ?? Enumerable.Empty<Description>()));
+
+                return columns;
+            }
+        }
+
         /// <summary>
         /// 取唯一的结果
         /// </summary>
@@ -132,11 +163,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn Join(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.Join };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.Join));
 
             return this;
         }
@@ -148,11 +175,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn InnerJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.InnerJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.InnerJoin));
 
             return this;
         }
@@ -164,11 +187,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn LeftJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.LeftJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.LeftJoin));
 
             return this;
         }
@@ -180,11 +199,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn RightJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.RightJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.RightJoin));
 
             return this;
         }
@@ -196,11 +211,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn FullJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.FullJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.FullJoin));
 
             return this;
         }
@@ -212,11 +223,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOn NaturalJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.NaturalJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.NaturalJoin));
 
             return this;
         }
@@ -298,6 +305,7 @@ namespace LogicEntity.Operator
         public IThenBy OrderBy(Description description)
         {
             _orderBy.Clear();
+
             _orderBy.Add(new OrderDescription(description, true));
 
             return this;
@@ -311,6 +319,7 @@ namespace LogicEntity.Operator
         public IThenBy OrderByDescending(Description description)
         {
             _orderBy.Clear();
+
             _orderBy.Add(new OrderDescription(description, false));
 
             return this;

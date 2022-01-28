@@ -30,10 +30,5 @@ namespace LogicEntity.Model
         /// 读取器
         /// </summary>
         public Dictionary<int, Func<object, object>> Readers { get; set; }
-
-        /// <summary>
-        /// 写入器
-        /// </summary>
-        public Dictionary<int, Func<object, object>> Writers { get; set; }
     }
 }

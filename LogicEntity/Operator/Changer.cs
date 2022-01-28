@@ -59,15 +59,13 @@ namespace LogicEntity.Operator
             if (_change is null)
                 return command;
 
-            var properties = _change.GetType().GetProperties().Where(p => p.PropertyType == typeof(Column));
-
             List<string> columns = new();
 
             command.Parameters = new();
 
             int index = 0;
 
-            foreach (PropertyInfo property in properties)
+            foreach (PropertyInfo property in _change.GetType().GetProperties())
             {
                 Column column = property.GetValue(_change) as Column;
 

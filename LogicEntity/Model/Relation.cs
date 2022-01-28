@@ -22,12 +22,12 @@ namespace LogicEntity.Model
         /// <summary>
         /// 表级别
         /// </summary>
-        internal TableTier TableTier { get; set; }
+        internal TableTier TableTier { get; private set; }
 
         /// <summary>
         /// 关联表
         /// </summary>
-        private TableDescription _relateTable;
+        internal TableDescription Table { get; private set; }
 
         /// <summary>
         /// 关联条件
@@ -37,18 +37,16 @@ namespace LogicEntity.Model
         /// <summary>
         /// 是否设置条件
         /// </summary>
-        private bool _isSetCondition;
+        private bool _hasCondition;
 
-        /// <summary>
-        /// 设置关联表
-        /// </summary>
-        /// <param name="table"></param>
-        public void SetTable(TableDescription table)
+        public Relation(TableDescription table, TableTier tableTier)
         {
-            _relateTable = table;
+            Table = table;
 
             if (table is not null)
-                _parameters.AddRange(table.GetParameters());
+                _parameters.AddRange(Table.GetParameters());
+
+            TableTier = tableTier;
         }
 
         /// <summary>
@@ -57,7 +55,7 @@ namespace LogicEntity.Model
         /// <param name="condition"></param>
         public void SetCondition(ConditionDescription condition)
         {
-            _isSetCondition = true;
+            _hasCondition = true;
 
             _condition = condition;
 
@@ -71,7 +69,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public override string ToString()
         {
-            return TableTier.Description() + " " + _relateTable + (_isSetCondition ? "\n   On " + _condition : string.Empty);
+            return TableTier.Description() + " " + Table + (_hasCondition ? "\n   On " + _condition : string.Empty);
         }
 
         /// <summary>

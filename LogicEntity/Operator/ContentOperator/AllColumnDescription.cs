@@ -11,13 +11,19 @@ namespace LogicEntity.Operator
     /// </summary>
     public class AllColumnDescription : Description
     {
-        private TableDescription _table;
+        /// <summary>
+        /// 表
+        /// </summary>
+        internal TableDescription Table { get; private set; }
 
         public AllColumnDescription(TableDescription table)
         {
-            _table = table;
+            Table = table;
         }
 
-        protected override string Content => _table.FinalTableName + ".*";
+        /// <summary>
+        /// 主体内容
+        /// </summary>
+        protected override string Content => Table.FinalTableName + ".*";
     }
 }

@@ -17,6 +17,23 @@ namespace LogicEntity.Operator
     {
         private string _content;
 
+        private bool _hasAlias = false;
+
+        private string _alias;
+
+        /// <summary>
+        /// 别名
+        /// </summary>
+        internal string Alias
+        {
+            set
+            {
+                _hasAlias = true;
+
+                _alias = value;
+            }
+        }
+
         /// <summary>
         /// 读取器
         /// </summary>
@@ -49,6 +66,11 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 名称
+        /// </summary>
+        public string Name => _hasAlias ? _alias : ToString();
+
+        /// <summary>
         /// 添加查询前转换器
         /// </summary>
         /// <param name="convertor"></param>
@@ -63,33 +85,22 @@ namespace LogicEntity.Operator
         protected virtual string Content => _content;
 
         /// <summary>
-        /// 转换后的主体内容
-        /// </summary>
-        string FullContent
-        {
-            get
-            {
-                string s = Content;
-
-                foreach (Func<string, string> convert in BeforeConvertors)
-                {
-                    if (convert is null)
-                        continue;
-
-                    s = convert(s);
-                }
-
-                return s;
-            }
-        }
-
-        /// <summary>
         /// 转为字符串
         /// </summary>
         /// <returns></returns>
         public override string ToString()
         {
-            return FullContent;
+            string s = Content;
+
+            foreach (Func<string, string> convert in BeforeConvertors)
+            {
+                if (convert is null)
+                    continue;
+
+                s = convert(s);
+            }
+
+            return s;
         }
 
         /// <summary>
@@ -99,6 +110,7 @@ namespace LogicEntity.Operator
         private Description ObjectClone()
         {
             Description description = MemberwiseClone() as Description;
+
             description.BeforeConvertors = new(BeforeConvertors);
 
             return description;
@@ -114,6 +126,8 @@ namespace LogicEntity.Operator
             Description description = ObjectClone();
 
             description.AddBeforeConvertor(convertor);
+
+            description.Read(null);
 
             return description;
         }

@@ -56,11 +56,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdaterOn<T> Join(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.Join };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.Join));
 
             return this;
         }
@@ -72,11 +68,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdaterOn<T> InnerJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.InnerJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.InnerJoin));
 
             return this;
         }
@@ -88,11 +80,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdaterOn<T> LeftJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.LeftJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.LeftJoin));
 
             return this;
         }
@@ -104,11 +92,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdaterOn<T> RightJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.RightJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.RightJoin));
 
             return this;
         }
@@ -120,11 +104,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdaterOn<T> FullJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.FullJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.FullJoin));
 
             return this;
         }
@@ -136,11 +116,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IUpdaterOn<T> NaturalJoin(TableDescription table)
         {
-            Relation relation = new Relation() { TableTier = TableTier.NaturalJoin };
-
-            relation.SetTable(table);
-
-            _relations.Add(relation);
+            _relations.Add(new Relation(table, TableTier.NaturalJoin));
 
             return this;
         }

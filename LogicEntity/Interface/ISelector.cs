@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Model;
+using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
@@ -32,5 +33,10 @@ namespace LogicEntity.Interface
         /// <param name="alias"></param>
         /// <returns></returns>
         public NestedTable As(string alias);
+
+        /// <summary>
+        /// 列
+        /// </summary>
+        public IEnumerable<Description> Columns { get; }
     }
 }

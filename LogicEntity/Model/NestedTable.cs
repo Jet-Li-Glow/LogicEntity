@@ -26,18 +26,8 @@ namespace LogicEntity.Model
         public NestedTable(ISelector selector, string alias)
         {
             _selector = selector;
-            _alias = alias;
-        }
 
-        /// <summary>
-        /// 添加别名
-        /// </summary>
-        /// <param name="alias"></param>
-        internal NestedTable As(string alias)
-        {
             _alias = alias;
-
-            return this;
         }
 
         /// <summary>
@@ -48,11 +38,20 @@ namespace LogicEntity.Model
         /// <summary>
         /// 列
         /// </summary>
+        internal override IEnumerable<Description> Columns => _selector?.Columns ?? Enumerable.Empty<Description>();
+
+        /// <summary>
+        /// 列
+        /// </summary>
         /// <param name="columnName"></param>
         /// <returns></returns>
         public Column Column(string columnName)
         {
-            return new Column() { Table = this, ColumnName = columnName };
+            Column column = new Column() { Table = this, ColumnName = columnName };
+
+            column.Read(Columns.SingleOrDefault(s => s.Name == columnName)?.Reader);
+
+            return column;
         }
 
         /// <summary>

@@ -1916,7 +1916,12 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static Description As(this Description description, string alias)
         {
-            return description?.Next(s => s + " As `" + alias + "`");
+            Description next = description?.Next(s => s + " As `" + alias + "`");
+
+            if (next is not null)
+                next.Alias = alias;
+
+            return next;
         }
     }
 }

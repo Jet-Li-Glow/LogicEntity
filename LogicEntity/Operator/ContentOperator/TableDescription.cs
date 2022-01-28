@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Model;
 
 namespace LogicEntity.Operator
 {
@@ -14,7 +15,12 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 最后的表名
         /// </summary>
-        internal virtual string FinalTableName { get; }
+        internal abstract string FinalTableName { get; }
+
+        /// <summary>
+        /// 列
+        /// </summary>
+        internal abstract IEnumerable<Description> Columns { get; }
 
         /// <summary>
         /// 所有的列
@@ -28,10 +34,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 转为字符串
         /// </summary>
-        public override string ToString()
-        {
-            return default;
-        }
+        public abstract override string ToString();
 
         /// <summary>
         /// 参数

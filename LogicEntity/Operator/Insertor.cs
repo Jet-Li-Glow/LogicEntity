@@ -169,13 +169,11 @@ namespace LogicEntity.Operator
 
             _updateDescription.Parameters = new();
 
-            Type type = typeof(T);
-
             updateValue?.Invoke(_table);
 
             List<string> updateSets = new List<string>();
 
-            foreach (PropertyInfo property in type.GetProperties())
+            foreach (PropertyInfo property in typeof(T).GetProperties())
             {
                 Column column = property.GetValue(_table) as Column;
 
