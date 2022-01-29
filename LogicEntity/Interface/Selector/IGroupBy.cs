@@ -7,7 +7,7 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IGroupBy : IOrderBy
+    public interface IGroupBy : IUnion
     {
         public IHaving GroupBy(params Description[] columns);
     }

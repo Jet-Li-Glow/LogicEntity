@@ -284,15 +284,39 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 添加 HAVING 条件
+        /// 添加组筛选条件
         /// </summary>
         /// <param name="conditions"></param>
         /// <returns></returns>
-        public IOrderBy Having(Condition condition)
+        public IUnion Having(Condition condition)
         {
             _having = condition;
 
             _hasHaving = true;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 联合
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public IOrderBy Union(ISelector selector)
+        {
+            _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.Union, Selector = selector });
+
+            return this;
+        }
+
+        /// <summary>
+        /// 联合所有
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public IOrderBy UnionAll(ISelector selector)
+        {
+            _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.UnionAll, Selector = selector });
 
             return this;
         }
@@ -391,30 +415,6 @@ namespace LogicEntity.Operator
         public ISelector ForUpdate()
         {
             _isForUpdate = true;
-
-            return this;
-        }
-
-        /// <summary>
-        /// 联合
-        /// </summary>
-        /// <param name="selector"></param>
-        /// <returns></returns>
-        public ISelector Union(ISelector selector)
-        {
-            _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.Union, Selector = selector });
-
-            return this;
-        }
-
-        /// <summary>
-        /// 联合所有
-        /// </summary>
-        /// <param name="selector"></param>
-        /// <returns></returns>
-        public ISelector UnionAll(ISelector selector)
-        {
-            _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.UnionAll, Selector = selector });
 
             return this;
         }

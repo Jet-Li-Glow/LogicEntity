@@ -7,8 +7,13 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IHaving : IOrderBy
+    public interface IHaving : IUnion
     {
-        public IOrderBy Having(Condition condition);
+        /// <summary>
+        /// 分组筛选
+        /// </summary>
+        /// <param name="condition"></param>
+        /// <returns></returns>
+        public IUnion Having(Condition condition);
     }
 }

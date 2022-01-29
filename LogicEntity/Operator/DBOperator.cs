@@ -70,9 +70,11 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertor Save<T>(T row) where T : Table, new()
         {
+            T table = new T();
+
             List<Column> colums = new();
 
-            foreach (PropertyInfo property in row.GetType().GetProperties())
+            foreach (PropertyInfo property in typeof(T).GetProperties())
             {
                 Column column = property.GetValue(row) as Column;
 
@@ -82,12 +84,12 @@ namespace LogicEntity.Operator
                 if (column.IsValueSet == false)
                     continue;
 
-                colums.Add(column);
+                colums.Add(property.GetValue(table) as Column);
             }
 
-            return InsertInto(row).Columns(colums.ToArray()).Row(row).OnDuplicateKeyUpdate((t) =>
+            return InsertInto(table).Columns(colums.ToArray()).Row(row).OnDuplicateKeyUpdate(t =>
             {
-                Type type = row.GetType();
+                Type type = t.GetType();
 
                 foreach (Column column in colums)
                 {

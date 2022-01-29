@@ -14,20 +14,6 @@ namespace LogicEntity.Interface
     public interface ISelector : IDbOperator
     {
         /// <summary>
-        /// 联合
-        /// </summary>
-        /// <param name="selector"></param>
-        /// <returns></returns>
-        public ISelector Union(ISelector selector);
-
-        /// <summary>
-        /// 联合所有
-        /// </summary>
-        /// <param name="selector"></param>
-        /// <returns></returns>
-        public ISelector UnionAll(ISelector selector);
-
-        /// <summary>
         /// 生成嵌套表
         /// </summary>
         /// <param name="alias"></param>
