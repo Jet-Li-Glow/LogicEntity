@@ -70,7 +70,7 @@ namespace Demo
 
             Major studentMajor = new();
 
-            var nested = DBOperator.Select(student.StudentId).From(student).Where(student.StudentId == 1).As("nestedStudent");
+            var nested = DBOperator.Select().From(student).Where(student.StudentId == 1).As("nestedStudent");
 
             ISelector joinSelector = DBOperator.Select(
                student.All(),
@@ -146,7 +146,7 @@ namespace Demo
             //List<StudentInfo> joinResult = Database.TestDb.Query<StudentInfo>(joinSelect).ToList();
 
 
-            ISelector njoinSelect = DBOperator.Select(joinStudent.StudentId).From(joinStudent).Limit(1).ForUpdate();
+            ISelector njoinSelect = DBOperator.Select().From(joinStudent).Limit(1).ForUpdate();
 
             string njoinText = njoinSelect.GetCommand().CommandText;
 
@@ -162,7 +162,7 @@ namespace Demo
 
             conditions.LogicalOperator = LogicalOperator.Or;
 
-            ISelector mulConditon = DBOperator.Select(mulStudent.StudentId).From(mulStudent).With(conditions);
+            ISelector mulConditon = DBOperator.Select().From(mulStudent).Conditions(conditions);
 
             string nulCondText = mulConditon.GetCommand().CommandText;
 
@@ -174,22 +174,7 @@ namespace Demo
 
             Student allStudent = new Student();
 
-            List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(
-                DBOperator.Select(
-                    allStudent.StudentId,
-                    allStudent.StudentName,
-                    allStudent.Birthday,
-                    allStudent.Gender,
-                    allStudent.MajorId,
-                    allStudent.Guid,
-                    allStudent.Bytes,
-                    allStudent.Float,
-                    allStudent.Double,
-                    allStudent.Decimal,
-                    allStudent.Bool,
-                    allStudent.Long,
-                    allStudent.Json
-                    ).From(allStudent)).ToList();
+            List<StudentInfo> allStudents = Database.TestReadOnlyDb.Query<StudentInfo>(DBOperator.Select().From(allStudent)).ToList();
 
             Dictionary<string, object> keyValues = Database.TestReadOnlyDb.ExecuteScalar<Dictionary<string, object>>(
                 DBOperator.Select(allStudent.Json).From(allStudent).Limit(1));
@@ -202,8 +187,8 @@ namespace Demo
 
             Student unionB = new Student();
 
-            ISelector unionSelect = DBOperator.Select(unionA.StudentId).From(unionA).Where(unionA.StudentId == 1)
-                .UnionAll(DBOperator.Select(unionB.StudentId).From(unionB).Where(unionB.StudentId == 2));
+            ISelector unionSelect = DBOperator.Select().From(unionA).Where(unionA.StudentId == 1)
+                .UnionAll(DBOperator.Select().From(unionB).Where(unionB.StudentId == 2));
 
             string unionText = unionSelect.GetCommand().CommandText;
 

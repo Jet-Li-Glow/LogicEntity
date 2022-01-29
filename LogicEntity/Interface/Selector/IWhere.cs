@@ -11,6 +11,6 @@ namespace LogicEntity.Interface
     {
         public IGroupBy Where(Condition condition);
 
-        public IGroupBy With(ConditionCollection condition);
+        public IGroupBy Conditions(ConditionCollection condition);
     }
 }

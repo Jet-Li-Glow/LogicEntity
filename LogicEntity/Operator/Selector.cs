@@ -126,7 +126,7 @@ namespace LogicEntity.Operator
 
                 columns.AddRange(_relations.SelectMany(s => s.Table?.Columns ?? Enumerable.Empty<Description>()));
 
-                return columns;
+                return columns.AsEnumerable();
             }
         }
 
@@ -262,7 +262,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="conditions"></param>
         /// <returns></returns>
-        public IGroupBy With(ConditionCollection condition)
+        public IGroupBy Conditions(ConditionCollection condition)
         {
             _condition = condition;
 
@@ -566,10 +566,12 @@ namespace LogicEntity.Operator
 
             command.Readers = new Dictionary<int, Func<object, object>>();
 
-            for (int i = 0; i < _columnDescriptions.Count; i++)
+            List<Description> cols = Columns.ToList();
+
+            for (int i = 0; i < cols.Count; i++)
             {
-                if (_columnDescriptions[i].Reader is not null)
-                    command.Readers[i] = _columnDescriptions[i].Reader;
+                if (cols[i].Reader is not null)
+                    command.Readers[i] = cols[i].Reader;
             }
 
             return command;
