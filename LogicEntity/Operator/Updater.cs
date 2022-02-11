@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LogicEntity.EnumCollection;
 using LogicEntity.Interface;
 using LogicEntity.Model;
+using LogicEntity.Tool;
 
 namespace LogicEntity.Operator
 {
@@ -176,10 +177,12 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public override Command GetCommand()
+        /// <summary>
+        /// 获取参数名称唯一的命令
+        /// </summary>
+        /// <returns></returns>
+        public override Command GetCommandWithUniqueParameterName()
         {
-            int index = 0;
-
             Command command = new Command();
 
             command.Parameters = new();
@@ -191,16 +194,7 @@ namespace LogicEntity.Operator
             {
                 relations = "\n" + string.Join("\n", _relations);
 
-                foreach (KeyValuePair<string, object> parameter in _relations.SelectMany(r => r.GetParameters()))
-                {
-                    string key = "@param" + index.ToString();
-
-                    relations = relations.Replace(parameter.Key, key);
-
-                    command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                    index++;
-                }
+                command.Parameters.AddRange(_relations.SelectMany(r => r.Parameters));
             }
 
             //值
@@ -230,13 +224,11 @@ namespace LogicEntity.Operator
                     continue;
                 }
 
-                string key = "@param" + index.ToString();
+                string key = ToolService.UniqueName();
 
                 columns.Add(column.ToString() + " = " + key);
 
                 command.Parameters.Add(KeyValuePair.Create(key, column.Value));
-
-                index++;
             }
 
             string set = "\nSet " + string.Join(",\n    ", columns);
@@ -252,16 +244,7 @@ namespace LogicEntity.Operator
                 {
                     conditions += _condition;
 
-                    foreach (KeyValuePair<string, object> parameter in _condition.GetParameters())
-                    {
-                        string key = "@param" + index.ToString();
-
-                        conditions = conditions.Replace(parameter.Key, key);
-
-                        command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                        index++;
-                    }
+                    command.Parameters.AddRange(_condition.Parameters ?? new List<KeyValuePair<string, object>>());
                 }
             }
 

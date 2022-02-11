@@ -50,6 +50,8 @@ namespace Demo
 
             Student unionStudent = new();
 
+            Student inStudent = new();
+
             Major major = new();
 
             Major nestedMajor = new();
@@ -62,12 +64,47 @@ namespace Demo
                 student.StudentId.As("Alpha"),
                 studentBeta.StudentId.As("Beta"),
                 new Description("student.StudentId").As("Gamma"),
+                student.StudentName.ReadChars(read =>
+                {
+                    List<char> chars = new();
+
+                    char[] buffer = new char[200];
+
+                    long charsRead = 0;
+
+                    do
+                    {
+                        charsRead = read(chars.Count, buffer, 0, buffer.Length);
+
+                        chars.AddRange(buffer.Take((int)charsRead));
+                    }
+                    while (charsRead == buffer.Length);
+
+                    return new string(chars.ToArray(), 0, chars.Count);
+                }),
                 student.StudentName.Distinct().OrderBy(student.StudentId).ThenByDescending(student.StudentName).Separator("*").Group_Concat().As("concatName"),
                 student.Birthday,
                 student.Gender,
                 student.MajorId,
                 student.Guid,
-                student.Bytes,
+                student.Bytes.ReadBytes(read =>
+                {
+                    List<byte> bytes = new();
+
+                    byte[] buffer = new byte[200];
+
+                    long bytesRead = 0;
+
+                    do
+                    {
+                        bytesRead = read(bytes.Count, buffer, 0, buffer.Length);
+
+                        bytes.AddRange(buffer.Take((int)bytesRead));
+                    }
+                    while (bytesRead == buffer.Length);
+
+                    return bytes.ToArray();
+                }),
                 student.Float,
                 student.Double.Sum().As("Double"),
                 student.Decimal.Max().As("Decimal"),
@@ -84,6 +121,9 @@ namespace Demo
                 .Where(true & (student.StudentId == 1 | student.StudentName.Like("%小红%"))
                             & student.Birthday < DateTime.Now
                             & student.StudentId.In(1, 2, 3, 4, 5, 6, 7, "8", ")a")
+                            & student.StudentId.In(DBOperator.Select(inStudent.StudentId)
+                                                             .From(inStudent)
+                                                             .Where(inStudent.StudentId.In(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)))
                             & student.StudentId >= 0
                        )
                 .GroupBy(student.StudentId, major.MajorId)
@@ -118,7 +158,10 @@ namespace Demo
             Student unionB = new Student();
 
             selector = DBOperator.Select().From(unionA).Where(unionA.StudentId == 1)
-                .UnionAll(DBOperator.Select().From(unionB).Where(unionB.StudentId == 2));
+                .UnionAll(DBOperator.Select().From(unionB).Where(unionB.StudentId == 2))
+                .UnionAll(DBOperator.Select().From(unionB).Where(unionB.StudentId == 3))
+                .OrderBy(new Description("StudentId"))
+                .Limit(10);
 
             commandText = selector.GetCommand().CommandText;
 

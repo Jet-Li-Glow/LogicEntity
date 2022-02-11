@@ -44,7 +44,7 @@ namespace LogicEntity.Model
             Table = table;
 
             if (table is not null)
-                _parameters.AddRange(Table.GetParameters());
+                _parameters.AddRange(Table.Parameters);
 
             TableTier = tableTier;
         }
@@ -60,7 +60,7 @@ namespace LogicEntity.Model
             _condition = condition;
 
             if (condition is not null)
-                _parameters.AddRange(condition.GetParameters());
+                _parameters.AddRange(condition.Parameters);
         }
 
         /// <summary>
@@ -73,12 +73,9 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 获取参数
+        /// 参数
         /// </summary>
         /// <returns></returns>
-        internal IEnumerable<KeyValuePair<string, object>> GetParameters()
-        {
-            return _parameters.Select(s => KeyValuePair.Create(s.Key, s.Value));
-        }
+        internal IEnumerable<KeyValuePair<string, object>> Parameters => _parameters.AsEnumerable();
     }
 }

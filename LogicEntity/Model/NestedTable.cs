@@ -61,7 +61,7 @@ namespace LogicEntity.Model
         public override string ToString()
         {
             if (_command is null)
-                _command = _selector?.GetCommand();
+                _command = _selector?.GetCommandWithUniqueParameterName();
 
             return "(\n    " + _command?.CommandText.Replace("\n", "\n    ") + "\n  ) As " + _alias;
         }
@@ -69,12 +69,15 @@ namespace LogicEntity.Model
         /// <summary>
         /// 参数（延迟加载）
         /// </summary>
-        internal override IEnumerable<KeyValuePair<string, object>> GetParameters()
+        internal override IEnumerable<KeyValuePair<string, object>> Parameters
         {
-            if (_command is null)
-                _command = _selector?.GetCommand();
+            get
+            {
+                if (_command is null)
+                    _command = _selector?.GetCommandWithUniqueParameterName();
 
-            return _command?.Parameters;
+                return _command?.Parameters;
+            }
         }
     }
 }

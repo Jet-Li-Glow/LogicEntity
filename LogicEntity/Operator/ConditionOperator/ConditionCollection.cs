@@ -48,12 +48,9 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取参数
+        /// 参数
         /// </summary>
         /// <returns></returns>
-        internal override IEnumerable<KeyValuePair<string, object>> GetParameters()
-        {
-            return Conditions.SelectMany(c => c?.GetParameters() ?? new List<KeyValuePair<string, object>>());
-        }
+        internal override IEnumerable<KeyValuePair<string, object>> Parameters => Conditions.SelectMany(c => c?.Parameters ?? new List<KeyValuePair<string, object>>());
     }
 }

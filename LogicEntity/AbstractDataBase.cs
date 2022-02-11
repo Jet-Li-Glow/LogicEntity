@@ -29,14 +29,16 @@ namespace LogicEntity
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
         /// <param name="clientReaders"></param>
+        /// <param name="clientBytesReaders"></param>
+        /// <param name="clientCharsReaders"></param>
         /// <returns></returns>
-        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
+        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders, Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> clientBytesReaders, Dictionary<int, Func<Func<long, char[], int, int, long>, object>> clientCharsReaders)
         {
             using (IDbConnection connection = GetDbConnection())
             {
                 connection.Open();
 
-                foreach (T t in Query<T>(connection, sql, keyValues, commandTimeout, clientReaders))
+                foreach (T t in Query<T>(connection, sql, keyValues, commandTimeout, clientReaders, clientBytesReaders, clientCharsReaders))
                     yield return t;
             }
         }

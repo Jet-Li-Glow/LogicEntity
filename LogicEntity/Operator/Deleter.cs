@@ -67,14 +67,14 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取操作命令
+        /// 获取参数名称唯一的命令
         /// </summary>
         /// <returns></returns>
-        public override Command GetCommand()
+        public override Command GetCommandWithUniqueParameterName()
         {
             Command command = new Command();
 
-            List<KeyValuePair<string, object>> parameters = new();
+            command.Parameters = new();
 
             string conditions = string.Empty;
 
@@ -82,21 +82,10 @@ namespace LogicEntity.Operator
             {
                 conditions = "\nWhere " + _conditions;
 
-                parameters.AddRange(_conditions?.GetParameters() ?? new List<KeyValuePair<string, object>>());
+                command.Parameters.AddRange(_conditions?.Parameters ?? new List<KeyValuePair<string, object>>());
             }
 
             command.CommandText = $"Delete From {_mainTable?.FullName}{conditions}";
-
-            command.Parameters = new();
-
-            for (int i = 0; i < parameters.Count; i++)
-            {
-                string key = "@param" + i.ToString();
-
-                command.CommandText = command.CommandText.Replace(parameters[i].Key, key);
-
-                command.Parameters.Add(KeyValuePair.Create(key, parameters[i].Value));
-            }
 
             command.Parameters.AddRange(ExtraParameters);
 

@@ -22,10 +22,10 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取参数
+        /// 参数
         /// </summary>
         /// <returns></returns>
-        internal abstract IEnumerable<KeyValuePair<string, object>> GetParameters();
+        internal abstract IEnumerable<KeyValuePair<string, object>> Parameters { get; }
 
         /// <summary>
         /// 直接获取字符串（没有参数）
@@ -36,7 +36,7 @@ namespace LogicEntity.Operator
             {
                 string result = ToString();
 
-                foreach (KeyValuePair<string, object> p in GetParameters())
+                foreach (KeyValuePair<string, object> p in Parameters)
                 {
                     result = result.Replace(p.Key, p.Value.ToSqlParam());
                 }

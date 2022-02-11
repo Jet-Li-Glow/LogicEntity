@@ -149,7 +149,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public IOnDuplicateKeyUpdate<T> Rows(ISelector selector)
         {
-            Command command = selector.GetCommand();
+            Command command = selector.GetCommandWithUniqueParameterName();
 
             _valueDescription.Description = "\n" + command.CommandText;
 
@@ -255,16 +255,14 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取操作命令
+        /// 获取参数名称唯一的命令
         /// </summary>
         /// <returns></returns>
-        public override Command GetCommand()
+        public override Command GetCommandWithUniqueParameterName()
         {
             Command command = new Command();
 
             command.Parameters = new();
-
-            int index = 0;
 
             //操作
             string operate = "Insert Into";
@@ -282,18 +280,7 @@ namespace LogicEntity.Operator
             string valueDescription = _valueDescription.Description ?? string.Empty;
 
             if (_valueDescription.Parameters is not null)
-            {
-                foreach (KeyValuePair<string, object> parameter in _valueDescription.Parameters)
-                {
-                    string key = "@param" + index.ToString();
-
-                    valueDescription = valueDescription.Replace(parameter.Key, key);
-
-                    command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                    index++;
-                }
-            }
+                command.Parameters.AddRange(_valueDescription.Parameters);
 
             //更新
             string update = string.Empty;
@@ -302,16 +289,8 @@ namespace LogicEntity.Operator
             {
                 update = _updateDescription.Description ?? string.Empty;
 
-                foreach (KeyValuePair<string, object> parameter in _updateDescription.Parameters)
-                {
-                    string key = "@param" + index.ToString();
-
-                    update = update.Replace(parameter.Key, key);
-
-                    command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                    index++;
-                }
+                if (_updateDescription.Parameters is not null)
+                    command.Parameters.AddRange(_updateDescription.Parameters);
             }
 
             command.CommandText = $"{operate} {_table.FullName} ({columns}){valueDescription}{update}";

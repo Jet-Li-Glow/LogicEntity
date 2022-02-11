@@ -40,6 +40,16 @@ namespace LogicEntity.Operator
         internal Func<object, object> Reader { get; private set; }
 
         /// <summary>
+        /// 字节读取器
+        /// </summary>
+        internal Func<Func<long, byte[], int, int, long>, object> BytesReader { get; private set; }
+
+        /// <summary>
+        /// 字符读取器
+        /// </summary>
+        internal Func<Func<long, char[], int, int, long>, object> CharsReader { get; private set; }
+
+        /// <summary>
         /// 写入器
         /// </summary>
         internal Func<object, object> Writer { get; private set; }
@@ -128,6 +138,12 @@ namespace LogicEntity.Operator
             description.AddBeforeConvertor(convertor);
 
             description.Read(null);
+
+            description.ReadBytes(null);
+
+            description.ReadChars(null);
+
+            description.Write(null);
 
             return description;
         }
@@ -304,6 +320,11 @@ namespace LogicEntity.Operator
             return new Condition(this, Comparator.Like, str);
         }
 
+        /// <summary>
+        /// 读取
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <returns></returns>
         public Description Read(Func<object, object> reader)
         {
             Reader = reader;
@@ -311,6 +332,39 @@ namespace LogicEntity.Operator
             return this;
         }
 
+        /// <summary>
+        /// 读取字节
+        /// </summary>
+        /// <param name="bytesReader"></param>
+        /// <returns></returns>
+        public Description ReadBytes(Func<Func<long, byte[], int, int, long>, object> bytesReader)
+        {
+            CharsReader = null;
+
+            BytesReader = bytesReader;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 读取字符
+        /// </summary>
+        /// <param name="charsReader"></param>
+        /// <returns></returns>
+        public Description ReadChars(Func<Func<long, char[], int, int, long>, object> charsReader)
+        {
+            BytesReader = null;
+
+            CharsReader = charsReader;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 写入
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <returns></returns>
         public Description Write(Func<object, object> writer)
         {
             Writer = writer;

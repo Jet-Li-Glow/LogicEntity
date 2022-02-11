@@ -24,10 +24,38 @@ namespace LogicEntity.Operator
         /// 获取命令
         /// </summary>
         /// <returns></returns>
-        public virtual Command GetCommand()
+        public Command GetCommand()
         {
-            return new Command();
+            Command command = GetCommandWithUniqueParameterName();
+
+            List<KeyValuePair<string, object>> parameters = new();
+
+            for (int i = 0; i < command.Parameters.Count; i++)
+            {
+                KeyValuePair<string, object> parameter = command.Parameters[i];
+
+#if DEBUG
+                if (parameter.Key.Contains("param"))
+                    throw new Exception("参数名称错误");
+#endif
+
+                string key = "@param" + i.ToString();
+
+                command.CommandText = command.CommandText.Replace(parameter.Key, key);
+
+                parameters.Add(KeyValuePair.Create(key, parameter.Value));
+            }
+
+            command.Parameters = parameters;
+
+            return command;
         }
+
+        /// <summary>
+        /// 获取参数名称唯一的命令
+        /// </summary>
+        /// <returns></returns>
+        public abstract Command GetCommandWithUniqueParameterName();
 
         /// <summary>
         /// 添加参数

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Interface;
 using LogicEntity.Model;
+using LogicEntity.Tool;
 
 namespace LogicEntity.Operator
 {
@@ -52,7 +53,11 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public override Command GetCommand()
+        /// <summary>
+        /// 获取参数名称唯一的命令
+        /// </summary>
+        /// <returns></returns>
+        public override Command GetCommandWithUniqueParameterName()
         {
             Command command = new Command();
 
@@ -62,8 +67,6 @@ namespace LogicEntity.Operator
             List<string> columns = new();
 
             command.Parameters = new();
-
-            int index = 0;
 
             foreach (PropertyInfo property in _change.GetType().GetProperties())
             {
@@ -85,13 +88,11 @@ namespace LogicEntity.Operator
                     continue;
                 }
 
-                string key = "@param" + index.ToString();
+                string key = ToolService.UniqueName();
 
                 columns.Add(column.ToString() + " = " + key);
 
                 command.Parameters.Add(KeyValuePair.Create(key, column.Value));
-
-                index++;
             }
 
             string set = "\nSet " + string.Join(",\n    ", columns);
@@ -106,16 +107,7 @@ namespace LogicEntity.Operator
                 {
                     condition += _condition;
 
-                    foreach (KeyValuePair<string, object> parameter in _condition.GetParameters())
-                    {
-                        string key = "@param" + index.ToString();
-
-                        condition = condition.Replace(parameter.Key, key);
-
-                        command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                        index++;
-                    }
+                    command.Parameters.AddRange(_condition.Parameters ?? new List<KeyValuePair<string, object>>());
                 }
             }
 

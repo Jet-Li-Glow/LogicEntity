@@ -30,5 +30,15 @@ namespace LogicEntity.Model
         /// 读取器
         /// </summary>
         public Dictionary<int, Func<object, object>> Readers { get; set; }
+
+        /// <summary>
+        /// 字节读取器
+        /// </summary>
+        public Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> BytesReaders { get; set; }
+
+        /// <summary>
+        /// 字符读取器
+        /// </summary>
+        public Dictionary<int, Func<Func<long, char[], int, int, long>, object>> CharsReaders { get; set; }
     }
 }

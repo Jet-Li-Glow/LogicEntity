@@ -75,7 +75,7 @@ namespace LogicEntity.Operator
         /// 条件
         /// </summary>
         internal Condition()
-        { 
+        {
         }
 
         /// <summary>
@@ -91,16 +91,10 @@ namespace LogicEntity.Operator
 
             Condition condition = new();
 
-            Command command = right.GetCommand();
+            Command command = right.GetCommandWithUniqueParameterName();
 
-            foreach (KeyValuePair<string, object> parameter in command.Parameters)
-            {
-                string selectorKey = ToolService.UniqueName();
-
-                command.CommandText = command.CommandText.Replace(parameter.Key, selectorKey);
-
-                condition._parameters.Add(KeyValuePair.Create(selectorKey, parameter.Value));
-            }
+            if (command.Parameters is not null)
+                condition._parameters.AddRange(command.Parameters);
 
             condition._conditionStr = $"{left} In \n    (\n      {command.CommandText.Replace("\n", "\n      ")}\n    )";
 
@@ -265,12 +259,9 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取参数
+        /// 参数
         /// </summary>
-        internal override IEnumerable<KeyValuePair<string, object>> GetParameters()
-        {
-            return _parameters.Select(s => KeyValuePair.Create(s.Key, s.Value));
-        }
+        internal override IEnumerable<KeyValuePair<string, object>> Parameters => _parameters.AsEnumerable();
 
         /// <summary>
         /// 组合条件
@@ -293,7 +284,7 @@ namespace LogicEntity.Operator
 
             _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + str;
 
-            AddParameters(condition.GetParameters());
+            AddParameters(condition.Parameters);
 
             return this;
         }

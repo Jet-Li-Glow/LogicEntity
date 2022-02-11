@@ -20,6 +20,12 @@ namespace LogicEntity.Interface
         public Command GetCommand();
 
         /// <summary>
+        /// 获取参数名称唯一的命令
+        /// </summary>
+        /// <returns></returns>
+        public Command GetCommandWithUniqueParameterName();
+
+        /// <summary>
         /// 添加参数
         /// </summary>
         /// <param name="key"></param>

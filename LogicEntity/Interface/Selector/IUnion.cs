@@ -13,13 +13,13 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public IOrderBy Union(ISelector selector);
+        public IUnion Union(ISelector selector);
 
         /// <summary>
         /// 联合所有
         /// </summary>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public IOrderBy UnionAll(ISelector selector);
+        public IUnion UnionAll(ISelector selector);
     }
 }

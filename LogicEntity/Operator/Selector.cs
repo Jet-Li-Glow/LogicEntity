@@ -302,7 +302,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public IOrderBy Union(ISelector selector)
+        public IUnion Union(ISelector selector)
         {
             _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.Union, Selector = selector });
 
@@ -314,7 +314,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="selector"></param>
         /// <returns></returns>
-        public IOrderBy UnionAll(ISelector selector)
+        public IUnion UnionAll(ISelector selector)
         {
             _unionDescriptions.Add(new UnionDescription() { TableTier = TableTier.UnionAll, Selector = selector });
 
@@ -430,13 +430,16 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 获取操作命令
+        /// 获取参数名称唯一的命令
         /// </summary>
         /// <returns></returns>
-        public override Command GetCommand()
+        /// <exception cref="Exception"></exception>
+        public override Command GetCommandWithUniqueParameterName()
         {
-            //参数
-            List<KeyValuePair<string, object>> parameters = new();
+            //命令
+            Command command = new Command();
+
+            command.Parameters = new();
 
             //唯一
             string distinct = _distinct ? "Distinct" : string.Empty;
@@ -456,7 +459,7 @@ namespace LogicEntity.Operator
             {
                 tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables);
 
-                parameters.AddRange(_mainTables.SelectMany(t => t?.GetParameters() ?? new List<KeyValuePair<string, object>>()));
+                command.Parameters.AddRange(_mainTables.SelectMany(t => t?.Parameters ?? new List<KeyValuePair<string, object>>()));
             }
 
             //从表
@@ -466,7 +469,7 @@ namespace LogicEntity.Operator
             {
                 relations = "\n" + string.Join("\n", _relations);
 
-                parameters.AddRange(_relations.SelectMany(r => r.GetParameters()));
+                command.Parameters.AddRange(_relations.SelectMany(r => r.Parameters));
             }
 
             //条件
@@ -480,7 +483,7 @@ namespace LogicEntity.Operator
                 {
                     conditions += _condition;
 
-                    parameters.AddRange(_condition.GetParameters());
+                    command.Parameters.AddRange(_condition.Parameters);
                 }
             }
 
@@ -503,8 +506,20 @@ namespace LogicEntity.Operator
                 {
                     having += _having;
 
-                    parameters.AddRange(_having.GetParameters());
+                    command.Parameters.AddRange(_having.Parameters);
                 }
+            }
+
+            //联合表
+            string union = string.Empty;
+
+            foreach (UnionDescription unionDescription in _unionDescriptions)
+            {
+                Command unionCommand = unionDescription.Selector.GetCommandWithUniqueParameterName();
+
+                union += "\n\n" + unionDescription.TableTier.Description() + "\n\n" + unionCommand.CommandText;
+
+                command.Parameters.AddRange(unionCommand.Parameters);
             }
 
             //排序
@@ -522,49 +537,17 @@ namespace LogicEntity.Operator
             string forUpdate = _isForUpdate ? "\nFor Update" : string.Empty;
 
             //命令
-            Command command = new Command();
-
-            command.CommandText = $"Select {distinct}\n  {columns}{tables}{relations}{conditions}{groupBy}{having}{orderBy}{limit}{forUpdate}";
-
-            command.Parameters = new();
-
-            int index = 0;
-
-            foreach (KeyValuePair<string, object> parameter in parameters)
-            {
-                string key = "@param" + index.ToString();
-
-                command.CommandText = command.CommandText.Replace(parameter.Key, key);
-
-                command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                index++;
-            }
-
-            //联合表
-            foreach (UnionDescription union in _unionDescriptions)
-            {
-                Command unionCommand = union.Selector.GetCommand();
-
-                foreach (KeyValuePair<string, object> parameter in unionCommand.Parameters)
-                {
-                    string key = "@param" + index.ToString();
-
-                    unionCommand.CommandText = unionCommand.CommandText.Replace(parameter.Key, key);
-
-                    command.Parameters.Add(KeyValuePair.Create(key, parameter.Value));
-
-                    index++;
-                }
-
-                command.CommandText += "\n\n" + union.TableTier.Description() + "\n\n" + unionCommand.CommandText;
-            }
+            command.CommandText = $"Select {distinct}\n  {columns}{tables}{relations}{conditions}{groupBy}{having}{union}{orderBy}{limit}{forUpdate}";
 
             command.Parameters.AddRange(ExtraParameters);
 
             command.CommandTimeout = CommandTimeout;
 
-            command.Readers = new Dictionary<int, Func<object, object>>();
+            command.Readers = new();
+
+            command.BytesReaders = new();
+
+            command.CharsReaders = new();
 
             List<Description> cols = Columns.ToList();
 
@@ -572,6 +555,10 @@ namespace LogicEntity.Operator
             {
                 if (cols[i].Reader is not null)
                     command.Readers[i] = cols[i].Reader;
+                else if (cols[i].BytesReader is not null)
+                    command.BytesReaders[i] = cols[i].BytesReader;
+                else if (cols[i].CharsReader is not null)
+                    command.CharsReaders[i] = cols[i].CharsReader;
             }
 
             return command;
