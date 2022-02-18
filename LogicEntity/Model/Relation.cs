@@ -15,11 +15,6 @@ namespace LogicEntity.Model
     internal class Relation
     {
         /// <summary>
-        /// 参数
-        /// </summary>
-        private List<KeyValuePair<string, object>> _parameters = new();
-
-        /// <summary>
         /// 表级别
         /// </summary>
         internal TableTier TableTier { get; private set; }
@@ -39,12 +34,14 @@ namespace LogicEntity.Model
         /// </summary>
         private bool _hasCondition;
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="tableTier"></param>
         public Relation(TableDescription table, TableTier tableTier)
         {
             Table = table;
-
-            if (table is not null)
-                _parameters.AddRange(Table.Parameters);
 
             TableTier = tableTier;
         }
@@ -58,24 +55,38 @@ namespace LogicEntity.Model
             _hasCondition = true;
 
             _condition = condition;
-
-            if (condition is not null)
-                _parameters.AddRange(condition.Parameters);
         }
 
         /// <summary>
-        /// 转为字符串
+        /// 获取命令
         /// </summary>
-        /// <returns></returns>
-        public override string ToString()
+        internal Command GetCommand()
         {
-            return TableTier.Description() + " " + Table + (_hasCondition ? "\n   On " + _condition : string.Empty);
+            Command command = new();
+
+            command.CommandText = TableTier.Description() + " " + Table + (_hasCondition ? "\n   On " + _condition : string.Empty);
+
+            List<KeyValuePair<string, object>> parameters = new();
+
+            if (Table is not null)
+                parameters.AddRange(Table.Parameters);
+
+            if (_condition is not null)
+                parameters.AddRange(_condition.Parameters);
+
+            command.Parameters = parameters.AsEnumerable();
+
+            return command;
         }
 
         /// <summary>
-        /// 参数
+        /// 命令
         /// </summary>
-        /// <returns></returns>
-        internal IEnumerable<KeyValuePair<string, object>> Parameters => _parameters.AsEnumerable();
+        internal class Command
+        {
+            public string CommandText { get; set; }
+
+            public IEnumerable<KeyValuePair<string, object>> Parameters { get; set; }
+        }
     }
 }

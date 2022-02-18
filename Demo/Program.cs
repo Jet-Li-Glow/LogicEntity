@@ -20,6 +20,11 @@ namespace Demo
     {
         static void Main(string[] args)
         {
+            //开发计划  1.CTE 适配Selector、Updater、Changer、Deleter。
+            //          2.ConditionDescription、TableDescription及其他所有带有Parameters属性的类修改为GetCommand规范化提取数据。
+            //          3.添加Windows支持。
+            //          4.添加Json相关函数支持。
+
             Console.WriteLine("-- Start --");
 
             //Db
@@ -176,6 +181,34 @@ namespace Demo
             Student singleObjectTable = new();
 
             Dictionary<string, object> keyValues = myDb.ExecuteScalar<Dictionary<string, object>>(DBOperator.Select(singleObjectTable.Json).From(singleObjectTable).Limit(1));
+
+            //查询 7
+            CommonTableExpression cte = new CommonTableExpression("cte");
+
+            cte.DefineColumns("n");
+
+            cte.Selector = DBOperator.Select(new Description("1"))
+                           .UnionAll(DBOperator.Select(new Description("n") + 1)
+                                     .From(cte)
+                                     .Where(cte.Column("n") < 10));
+
+            CommonTableExpression cte2 = new CommonTableExpression("cte2");
+
+            cte2.DefineColumns("n");
+
+            cte2.Selector = DBOperator.Select(new Description("20"))
+                           .UnionAll(DBOperator.Select(new Description("n") + 1)
+                                     .From(cte2)
+                                     .Where(cte2.Column("n") < 30));
+
+            selector = DBOperator.WithRecursive(cte, cte2)
+                                 .Select()
+                                 .From(cte)
+                                 .UnionAll(DBOperator.Select().From(cte2));
+
+            commandText = selector.GetCommand().CommandText;
+
+            List<int> ns = myDb.Query<int>(selector).ToList();
 
 
             //插入

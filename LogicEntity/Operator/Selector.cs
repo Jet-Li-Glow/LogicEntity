@@ -17,8 +17,18 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 查询操作器
     /// </summary>
-    internal class Selector : OperatorBase, IFrom, IJoin, IOn, IThenBy, IHaving, ISelector
+    internal class Selector : OperatorBase, ISelect, IDistinct, IJoin, IOn, IThenBy, IHaving, ISelector
     {
+        /// <summary>
+        /// 公共表格表达式是否递归
+        /// </summary>
+        bool _isCommonTableExpressionRecursive = false;
+
+        /// <summary>
+        /// 公共表格表达式
+        /// </summary>
+        List<CommonTableExpression> _commonTableExpression = new();
+
         /// <summary>
         /// 是否去重
         /// </summary>
@@ -90,15 +100,8 @@ namespace LogicEntity.Operator
         List<UnionDescription> _unionDescriptions = new();
 
         /// <summary>
-        /// 查询操作器
+        /// 列
         /// </summary>
-        /// <param name="columnDescriptions"></param>
-        public Selector(IEnumerable<Description> columnDescriptions)
-        {
-            if (columnDescriptions is not null)
-                _columnDescriptions.AddRange(columnDescriptions);
-        }
-
         public IEnumerable<Description> Columns
         {
             get
@@ -131,10 +134,50 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
+        /// 公共表格表达式
+        /// </summary>
+        /// <param name="commonTableExpressions"></param>
+        /// <returns></returns>
+        public ISelect With(params CommonTableExpression[] commonTableExpressions)
+        {
+            if (commonTableExpressions is not null)
+                _commonTableExpression.AddRange(commonTableExpressions);
+
+            return this;
+        }
+
+        /// <summary>
+        /// 公共表格表达式
+        /// </summary>
+        /// <param name="commonTableExpressions"></param>
+        /// <returns></returns>
+        public ISelect WithRecursive(params CommonTableExpression[] commonTableExpressions)
+        {
+            With(commonTableExpressions);
+
+            _isCommonTableExpressionRecursive = true;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 查询
+        /// </summary>
+        /// <param name="columnDescriptions"></param>
+        /// <returns></returns>
+        public IDistinct Select(params Description[] columnDescriptions)
+        {
+            if (columnDescriptions is not null)
+                _columnDescriptions.AddRange(columnDescriptions);
+
+            return this;
+        }
+
+        /// <summary>
         /// 取唯一的结果
         /// </summary>
         /// <returns></returns>
-        internal Selector Distinct()
+        public IFrom Distinct()
         {
             _distinct = true;
 
@@ -433,16 +476,48 @@ namespace LogicEntity.Operator
         /// 获取参数名称唯一的命令
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="Exception"></exception>
         public override Command GetCommandWithUniqueParameterName()
         {
             //命令
-            Command command = new Command();
+            Command command = new();
 
             command.Parameters = new();
 
-            //唯一
-            string distinct = _distinct ? "Distinct" : string.Empty;
+            //CTE
+            string with = string.Empty;
+
+            if (_commonTableExpression.Any())
+            {
+                with += "With";
+
+                if (_isCommonTableExpressionRecursive)
+                    with += " Recursive";
+
+                with += "\n";
+
+                with += string.Join(",\n", _commonTableExpression.Select(s =>
+                {
+                    CommonTableExpression.Command cteCommand = s.GetCommonTableExpressionCommand();
+
+                    if (cteCommand is null)
+                        return string.Empty;
+
+                    if (cteCommand.Parameters is not null)
+                        command.Parameters.AddRange(cteCommand.Parameters);
+
+                    return cteCommand.CommandText;
+                }));
+
+                with += "\n";
+            }
+
+            //查询
+            string select = "Select";
+
+            if (_distinct)
+                select += " Distinct";
+
+            select += "\n";
 
             //列
             string columns = string.Empty;
@@ -452,6 +527,8 @@ namespace LogicEntity.Operator
             else
                 columns = "*";
 
+            columns = "  " + columns;
+
             //主表
             string tables = string.Empty;
 
@@ -459,7 +536,7 @@ namespace LogicEntity.Operator
             {
                 tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables);
 
-                command.Parameters.AddRange(_mainTables.SelectMany(t => t?.Parameters ?? new List<KeyValuePair<string, object>>()));
+                command.Parameters.AddRange(_mainTables.SelectMany(t => t?.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>()));
             }
 
             //从表
@@ -467,9 +544,11 @@ namespace LogicEntity.Operator
 
             if (_relations.Any())
             {
-                relations = "\n" + string.Join("\n", _relations);
+                List<Relation.Command> relationCommands = _relations.Select(s => s.GetCommand()).ToList();
 
-                command.Parameters.AddRange(_relations.SelectMany(r => r.Parameters));
+                relations = "\n" + string.Join("\n", relationCommands.Select(s => s.CommandText));
+
+                command.Parameters.AddRange(relationCommands.SelectMany(s => s.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>()));
             }
 
             //条件
@@ -537,7 +616,7 @@ namespace LogicEntity.Operator
             string forUpdate = _isForUpdate ? "\nFor Update" : string.Empty;
 
             //命令
-            command.CommandText = $"Select {distinct}\n  {columns}{tables}{relations}{conditions}{groupBy}{having}{union}{orderBy}{limit}{forUpdate}";
+            command.CommandText = $"{with}{select}{columns}{tables}{relations}{conditions}{groupBy}{having}{union}{orderBy}{limit}{forUpdate}";
 
             command.Parameters.AddRange(ExtraParameters);
 

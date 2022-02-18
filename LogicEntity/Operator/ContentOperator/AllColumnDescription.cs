@@ -16,6 +16,10 @@ namespace LogicEntity.Operator
         /// </summary>
         internal TableDescription Table { get; private set; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="table"></param>
         public AllColumnDescription(TableDescription table)
         {
             Table = table;

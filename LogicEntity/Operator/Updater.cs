@@ -192,9 +192,11 @@ namespace LogicEntity.Operator
 
             if (_relations.Any())
             {
-                relations = "\n" + string.Join("\n", _relations);
+                List<Relation.Command> relationCommands = _relations.Select(s => s.GetCommand()).ToList();
 
-                command.Parameters.AddRange(_relations.SelectMany(r => r.Parameters));
+                relations = "\n" + string.Join("\n", relationCommands.Select(s => s.CommandText));
+
+                command.Parameters.AddRange(relationCommands.SelectMany(s => s.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>()));
             }
 
             //值

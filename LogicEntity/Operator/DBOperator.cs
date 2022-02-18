@@ -20,11 +20,31 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 查询操作器
         /// </summary>
+        /// <param name="commonTableExpressions"></param>
+        /// <returns></returns>
+        public static ISelect With(params CommonTableExpression[] commonTableExpressions)
+        {
+            return new Selector().With(commonTableExpressions);
+        }
+
+        /// <summary>
+        /// 查询操作器
+        /// </summary>
+        /// <param name="commonTableExpressions"></param>
+        /// <returns></returns>
+        public static ISelect WithRecursive(params CommonTableExpression[] commonTableExpressions)
+        {
+            return new Selector().WithRecursive(commonTableExpressions);
+        }
+
+        /// <summary>
+        /// 查询操作器
+        /// </summary>
         /// <param name="columnDescriptions"></param>
         /// <returns></returns>
-        public static IFrom Select(params Description[] columnDescriptions)
+        public static IDistinct Select(params Description[] columnDescriptions)
         {
-            return new Selector(columnDescriptions);
+            return new Selector().Select(columnDescriptions);
         }
 
         /// <summary>
@@ -34,7 +54,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IFrom SelectDistinct(params Description[] columnDescriptions)
         {
-            return new Selector(columnDescriptions).Distinct();
+            return new Selector().Select(columnDescriptions).Distinct();
         }
 
         /// <summary>
