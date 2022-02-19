@@ -18,47 +18,47 @@ namespace LogicEntity.Operator
     public static class DBOperator
     {
         /// <summary>
-        /// 查询操作器
+        /// 查询
         /// </summary>
         /// <param name="commonTableExpressions"></param>
         /// <returns></returns>
-        public static ISelect With(params CommonTableExpression[] commonTableExpressions)
+        public static ICTEDataManipulation With(params CommonTableExpression[] commonTableExpressions)
         {
-            return new Selector().With(commonTableExpressions);
+            return new CTEDataManipulation().With(commonTableExpressions);
         }
 
         /// <summary>
-        /// 查询操作器
+        /// 查询
         /// </summary>
         /// <param name="commonTableExpressions"></param>
         /// <returns></returns>
-        public static ISelect WithRecursive(params CommonTableExpression[] commonTableExpressions)
+        public static ICTEDataManipulation WithRecursive(params CommonTableExpression[] commonTableExpressions)
         {
-            return new Selector().WithRecursive(commonTableExpressions);
+            return new CTEDataManipulation().WithRecursive(commonTableExpressions);
         }
 
         /// <summary>
-        /// 查询操作器
+        /// 查询
         /// </summary>
         /// <param name="columnDescriptions"></param>
         /// <returns></returns>
         public static IDistinct Select(params Description[] columnDescriptions)
         {
-            return new Selector().Select(columnDescriptions);
+            return With(null).Select(columnDescriptions);
         }
 
         /// <summary>
-        /// 查询操作器
+        /// 查询
         /// </summary>
         /// <param name="columnDescriptions"></param>
         /// <returns></returns>
         public static IFrom SelectDistinct(params Description[] columnDescriptions)
         {
-            return new Selector().Select(columnDescriptions).Distinct();
+            return With(null).SelectDistinct(columnDescriptions);
         }
 
         /// <summary>
-        /// 插入操作器
+        /// 插入
         /// </summary>
         /// <param name="table">数据实体</param>
         /// <returns></returns>
@@ -83,7 +83,7 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 插入操作器（当主键冲突时更新）
+        /// 插入（当主键冲突时更新）
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="row"></param>
@@ -124,7 +124,7 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 插入操作器
+        /// 插入
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
@@ -135,7 +135,7 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 插入操作器
+        /// 插入
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
@@ -146,7 +146,7 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 插入操作器
+        /// 插入
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="table">插入的表</param>
@@ -157,16 +157,16 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 更新操作器
+        /// 更新
         /// </summary>
         /// <returns></returns>
         public static IUpdaterJoin<T> Update<T>(T table) where T : Table, new()
         {
-            return new Updater<T>(table);
+            return With(null).Update(table);
         }
 
         /// <summary>
-        /// 更新操作器
+        /// 更新
         /// </summary>
         /// <returns></returns>
         public static IChanger ApplyChanges(Table change)
@@ -175,12 +175,23 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 删除操作器
+        /// 删除
         /// </summary>
+        /// <param name="tables"></param>
         /// <returns></returns>
-        public static IDeleteWhere Delete(Table table)
+        public static IDeleterFrom Delete(params Table[] tables)
         {
-            return new Deleter(table);
+            return With(null).Delete(tables);
+        }
+
+        /// <summary>
+        /// 删除
+        /// </summary>
+        /// <param name="tables"></param>
+        /// <returns></returns>
+        public static IDeleterJoin DeleterFrom(params TableDescription[] tables)
+        {
+            return With(null).DeleterFrom(tables);
         }
     }
 }

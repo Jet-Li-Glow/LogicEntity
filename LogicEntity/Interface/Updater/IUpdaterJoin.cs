@@ -8,7 +8,7 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IUpdaterJoin<T> : IUpdaterSet<T> where T : Table
+    public interface IUpdaterJoin<T> : IUpdaterSet<T> where T : Table, new()
     {
         public IUpdaterOn<T> Join(TableDescription table);
 

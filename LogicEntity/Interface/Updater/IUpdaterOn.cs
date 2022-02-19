@@ -8,7 +8,7 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IUpdaterOn<T> where T : Table
+    public interface IUpdaterOn<T> where T : Table, new()
     {
         public IUpdaterJoin<T> On(Condition condition);
     }

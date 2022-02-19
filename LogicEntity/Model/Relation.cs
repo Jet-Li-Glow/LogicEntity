@@ -64,12 +64,14 @@ namespace LogicEntity.Model
         {
             Command command = new();
 
-            command.CommandText = TableTier.Description() + " " + Table + (_hasCondition ? "\n   On " + _condition : string.Empty);
+            TableDescription.Command tableCommand = Table?.GetCommand();
+
+            command.CommandText = TableTier.Description() + " " + tableCommand?.CommandText + (_hasCondition ? "\n   On " + _condition : string.Empty);
 
             List<KeyValuePair<string, object>> parameters = new();
 
-            if (Table is not null)
-                parameters.AddRange(Table.Parameters);
+            if (tableCommand is not null && tableCommand.Parameters is not null)
+                parameters.AddRange(tableCommand.Parameters);
 
             if (_condition is not null)
                 parameters.AddRange(_condition.Parameters);

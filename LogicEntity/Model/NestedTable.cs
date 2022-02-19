@@ -13,11 +13,9 @@ namespace LogicEntity.Model
     /// </summary>
     public class NestedTable : TableDescription
     {
-        private ISelector _selector;
+        ISelector _selector;
 
-        private Command _command;
-
-        private string _alias;
+        string _alias;
 
         /// <summary>
         /// 嵌套表
@@ -55,29 +53,20 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 转为字符串（延迟加载）
+        /// 获取命令
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        internal override Command GetCommand()
         {
-            if (_command is null)
-                _command = _selector?.GetCommandWithUniqueParameterName();
+            Command command = new();
 
-            return "(\n    " + _command?.CommandText.Replace("\n", "\n    ") + "\n  ) As " + _alias;
-        }
+            Model.Command selectorCommand = _selector?.GetCommandWithUniqueParameterName();
 
-        /// <summary>
-        /// 参数（延迟加载）
-        /// </summary>
-        internal override IEnumerable<KeyValuePair<string, object>> Parameters
-        {
-            get
-            {
-                if (_command is null)
-                    _command = _selector?.GetCommandWithUniqueParameterName();
+            command.CommandText = "(\n    " + selectorCommand?.CommandText.Replace("\n", "\n    ") + "\n  ) As " + _alias;
 
-                return _command?.Parameters;
-            }
+            command.Parameters = selectorCommand?.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>();
+
+            return command;
         }
     }
 }

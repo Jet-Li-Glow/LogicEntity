@@ -7,10 +7,10 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IOrderBy : ILimit
+    public interface IDeleterThenBy : IDeleterLimit
     {
-        public IThenBy OrderBy(Description description);
+        public IDeleterThenBy ThenBy(Description description);
 
-        public IThenBy OrderByDescending(Description description);
+        public IDeleterThenBy ThenByDescending(Description description);
     }
 }

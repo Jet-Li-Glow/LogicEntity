@@ -7,8 +7,8 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
-    public interface IUpdaterSet<T> where T : Table, new()
+    public interface IDelete
     {
-        public IUpdaterWhere Set(Action<T> setValue);
+        public IDeleterFrom Delete(params Table[] tables);
     }
 }

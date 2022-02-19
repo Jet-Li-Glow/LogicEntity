@@ -12,6 +12,6 @@ namespace LogicEntity.Interface
     {
         public IUpdater Where(Condition condition);
 
-        public IUpdater With(ConditionCollection condition);
+        public IUpdater Conditions(ConditionCollection condition);
     }
 }

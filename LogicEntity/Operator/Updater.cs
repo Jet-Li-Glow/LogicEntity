@@ -14,8 +14,18 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 更新操作器
     /// </summary>
-    internal class Updater<T> : OperatorBase, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table, new()
+    internal class Updater<T> : OperatorBase, IUpdate<T>, IUpdaterJoin<T>, IUpdaterOn<T>, IUpdaterWhere where T : Table, new()
     {
+        /// <summary>
+        /// 公共表格表达式是否递归
+        /// </summary>
+        bool _isCommonTableExpressionRecursive = false;
+
+        /// <summary>
+        /// 公共表格表达式
+        /// </summary>
+        List<CommonTableExpression> _commonTableExpression = new();
+
         /// <summary>
         /// 表
         /// </summary>
@@ -42,12 +52,42 @@ namespace LogicEntity.Operator
         bool _hasConditions;
 
         /// <summary>
-        /// 更新操作器
+        /// 公共表格表达式
+        /// </summary>
+        /// <param name="commonTableExpressions"></param>
+        /// <returns></returns>
+        public IUpdate<T> With(params CommonTableExpression[] commonTableExpressions)
+        {
+            if (commonTableExpressions is not null)
+                _commonTableExpression.AddRange(commonTableExpressions);
+
+            return this;
+        }
+
+        /// <summary>
+        /// 公共表格表达式
+        /// </summary>
+        /// <param name="commonTableExpressions"></param>
+        /// <returns></returns>
+        public IUpdate<T> WithRecursive(params CommonTableExpression[] commonTableExpressions)
+        {
+            With(commonTableExpressions);
+
+            _isCommonTableExpressionRecursive = true;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 更新表
         /// </summary>
         /// <param name="table"></param>
-        public Updater(T table)
+        /// <returns></returns>
+        public IUpdaterJoin<T> Update(T table)
         {
             _table = table;
+
+            return this;
         }
 
         /// <summary>
@@ -168,7 +208,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public IUpdater With(ConditionCollection condition)
+        public IUpdater Conditions(ConditionCollection condition)
         {
             _condition = condition;
 
@@ -187,16 +227,54 @@ namespace LogicEntity.Operator
 
             command.Parameters = new();
 
+            //CTE
+            string with = string.Empty;
+
+            if (_commonTableExpression.Any())
+            {
+                with += "With";
+
+                if (_isCommonTableExpressionRecursive)
+                    with += " Recursive";
+
+                with += "\n";
+
+                with += string.Join(",\n", _commonTableExpression.Select(s =>
+                {
+                    CommonTableExpression.CommonTableExpressionCommand cteCommand = s.GetCommonTableExpressionCommand();
+
+                    if (cteCommand is null)
+                        return string.Empty;
+
+                    if (cteCommand.Parameters is not null)
+                        command.Parameters.AddRange(cteCommand.Parameters);
+
+                    return cteCommand.CommandText;
+                }));
+
+                with += "\n";
+            }
+
             //从表
             string relations = string.Empty;
 
             if (_relations.Any())
             {
-                List<Relation.Command> relationCommands = _relations.Select(s => s.GetCommand()).ToList();
+                relations = "\n" + string.Join("\n", _relations.Select(s =>
+                {
+                    if (s is null)
+                        return string.Empty;
 
-                relations = "\n" + string.Join("\n", relationCommands.Select(s => s.CommandText));
+                    Relation.Command relationCommand = s.GetCommand();
 
-                command.Parameters.AddRange(relationCommands.SelectMany(s => s.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>()));
+                    if (relationCommand is null)
+                        return string.Empty;
+
+                    if (relationCommand.Parameters is not null)
+                        command.Parameters.AddRange(relationCommand.Parameters);
+
+                    return relationCommand.CommandText;
+                }));
             }
 
             //值
@@ -250,7 +328,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"Update {_table.FullName}{relations}{set}{conditions}";
+            command.CommandText = $"{with}Update {_table.FullName}{relations}{set}{conditions}";
 
             command.Parameters.AddRange(ExtraParameters);
 

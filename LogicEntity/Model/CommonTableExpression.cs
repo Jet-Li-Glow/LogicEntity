@@ -64,9 +64,9 @@ namespace LogicEntity.Model
         /// <summary>
         /// 获取命令
         /// </summary>
-        internal Command GetCommonTableExpressionCommand()
+        internal CommonTableExpressionCommand GetCommonTableExpressionCommand()
         {
-            Command command = new();
+            CommonTableExpressionCommand command = new();
 
             Model.Command selectorCommand = Selector?.GetCommandWithUniqueParameterName();
 
@@ -83,18 +83,24 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 转为字符串
+        /// 获取命令
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        internal override Command GetCommand()
         {
-            return FinalTableName;
+            Command command = new();
+
+            command.CommandText = FinalTableName;
+
+            command.Parameters = Enumerable.Empty<KeyValuePair<string, object>>();
+
+            return command;
         }
 
         /// <summary>
         /// 命令
         /// </summary>
-        internal class Command
+        internal class CommonTableExpressionCommand
         {
             public string CommandText { get; set; }
 

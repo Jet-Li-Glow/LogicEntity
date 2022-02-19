@@ -80,11 +80,18 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
-        /// 转为字符串
+        /// 获取命令
         /// </summary>
-        public override string ToString()
+        /// <returns></returns>
+        internal override Command GetCommand()
         {
-            return FullName + (TableAlias is null ? string.Empty : " As " + TableAlias);
+            Command command = new();
+
+            command.CommandText = FullName + (TableAlias is null ? string.Empty : " As " + TableAlias);
+
+            command.Parameters = Enumerable.Empty<KeyValuePair<string, object>>();
+
+            return command;
         }
     }
 }

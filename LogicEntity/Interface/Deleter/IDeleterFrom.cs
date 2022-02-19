@@ -7,10 +7,8 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IOrderBy : ILimit
+    public interface IDeleterFrom
     {
-        public IThenBy OrderBy(Description description);
-
-        public IThenBy OrderByDescending(Description description);
+        IDeleterJoin From(params TableDescription[] tables);
     }
 }

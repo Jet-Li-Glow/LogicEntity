@@ -32,19 +32,19 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 转为字符串
+        /// 获取命令
         /// </summary>
-        public abstract override string ToString();
+        /// <returns></returns>
+        internal abstract Command GetCommand();
 
         /// <summary>
-        /// 参数
+        /// 命令
         /// </summary>
-        internal virtual IEnumerable<KeyValuePair<string, object>> Parameters
+        internal class Command
         {
-            get
-            {
-                yield break;
-            }
+            public string CommandText { get; set; }
+
+            public IEnumerable<KeyValuePair<string, object>> Parameters { get; set; }
         }
     }
 }

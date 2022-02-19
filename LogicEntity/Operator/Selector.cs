@@ -417,9 +417,9 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 返回指定条数
+        /// 返回指定行数
         /// </summary>
-        /// <param name="limit">返回的条数</param>
+        /// <param name="limit">返回的行数</param>
         /// <returns></returns>
         public IForUpdate Limit(int limit)
         {
@@ -429,10 +429,10 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 返回指定范围的条目
+        /// 返回指定范围的行
         /// </summary>
-        /// <param name="offset">跳过的条数</param>
-        /// <param name="limit">返回的条数</param>
+        /// <param name="offset">跳过的行</param>
+        /// <param name="limit">返回的行数</param>
         /// <returns></returns>
         public IForUpdate Limit(int offset, int limit)
         {
@@ -442,7 +442,7 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 返回前指定数量的条目
+        /// 返回前指定数量的行
         /// </summary>
         /// <param name="limit"></param>
         /// <returns></returns>
@@ -497,7 +497,7 @@ namespace LogicEntity.Operator
 
                 with += string.Join(",\n", _commonTableExpression.Select(s =>
                 {
-                    CommonTableExpression.Command cteCommand = s.GetCommonTableExpressionCommand();
+                    CommonTableExpression.CommonTableExpressionCommand cteCommand = s.GetCommonTableExpressionCommand();
 
                     if (cteCommand is null)
                         return string.Empty;
@@ -534,9 +534,21 @@ namespace LogicEntity.Operator
 
             if (_hasMainTable)
             {
-                tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables);
+                tables = "\nFrom\n  " + string.Join(",\n  ", _mainTables.Select(s =>
+                {
+                    if (s is null)
+                        return string.Empty;
 
-                command.Parameters.AddRange(_mainTables.SelectMany(t => t?.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>()));
+                    TableDescription.Command tableCommand = s.GetCommand();
+
+                    if (tableCommand is null)
+                        return string.Empty;
+
+                    if (tableCommand.Parameters is not null)
+                        command.Parameters.AddRange(tableCommand.Parameters);
+
+                    return tableCommand.CommandText;
+                }));
             }
 
             //从表
@@ -544,11 +556,21 @@ namespace LogicEntity.Operator
 
             if (_relations.Any())
             {
-                List<Relation.Command> relationCommands = _relations.Select(s => s.GetCommand()).ToList();
+                relations = "\n" + string.Join("\n", _relations.Select(s =>
+                {
+                    if (s is null)
+                        return string.Empty;
 
-                relations = "\n" + string.Join("\n", relationCommands.Select(s => s.CommandText));
+                    Relation.Command relationCommand = s.GetCommand();
 
-                command.Parameters.AddRange(relationCommands.SelectMany(s => s.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>()));
+                    if (relationCommand is null)
+                        return string.Empty;
+
+                    if (relationCommand.Parameters is not null)
+                        command.Parameters.AddRange(relationCommand.Parameters);
+
+                    return relationCommand.CommandText;
+                }));
             }
 
             //条件

@@ -20,8 +20,7 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //开发计划  1.CTE 适配Selector、Updater、Changer、Deleter。
-            //          2.ConditionDescription、TableDescription及其他所有带有Parameters属性的类修改为GetCommand规范化提取数据。
+            //开发计划  1.ConditionDescription 及其他所有带有Parameters属性的类修改为GetCommand规范化提取数据。
             //          3.添加Windows支持。
             //          4.添加Json相关函数支持。
 
@@ -369,12 +368,12 @@ namespace Demo
             //更新 1
             updater = DBOperator.ApplyChanges(updateData).On(updateData.StudentId == Id & updateData.MajorId > 0);
 
-            commandText = insertor.GetCommand().CommandText;
+            commandText = updater.GetCommand().CommandText;
 
             rowsAffected = myDb.ExecuteNonQuery(updater);
 
             //更新 2
-            Major updateMajor = new Major();
+            Major updateMajor = new();
 
             updater = DBOperator.Update(updateData)
                 .LeftJoin(updateMajor).On(updateData.MajorId == updateMajor.MajorId)
@@ -386,23 +385,71 @@ namespace Demo
                 })
                 .Where(updateData.StudentId == Id);
 
-            commandText = insertor.GetCommand().CommandText;
+            commandText = updater.GetCommand().CommandText;
+
+            rowsAffected = myDb.ExecuteNonQuery(updater);
+
+            //更新 3
+            Major cteMajor = new();
+
+            CommonTableExpression updateCTE = new("cte");
+
+            updateCTE.Selector = DBOperator.Select().From(cteMajor).Where(cteMajor.MajorId == 1);
+
+            Major cteUpdateMajor = new();
+
+            updater = DBOperator.With(updateCTE)
+                                .Update(cteUpdateMajor)
+                                .InnerJoin(updateCTE).On(updateCTE.Column("MajorId") == cteUpdateMajor.MajorId)
+                                .Set(s => s.MajorName.Value = s.MajorName.Concat("+"));
+
+            commandText = updater.GetCommand().CommandText;
 
             rowsAffected = myDb.ExecuteNonQuery(updater);
 
             //删除
+            IDeleter deleter;
+
+            //删除 1
             Student deleteTable = new Student();
 
-            IDeleter deleter = DBOperator.Delete(deleteTable).Where(deleteTable.StudentId.In(71116, -1));
+            deleter = DBOperator.DeleterFrom(deleteTable).Where(deleteTable.StudentId.In(71116, -1)).OrderBy(deleteTable.StudentId).Limit(2);
 
-            commandText = insertor.GetCommand().CommandText;
+            commandText = deleter.GetCommand().CommandText;
+
+            rowsAffected = myDb.ExecuteNonQuery(deleter);
+
+            //删除 2
+            Student deleteStudent = new();
+
+            Major deleteMajor = new();
+
+            deleter = DBOperator.Delete(deleteStudent)
+                                .From(deleteStudent)
+                                .InnerJoin(deleteMajor).On(deleteMajor.MajorId == deleteStudent.MajorId)
+                                .Where(deleteMajor.MajorId == 5);
+
+            commandText = deleter.GetCommand().CommandText;
+
+            rowsAffected = myDb.ExecuteNonQuery(deleter);
+
+            //删除 3
+            CommonTableExpression deleteCTE = new("cte");
+
+            deleteCTE.Selector = DBOperator.Select(new Description("-1"));
+
+            Student cteDeleteStudent = new();
+
+            deleter = DBOperator.With(deleteCTE).DeleterFrom(cteDeleteStudent).Where(cteDeleteStudent.StudentId.In(DBOperator.Select().From(deleteCTE)));
+
+            commandText = deleter.GetCommand().CommandText;
 
             rowsAffected = myDb.ExecuteNonQuery(deleter);
 
             //事务 1
             Student transactionDeleteTable = new Student();
 
-            IDeleter transactionDeleter = DBOperator.Delete(transactionDeleteTable).Where(transactionDeleteTable.StudentId.In(71116, -1));
+            IDeleter transactionDeleter = DBOperator.DeleterFrom(transactionDeleteTable).Where(transactionDeleteTable.StudentId.In(71116, -1));
 
             Student transactionStudent = new Student();
             transactionStudent.StudentId.Value = 71116;
