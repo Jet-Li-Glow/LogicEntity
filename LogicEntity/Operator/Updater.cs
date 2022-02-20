@@ -194,21 +194,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public IUpdater Where(Condition condition)
-        {
-            _condition = condition;
-
-            _hasConditions = true;
-
-            return this;
-        }
-
-        /// <summary>
-        /// 添加条件
-        /// </summary>
-        /// <param name="condition"></param>
-        /// <returns></returns>
-        public IUpdater Conditions(ConditionCollection condition)
+        public IUpdater Where(ConditionDescription condition)
         {
             _condition = condition;
 
@@ -320,11 +306,14 @@ namespace LogicEntity.Operator
             {
                 conditions = "\nWhere ";
 
-                if (_condition is not null)
-                {
-                    conditions += _condition;
+                ConditionDescription.Command conditionCommand = _condition?.GetCommand();
 
-                    command.Parameters.AddRange(_condition.Parameters ?? new List<KeyValuePair<string, object>>());
+                if (conditionCommand is not null)
+                {
+                    conditions += conditionCommand.CommandText;
+
+                    if (conditionCommand.Parameters is not null)
+                        command.Parameters.AddRange(conditionCommand.Parameters);
                 }
             }
 

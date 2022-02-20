@@ -16,7 +16,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 条件集合
         /// </summary>
-        private List<Condition> Conditions = new List<Condition>();
+        List<Condition> _conditions = new();
 
         /// <summary>
         /// 逻辑操作符
@@ -29,28 +29,45 @@ namespace LogicEntity.Operator
         /// <param name="condition"></param>
         public void Add(Condition condition)
         {
-            Conditions.Add(condition);
+            _conditions.Add(condition);
         }
 
         /// <summary>
-        /// 转为字符串
+        /// 获取命令
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        internal override Command GetCommand()
         {
-            return string.Join($"\n   {LogicalOperator.Description()} ", Conditions.Select(c =>
+            Command command = new();
+
+            List<KeyValuePair<string, object>> parameters = new();
+
+            command.CommandText = string.Join($"\n   {LogicalOperator.Description()} ", _conditions.Select(s =>
             {
-                if (c is null)
-                    return string.Empty;
+                string result = string.Empty;
 
-                return c.IsMultiple ? "(" + c + ")" : c.ToString();
+                if (s is null)
+                    return result;
+
+                Command conditionCommand = s.GetCommand();
+
+                if (conditionCommand is null)
+                    return result;
+
+                if (conditionCommand.Parameters is not null)
+                    parameters.AddRange(conditionCommand.Parameters);
+
+                result = conditionCommand.CommandText;
+
+                if (s.IsMultiple)
+                    result = $"({result})";
+
+                return result;
             }));
-        }
 
-        /// <summary>
-        /// 参数
-        /// </summary>
-        /// <returns></returns>
-        internal override IEnumerable<KeyValuePair<string, object>> Parameters => Conditions.SelectMany(c => c?.Parameters ?? new List<KeyValuePair<string, object>>());
+            command.Parameters = parameters.AsEnumerable();
+
+            return command;
+        }
     }
 }

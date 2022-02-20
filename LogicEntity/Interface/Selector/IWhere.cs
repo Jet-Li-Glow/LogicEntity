@@ -9,8 +9,6 @@ namespace LogicEntity.Interface
 {
     public interface IWhere : IGroupBy
     {
-        public IGroupBy Where(Condition condition);
-
-        public IGroupBy Conditions(ConditionCollection condition);
+        public IGroupBy Where(ConditionDescription condition);
     }
 }

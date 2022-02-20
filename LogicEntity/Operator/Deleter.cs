@@ -205,21 +205,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public IDeleterOrderBy Where(Condition condition)
-        {
-            _condition = condition;
-
-            _hasConditons = true;
-
-            return this;
-        }
-
-        /// <summary>
-        /// 添加条件
-        /// </summary>
-        /// <param name="condition"></param>
-        /// <returns></returns>
-        public IDeleterOrderBy Conditions(ConditionCollection condition)
+        public IDeleterOrderBy Where(ConditionDescription condition)
         {
             _condition = condition;
 
@@ -397,11 +383,14 @@ namespace LogicEntity.Operator
             {
                 conditions = "\nWhere ";
 
-                if (_condition is not null)
-                {
-                    conditions += _condition;
+                ConditionDescription.Command conditionCommand = _condition?.GetCommand();
 
-                    command.Parameters.AddRange(_condition.Parameters);
+                if (conditionCommand is not null)
+                {
+                    conditions += conditionCommand.CommandText;
+
+                    if (conditionCommand.Parameters is not null)
+                        command.Parameters.AddRange(conditionCommand.Parameters);
                 }
             }
 

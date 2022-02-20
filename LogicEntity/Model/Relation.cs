@@ -64,17 +64,36 @@ namespace LogicEntity.Model
         {
             Command command = new();
 
-            TableDescription.Command tableCommand = Table?.GetCommand();
-
-            command.CommandText = TableTier.Description() + " " + tableCommand?.CommandText + (_hasCondition ? "\n   On " + _condition : string.Empty);
-
             List<KeyValuePair<string, object>> parameters = new();
 
-            if (tableCommand is not null && tableCommand.Parameters is not null)
-                parameters.AddRange(tableCommand.Parameters);
+            TableDescription.Command tableCommand = Table?.GetCommand();
 
-            if (_condition is not null)
-                parameters.AddRange(_condition.Parameters);
+            ConditionDescription.Command conditionCommand = _condition?.GetCommand();
+
+            command.CommandText = TableTier.Description() + " ";
+
+            if (tableCommand is not null)
+            {
+                command.CommandText += tableCommand.CommandText;
+
+                if (tableCommand.Parameters is not null)
+                    parameters.AddRange(tableCommand.Parameters);
+            }
+
+            if (_hasCondition)
+            {
+                command.CommandText += "\n   On ";
+
+                if (conditionCommand is not null)
+                {
+                    command.CommandText += conditionCommand.CommandText;
+
+                    if (conditionCommand.Parameters is not null)
+                    {
+                        parameters.AddRange(conditionCommand.Parameters);
+                    }
+                }
+            }
 
             command.Parameters = parameters.AsEnumerable();
 

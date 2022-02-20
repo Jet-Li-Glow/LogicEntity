@@ -20,9 +20,9 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //开发计划  1.ConditionDescription 及其他所有带有Parameters属性的类修改为GetCommand规范化提取数据。
-            //          3.添加Windows支持。
-            //          4.添加Json相关函数支持。
+            //开发计划  1.添加Windows支持。
+            //          2.添加Json相关函数支持。
+            //          3.修改底层架构，使用SQLNode实现字符串拼接
 
             Console.WriteLine("-- Start --");
 
@@ -150,7 +150,7 @@ namespace Demo
 
             conditions.LogicalOperator = LogicalOperator.Or;
 
-            selector = DBOperator.Select().From(mulStudent).Conditions(conditions);
+            selector = DBOperator.Select().From(mulStudent).Where(conditions);
 
             commandText = selector.GetCommand().CommandText;
 

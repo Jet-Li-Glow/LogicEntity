@@ -103,11 +103,14 @@ namespace LogicEntity.Operator
             {
                 condition = "\nWhere ";
 
-                if (_condition is not null)
-                {
-                    condition += _condition;
+                ConditionDescription.Command conditionCommand = _condition?.GetCommand();
 
-                    command.Parameters.AddRange(_condition.Parameters ?? new List<KeyValuePair<string, object>>());
+                if (conditionCommand is not null)
+                {
+                    condition += conditionCommand.CommandText;
+
+                    if (conditionCommand.Parameters is not null)
+                        command.Parameters.AddRange(conditionCommand.Parameters);
                 }
             }
 

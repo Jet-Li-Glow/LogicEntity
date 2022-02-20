@@ -9,8 +9,6 @@ namespace LogicEntity.Interface
 {
     public interface IDeleterWhere : IDeleterOrderBy
     {
-        public IDeleterOrderBy Where(Condition condition);
-
-        public IDeleterOrderBy Conditions(ConditionCollection condition);
+        public IDeleterOrderBy Where(ConditionDescription condition);
     }
 }

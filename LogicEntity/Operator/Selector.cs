@@ -291,21 +291,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="conditions"></param>
         /// <returns></returns>
-        public IGroupBy Where(Condition condition)
-        {
-            _condition = condition;
-
-            _hasConditions = true;
-
-            return this;
-        }
-
-        /// <summary>
-        /// 添加 WHERE 条件
-        /// </summary>
-        /// <param name="conditions"></param>
-        /// <returns></returns>
-        public IGroupBy Conditions(ConditionCollection condition)
+        public IGroupBy Where(ConditionDescription condition)
         {
             _condition = condition;
 
@@ -580,11 +566,14 @@ namespace LogicEntity.Operator
             {
                 conditions = "\nWhere ";
 
-                if (_condition is not null)
-                {
-                    conditions += _condition;
+                ConditionDescription.Command conditionCommand = _condition?.GetCommand();
 
-                    command.Parameters.AddRange(_condition.Parameters);
+                if (conditionCommand is not null)
+                {
+                    conditions += conditionCommand.CommandText;
+
+                    if (conditionCommand.Parameters is not null)
+                        command.Parameters.AddRange(conditionCommand.Parameters);
                 }
             }
 
@@ -603,11 +592,14 @@ namespace LogicEntity.Operator
             {
                 having = "\nHaving ";
 
-                if (_having is not null)
-                {
-                    having += _having;
+                ConditionDescription.Command havingCommand = _having?.GetCommand();
 
-                    command.Parameters.AddRange(_having.Parameters);
+                if (havingCommand is not null)
+                {
+                    having += havingCommand.CommandText;
+
+                    if (havingCommand.Parameters is not null)
+                        command.Parameters.AddRange(havingCommand.Parameters);
                 }
             }
 

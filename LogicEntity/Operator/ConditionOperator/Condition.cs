@@ -91,12 +91,12 @@ namespace LogicEntity.Operator
 
             Condition condition = new();
 
-            Command command = right.GetCommandWithUniqueParameterName();
+            Model.Command selectorCommand = right.GetCommandWithUniqueParameterName();
 
-            if (command.Parameters is not null)
-                condition._parameters.AddRange(command.Parameters);
+            if (selectorCommand.Parameters is not null)
+                condition._parameters.AddRange(selectorCommand.Parameters);
 
-            condition._conditionStr = $"{left} In \n    (\n      {command.CommandText.Replace("\n", "\n      ")}\n    )";
+            condition._conditionStr = $"{left} In \n    (\n      {selectorCommand.CommandText.Replace("\n", "\n      ")}\n    )";
 
             return condition;
         }
@@ -250,20 +250,6 @@ namespace LogicEntity.Operator
         }
 
         /// <summary>
-        /// 转为字符串
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            return _conditionStr;
-        }
-
-        /// <summary>
-        /// 参数
-        /// </summary>
-        internal override IEnumerable<KeyValuePair<string, object>> Parameters => _parameters.AsEnumerable();
-
-        /// <summary>
         /// 组合条件
         /// </summary>
         /// <param name="logicalOperator"></param>
@@ -280,11 +266,22 @@ namespace LogicEntity.Operator
                 return this;
             }
 
-            string str = condition.IsMultiple ? "(" + condition + ")" : condition.ToString();
+            Command conditionCommand = condition.GetCommand();
+
+            string str = string.Empty;
+
+            if (conditionCommand is not null)
+            {
+                str = conditionCommand.CommandText;
+
+                if (condition.IsMultiple)
+                    str = $"({str})";
+
+                if (conditionCommand.Parameters is not null)
+                    AddParameters(conditionCommand.Parameters);
+            }
 
             _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + str;
-
-            AddParameters(condition.Parameters);
 
             return this;
         }
@@ -297,7 +294,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         private Condition After(LogicalOperator logicalOperator, bool condition)
         {
-            _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + condition.ToString();
+            _conditionStr += "\n" + logicalOperator.Description().PadLeft(5) + " " + condition;
 
             return this;
         }
@@ -366,6 +363,19 @@ namespace LogicEntity.Operator
         public static Condition operator |(bool left, Condition right)
         {
             return new Condition(left.ToString()) | right;
+        }
+
+        /// <summary>
+        /// 获取命令
+        /// </summary>
+        /// <returns></returns>
+        internal override Command GetCommand()
+        {
+            return new Command()
+            {
+                CommandText = _conditionStr,
+                Parameters = _parameters.AsEnumerable()
+            };
         }
     }
 }

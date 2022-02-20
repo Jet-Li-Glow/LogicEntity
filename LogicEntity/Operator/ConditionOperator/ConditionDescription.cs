@@ -13,19 +13,10 @@ namespace LogicEntity.Operator
     public abstract class ConditionDescription
     {
         /// <summary>
-        /// 转为字符串
+        /// 获取命令
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
-        {
-            return default;
-        }
-
-        /// <summary>
-        /// 参数
-        /// </summary>
-        /// <returns></returns>
-        internal abstract IEnumerable<KeyValuePair<string, object>> Parameters { get; }
+        internal abstract Command GetCommand();
 
         /// <summary>
         /// 直接获取字符串（没有参数）
@@ -34,15 +25,35 @@ namespace LogicEntity.Operator
         {
             get
             {
-                string result = ToString();
+                string result = string.Empty;
 
-                foreach (KeyValuePair<string, object> p in Parameters)
+                Command command = GetCommand();
+
+                if (command is null)
+                    return result;
+
+                result = command.CommandText;
+
+                if (command.Parameters is null)
                 {
-                    result = result.Replace(p.Key, p.Value.ToSqlParam());
+                    foreach (KeyValuePair<string, object> p in command.Parameters)
+                    {
+                        result = result.Replace(p.Key, p.Value.ToSqlParam());
+                    }
                 }
 
                 return result;
             }
+        }
+
+        /// <summary>
+        /// 命令
+        /// </summary>
+        internal class Command
+        {
+            public string CommandText { get; set; }
+
+            public IEnumerable<KeyValuePair<string, object>> Parameters { get; set; }
         }
     }
 }
