@@ -1923,5 +1923,167 @@ namespace LogicEntity.Model
 
             return next;
         }
+
+        // Window Function
+
+        /// <summary>
+        /// 窗口
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="window"></param>
+        /// <returns></returns>
+        public static Description Over(this Description description, Window window)
+        {
+            return description?.Next(s => s + $" Over {window.Alias}");
+        }
+
+        /// <summary>
+        /// 窗口
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="setWindow"></param>
+        /// <returns></returns>
+        public static Description Over(this Description description, Action<Window> setWindow)
+        {
+            Window window = new("");
+
+            setWindow(window);
+
+            return description?.Next(s => s + $" Over ({window.ToString().Trim()})");
+        }
+
+        /// <summary>
+        /// 累计分布
+        /// </summary>
+        /// <returns></returns>
+        public static Description Cume_Dist()
+        {
+            return new Description("Cume_Dist()");
+        }
+
+        /// <summary>
+        /// 排名
+        /// </summary>
+        /// <returns></returns>
+        public static Description Dense_Rank()
+        {
+            return new Description("Dense_Rank()");
+        }
+
+        /// <summary>
+        /// 第一个值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description First_Value(Description description)
+        {
+            return new Description($"First_Value({description})");
+        }
+
+        /// <summary>
+        /// 前值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="n"></param>
+        /// <param name="defaultDescription"></param>
+        /// <returns></returns>
+        public static Description Lag(Description description, ulong? n = null, Description defaultDescription = null)
+        {
+            List<string> ps = new();
+
+            ps.Add(description?.ToString());
+
+            if (n.HasValue)
+                ps.Add(n.Value.ToString());
+
+            if (defaultDescription is not null)
+                ps.Add(defaultDescription.ToString());
+
+            return new Description($"Lag({string.Join(", ", ps)})");
+        }
+
+        /// <summary>
+        /// 最后一个值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <returns></returns>
+        public static Description Last_Value(Description description)
+        {
+            return new Description($"Last_Value({description})");
+        }
+
+        /// <summary>
+        /// 后值
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="n"></param>
+        /// <param name="defaultDescription"></param>
+        /// <returns></returns>
+        public static Description Lead(Description description, ulong? n = null, Description defaultDescription = null)
+        {
+            List<string> ps = new();
+
+            ps.Add(description?.ToString());
+
+            if (n.HasValue)
+                ps.Add(n.Value.ToString());
+
+            if (defaultDescription is not null)
+                ps.Add(defaultDescription.ToString());
+
+            return new Description($"Lead({string.Join(", ", ps)})");
+        }
+
+        /// <summary>
+        /// 第n行
+        /// </summary>
+        /// <param name="description"></param>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        public static Description Nth_Value(Description description, ulong n)
+        {
+            return new Description($"Nth_Value({description}, {n})");
+        }
+
+        /// <summary>
+        /// 分组组号
+        /// </summary>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        public static Description Ntile(ulong n)
+        {
+            return new Description($"Ntile({n})");
+        }
+
+        /// <summary>
+        /// 百分比排名
+        /// </summary>
+        /// <returns></returns>
+        public static Description Percent_Rank()
+        {
+            return new Description("Percent_Rank()");
+        }
+
+        /// <summary>
+        /// 排名
+        /// </summary>
+        /// <returns></returns>
+        public static Description Rank()
+        {
+            return new Description("Rank()");
+        }
+
+        /// <summary>
+        /// 行号
+        /// </summary>
+        /// <returns></returns>
+        public static Description Row_Number()
+        {
+            return new Description("Row_Number()");
+        }
+
+        //Json Function
+
+
     }
 }

@@ -20,8 +20,8 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //开发计划  1.添加Windows支持。
-            //          2.添加Json相关函数支持。
+            //开发计划  1.添加Json相关函数支持。
+            //          2.填充优化。
             //          3.修改底层架构，使用SQLNode实现字符串拼接
 
             Console.WriteLine("-- Start --");
@@ -61,6 +61,10 @@ namespace Demo
             Major nestedMajor = new();
 
             var nested = DBOperator.Select().From(nestedMajor).Where(nestedMajor.MajorId == 1).As("nestedMajor");
+
+            Window w = new Window("w").PartitionBy(student.StudentId).OrderBy(student.StudentId).Rows().Between().UnboundedPreceding().And().UnboundedFollowing();
+
+            Window w2 = new Window("w2").PartitionBy(student.StudentId).OrderBy(student.StudentId).Rows().Between().Preceding(new Description("1")).And().Following(new Description("1"));
 
             selector = DBOperator.Select(
                 student.StudentId,
@@ -116,7 +120,9 @@ namespace Demo
                 student.Long.Read(l => (long)l + 1),
                 student.Json,          //可在构造函数中通过 Read 和 Write 设置序列化和反序列化方法 或 显式调用这两个方法
                 nested.Column("MajorId").As("nestedMajorId"),
-                major.All()
+                major.All(),
+                DbFunction.Row_Number().Over(w).As("rowNumber"),
+                DbFunction.Row_Number().Over(w => w.OrderBy(student.StudentId).ThenByDescending(student.MajorId)).As("rowNumber2")
                 )
                 .From(student)
                 .InnerJoin(studentBeta.As("studentBeta")).On(student.StudentId == studentBeta.StudentId)
@@ -132,6 +138,7 @@ namespace Demo
                        )
                 .GroupBy(student.StudentId, major.MajorId)
                 .Having(student.StudentId > 0)
+                .Window(w, w2)
                 .OrderBy(student.StudentId)
                 .ThenBy(major.MajorId)
                 .Limit(1000);

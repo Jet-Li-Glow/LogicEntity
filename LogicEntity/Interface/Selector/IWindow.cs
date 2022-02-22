@@ -7,13 +7,16 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IHaving : IWindow
+    /// <summary>
+    /// 窗口
+    /// </summary>
+    public interface IWindow : IUnion
     {
         /// <summary>
-        /// 分组筛选
+        /// 窗口
         /// </summary>
-        /// <param name="condition"></param>
+        /// <param name="windows"></param>
         /// <returns></returns>
-        public IWindow Having(Condition condition);
+        public IUnion Window(params Window[] windows);
     }
 }

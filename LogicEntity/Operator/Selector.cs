@@ -32,7 +32,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 是否去重
         /// </summary>
-        bool _distinct;
+        bool _distinct = false;
 
         /// <summary>
         /// 列
@@ -47,7 +47,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 是否有主表
         /// </summary>
-        bool _hasMainTable;
+        bool _hasMainTable = false;
 
         /// <summary>
         /// 从表
@@ -62,7 +62,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 是否有条件
         /// </summary>
-        bool _hasConditions;
+        bool _hasConditions = false;
 
         /// <summary>
         /// 分组
@@ -70,14 +70,24 @@ namespace LogicEntity.Operator
         List<Description> _groupBy = new();
 
         /// <summary>
+        /// 是否有分组筛选条件
+        /// </summary>
+        bool _hasHaving = false;
+
+        /// <summary>
         /// 分组筛选条件
         /// </summary>
         ConditionDescription _having;
 
         /// <summary>
-        /// 是否有分组筛选条件
+        /// 窗口
         /// </summary>
-        bool _hasHaving;
+        List<Window> _windows = new();
+
+        /// <summary>
+        /// 是否有窗口
+        /// </summary>
+        bool _hasWindow = false;
 
         /// <summary>
         /// 排序
@@ -92,7 +102,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 是否进行更新
         /// </summary>
-        bool _isForUpdate;
+        bool _isForUpdate = false;
 
         /// <summary>
         /// 联合表
@@ -317,11 +327,26 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="conditions"></param>
         /// <returns></returns>
-        public IUnion Having(Condition condition)
+        public IWindow Having(Condition condition)
         {
             _having = condition;
 
             _hasHaving = true;
+
+            return this;
+        }
+
+        /// <summary>
+        /// 窗口
+        /// </summary>
+        /// <param name="windows"></param>
+        /// <returns></returns>
+        public IUnion Window(params Window[] windows)
+        {
+            if (windows is not null)
+                _windows.AddRange(windows);
+
+            _hasWindow = true;
 
             return this;
         }
@@ -603,6 +628,14 @@ namespace LogicEntity.Operator
                 }
             }
 
+            //窗口
+            string window = string.Empty;
+
+            if (_hasWindow)
+            {
+                window = $"\nWindow {string.Join(",\n       ", _windows.Select(s => $"{s.Alias} As ({s.ToString().Trim()})"))}";
+            }
+
             //联合表
             string union = string.Empty;
 
@@ -630,7 +663,7 @@ namespace LogicEntity.Operator
             string forUpdate = _isForUpdate ? "\nFor Update" : string.Empty;
 
             //命令
-            command.CommandText = $"{with}{select}{columns}{tables}{relations}{conditions}{groupBy}{having}{union}{orderBy}{limit}{forUpdate}";
+            command.CommandText = $"{with}{select}{columns}{tables}{relations}{conditions}{groupBy}{having}{window}{union}{orderBy}{limit}{forUpdate}";
 
             command.Parameters.AddRange(ExtraParameters);
 
