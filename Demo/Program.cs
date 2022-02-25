@@ -21,8 +21,7 @@ namespace Demo
         static void Main(string[] args)
         {
             //开发计划  1.添加Json相关函数支持。
-            //          2.填充优化。
-            //          3.修改底层架构，使用SQLNode实现字符串拼接
+            //          2.修改底层架构，使用SQLNode实现字符串拼接。
 
             Console.WriteLine("-- Start --");
 

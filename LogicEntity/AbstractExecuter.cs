@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,7 +35,34 @@ namespace LogicEntity
             typeof(long),
             typeof(ulong),
             typeof(string),
+            typeof(object)
         };
+
+        static readonly PropertyInfo _ColumnValue = typeof(Column).GetProperty("Value");
+        static readonly MethodInfo _GetBoolean = typeof(IDataRecord).GetMethod("GetBoolean");
+        static readonly MethodInfo _GetByte = typeof(IDataRecord).GetMethod("GetByte");
+        static readonly MethodInfo _GetBytes = typeof(IDataRecord).GetMethod("GetBytes");
+        static readonly MethodInfo _GetChar = typeof(IDataRecord).GetMethod("GetChar");
+        static readonly MethodInfo _GetChars = typeof(IDataRecord).GetMethod("GetChars");
+        static readonly MethodInfo _GetDateTime = typeof(IDataRecord).GetMethod("GetDateTime");
+        static readonly MethodInfo _GetDecimal = typeof(IDataRecord).GetMethod("GetDecimal");
+        static readonly MethodInfo _GetDouble = typeof(IDataRecord).GetMethod("GetDouble");
+        static readonly MethodInfo _GetFloat = typeof(IDataRecord).GetMethod("GetFloat");
+        static readonly MethodInfo _GetGuid = typeof(IDataRecord).GetMethod("GetGuid");
+        static readonly MethodInfo _GetInt16 = typeof(IDataRecord).GetMethod("GetInt16");
+        static readonly MethodInfo _GetInt32 = typeof(IDataRecord).GetMethod("GetInt32");
+        static readonly MethodInfo _GetInt64 = typeof(IDataRecord).GetMethod("GetInt64");
+        static readonly MethodInfo _GetString = typeof(IDataRecord).GetMethod("GetString");
+        static readonly MethodInfo _GetValue = typeof(IDataRecord).GetMethod("GetValue");
+        static readonly MethodInfo _IsDBNull = typeof(IDataRecord).GetMethod("IsDBNull");
+        static readonly MethodInfo _ChangeType = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
+        static readonly MethodInfo _EnumParse = typeof(Enum).GetMethod("Parse", new[] { typeof(Type), typeof(string) });
+        static readonly MethodInfo _EnumIsDefined = typeof(Enum).GetMethod("IsDefined", new[] { typeof(Type), typeof(object) });
+        static readonly ConstructorInfo _InvalidEnumArgumentExceptionConstructor = typeof(InvalidEnumArgumentException).GetConstructor(new[] { typeof(string) });
+        static readonly MethodInfo _StringConcat = typeof(string).GetMethod("Concat", new[] { typeof(string), typeof(string), typeof(string) });
+        static readonly MethodInfo _ClientReaderInvoke = typeof(Func<object, object>).GetMethod("Invoke");
+        static readonly MethodInfo _ClientBytesReaderInvoke = typeof(Func<Func<long, byte[], int, int, long>, object>).GetMethod("Invoke");
+        static readonly MethodInfo _ClientCharsReaderInvoke = typeof(Func<Func<long, char[], int, int, long>, object>).GetMethod("Invoke");
 
         /// <summary>
         /// sql转Command
@@ -67,7 +95,9 @@ namespace LogicEntity
         /// <returns></returns>
         static bool IsDbBaseType(Type type)
         {
-            return BaseTypes.Contains(type);
+            type = Nullable.GetUnderlyingType(type) ?? type;
+
+            return BaseTypes.Contains(type) || type.IsSubclassOf(typeof(Enum));
         }
 
         /// <summary>
@@ -196,10 +226,6 @@ namespace LogicEntity
         /// <exception cref="InvalidEnumArgumentException"></exception>
         protected internal IEnumerable<T> Query<T>(IDbConnection connection, string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders, Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> clientBytesReaders, Dictionary<int, Func<Func<long, char[], int, int, long>, object>> clientCharsReaders) where T : new()
         {
-            Type type = typeof(T);
-
-            type = Nullable.GetUnderlyingType(type) ?? type;
-
             IDbCommand command = connection.CreateCommand();
 
             if (keyValues is not null)
@@ -225,38 +251,33 @@ namespace LogicEntity
 
             using (IDataReader reader = command.ExecuteReader())
             {
-                if (IsDbBaseType(type) == false)
+                if (IsDbBaseType(typeof(T)) == false)
                 {
-                    List<Action<T, IDataReader>> fillActions = new();
-
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        PropertyInfo property = type.GetProperty(reader.GetName(i), BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-                        if (property is null)
-                            continue;
-
-                        if (property.CanWrite == false)
-                            continue;
-
-                        fillActions.Add(_GetFillAction(property, i));
-                    }
+                    Action<T> fill = _GetFillAction(reader);
 
                     while (reader.Read())
                     {
                         T t = new();
 
-                        foreach (Action<T, IDataReader> fill in fillActions)
-                        {
-                            fill(t, reader);
-                        }
+                        fill(t);
 
                         yield return t;
                     }
                 }
                 else
                 {
-                    Func<IDataReader, object> cellReader = _GetCellReader(type, 0);
+                    _GetValueExpression(reader, "single", typeof(T), 0, out List<ParameterExpression> variables, out List<Expression> body, out Expression val);
+
+                    Expression bodyExpression = val;
+
+                    if (variables.Any() && body.Any())
+                    {
+                        body.Add(val);
+
+                        bodyExpression = Expression.Block(variables, body);
+                    }
+
+                    Func<T> cellReader = Expression.Lambda<Func<T>>(bodyExpression).Compile();
 
                     while (reader.Read())
                     {
@@ -271,7 +292,7 @@ namespace LogicEntity
 
                         try
                         {
-                            t = cellReader(reader);
+                            t = cellReader();
                         }
                         catch (Exception exception)
                         {
@@ -283,116 +304,249 @@ namespace LogicEntity
                 }
             }
 
-            Action<T, IDataReader> _GetFillAction(PropertyInfo property, int i)
+            Action<T> _GetFillAction(IDataReader reader)
             {
-                if (property.PropertyType == typeof(Column))
-                    return (t, reader) =>
+                List<ParameterExpression> variables = new();
+
+                List<Expression> body = new();
+
+                ParameterExpression instance = Expression.Parameter(typeof(T), "instance");
+
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    PropertyInfo property = typeof(T).GetProperty(reader.GetName(i), BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+                    if (property is null)
+                        continue;
+
+                    if (property.CanWrite == false)
+                        continue;
+
+                    Type targetType = property.PropertyType;
+
+                    Expression targetAccess = Expression.Property(instance, property);
+
+                    if (property.PropertyType == typeof(Column))
                     {
-                        (property.GetValue(t) as Column).Value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                    };
+                        targetType = typeof(object);
 
-                Type dataType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                        targetAccess = Expression.Property(targetAccess, _ColumnValue);
+                    }
 
-                Func<IDataReader, object> cellReader = _GetCellReader(dataType, i);
+                    _GetValueExpression(reader, property.Name, targetType, i, out List<ParameterExpression> fieldVariables, out List<Expression> fieldBody, out Expression val);
+
+                    variables.AddRange(fieldVariables);
+
+                    body.AddRange(fieldBody);
+
+                    body.Add(Expression.Assign(targetAccess, val));
+                }
+
+#if DEBUG
+                Expression expression = Expression.Lambda<Action<T>>(Expression.Block(variables, body), instance);
+#endif
+
+                return Expression.Lambda<Action<T>>(Expression.Block(variables, body), instance).Compile();
+            }
+
+            void _GetValueExpression(IDataReader reader, string name, Type targetType, int i, out List<ParameterExpression> variables, out List<Expression> body, out Expression val)
+            {
+                variables = new();
+
+                body = new();
+
+                val = null;
+
+                Type dataType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+                Expression isDBNull = Expression.Call(Expression.Constant(reader), _IsDBNull, Expression.Constant(i));
 
                 if (clientReaders is not null && clientReaders.TryGetValue(i, out Func<object, object> clientReader))
                 {
-                    cellReader = reader =>
-                    {
-                        object obj = reader.GetValue(i);
+                    ParameterExpression obj = Expression.Parameter(typeof(object), name + "ClientReaderValue");
 
-                        if (obj is DBNull)
-                            obj = null;
+                    variables.Add(obj);
 
-                        return clientReader(obj);
-                    };
+                    body.Add(Expression.Assign(obj, Expression.Call(Expression.Constant(reader), _GetValue, Expression.Constant(i))));
+
+                    val = Expression.Call(Expression.Constant(clientReader), _ClientReaderInvoke, Expression.Condition(
+                        Expression.TypeIs(obj, typeof(DBNull)),
+                        Expression.Default(typeof(object)),
+                        obj
+                        ));
+
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
                 }
                 else if (clientBytesReaders is not null && clientBytesReaders.TryGetValue(i, out Func<Func<long, byte[], int, int, long>, object> clientBytesReader))
                 {
-                    cellReader = reader => clientBytesReader((offset, buffer, bufferOffset, length) => reader.GetBytes(i, offset, buffer, bufferOffset, length));
+                    val = Expression.Call(Expression.Constant(clientBytesReader), _ClientBytesReaderInvoke,
+                        Expression.Constant(new Func<long, byte[], int, int, long>((offset, buffer, bufferOffset, length) => reader.GetBytes(i, offset, buffer, bufferOffset, length))));
+
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
                 }
                 else if (clientCharsReaders is not null && clientCharsReaders.TryGetValue(i, out Func<Func<long, char[], int, int, long>, object> clientCharsReader))
                 {
-                    cellReader = reader => clientCharsReader((offset, buffer, bufferOffset, length) => reader.GetChars(i, offset, buffer, bufferOffset, length));
+                    val = Expression.Call(Expression.Constant(clientCharsReader), _ClientCharsReaderInvoke,
+                        Expression.Constant(new Func<long, char[], int, int, long>((offset, buffer, bufferOffset, length) => reader.GetChars(i, offset, buffer, bufferOffset, length))));
+
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
                 }
-
-                return (t, reader) =>
+                else if (dataType == typeof(bool))
                 {
-                    if (reader.IsDBNull(i))
-                    {
-                        property.SetValue(t, null);
+                    val = Expression.Call(Expression.Constant(reader), _GetBoolean, Expression.Constant(i));
 
-                        return;
-                    }
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                    object cell = null;
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(byte))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetByte, Expression.Constant(i));
 
-                    try
-                    {
-                        cell = cellReader(reader);
-                    }
-                    catch (Exception exception)
-                    {
-                        throw new InvalidCastException("属性 " + property.Name + " 类型转换异常", exception);
-                    }
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                    property.SetValue(t, cell);
-                };
-            }
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(char))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetChar, Expression.Constant(i));
 
-            Func<IDataReader, object> _GetCellReader(Type type, int i)
-            {
-                if (type == typeof(Column))
-                    return (reader) => reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type == typeof(bool))
-                    return (reader) => reader.GetBoolean(i);
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(DateTime))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetDateTime, Expression.Constant(i));
 
-                if (type == typeof(byte))
-                    return (reader) => reader.GetByte(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type == typeof(char))
-                    return (reader) => reader.GetChar(i);
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(decimal))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetDecimal, Expression.Constant(i));
 
-                if (type == typeof(DateTime))
-                    return (reader) => reader.GetDateTime(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type == typeof(decimal))
-                    return (reader) => reader.GetDecimal(i);
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(double))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetDouble, Expression.Constant(i));
 
-                if (type == typeof(double))
-                    return (reader) => reader.GetDouble(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type == typeof(float))
-                    return (reader) => reader.GetFloat(i);
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(float))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetFloat, Expression.Constant(i));
 
-                if (type == typeof(Guid))
-                    return (reader) => reader.GetGuid(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type == typeof(short))
-                    return (reader) => reader.GetInt16(i);
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(Guid))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetGuid, Expression.Constant(i));
 
-                if (type == typeof(int))
-                    return (reader) => reader.GetInt32(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type == typeof(long))
-                    return (reader) => reader.GetInt64(i);
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(short))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetInt16, Expression.Constant(i));
 
-                if (type == typeof(string))
-                    return (reader) => reader.GetString(i);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                if (type.IsSubclassOf(typeof(Enum)))
-                    return (reader) =>
-                    {
-                        object enumValue = Enum.Parse(type, reader.GetString(i));
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(int))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetInt32, Expression.Constant(i));
 
-                        if (Enum.IsDefined(type, enumValue) == false)
-                            throw new InvalidEnumArgumentException("尝试将【" + reader.GetString(i) + "】转换为 " + type.Name);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
 
-                        return enumValue;
-                    };
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(long))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetInt64, Expression.Constant(i));
 
-                return (reader) => Convert.ChangeType(reader.GetValue(i), type);
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(string))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i));
+
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType == typeof(object))
+                {
+                    val = Expression.Call(Expression.Constant(reader), _GetValue, Expression.Constant(i));
+
+                    if (val.Type != targetType)
+                        val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
+                else if (dataType.IsSubclassOf(typeof(Enum)))
+                {
+                    ParameterExpression enumValue = Expression.Variable(typeof(object), name + "EnumValue");
+
+                    variables.Add(enumValue);
+
+                    body.Add(Expression.Assign(enumValue, Expression.Convert(Expression.Default(targetType), typeof(object))));
+
+                    Expression assign = Expression.Assign(
+                        enumValue,
+                        Expression.Call(_EnumParse, Expression.Constant(dataType), Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)))
+                        );
+
+                    Expression exceptionInfo = Expression.Call(_StringConcat,
+                        Expression.Constant("尝试将【"),
+                        Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)),
+                        Expression.Constant("】转换为 " + dataType.Name)
+                        );
+
+                    Expression check = Expression.IfThen(
+                        Expression.Not(Expression.Call(_EnumIsDefined, Expression.Constant(dataType), enumValue)),
+                        Expression.Throw(Expression.New(_InvalidEnumArgumentExceptionConstructor, exceptionInfo))
+                        );
+
+                    body.Add(Expression.IfThen(Expression.Not(isDBNull), Expression.Block(assign, check)));
+
+                    val = Expression.Convert(enumValue, targetType);
+                }
+                else
+                {
+                    val = Expression.Call(_ChangeType, Expression.Call(Expression.Constant(reader), _GetValue, Expression.Constant(i)), Expression.Constant(targetType));
+
+                    val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
+                }
             }
         }
 

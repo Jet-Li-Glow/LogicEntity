@@ -15,7 +15,7 @@ namespace Demo.Model
 
         public DateTime? Birthday { get; set; }
 
-        public Gender Gender { get; set; }
+        public Gender? Gender { get; set; }
 
         public int MajorId { get; set; }
 
