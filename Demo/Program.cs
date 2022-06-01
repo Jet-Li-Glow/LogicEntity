@@ -90,6 +90,7 @@ namespace Demo
                     return new string(chars.ToArray(), 0, chars.Count);
                 }),
                 student.StudentName.Distinct().OrderBy(student.StudentId).ThenByDescending(student.StudentName).Separator("*").Group_Concat().As("concatName"),
+                student.AnotherName,  //自定义列名
                 student.Birthday,
                 student.Gender,
                 student.MajorId,
@@ -118,7 +119,7 @@ namespace Demo
                 student.Bool,
                 student.Long.Read(l => (long)l + 1),
                 student.Json,          //可在构造函数中通过 Read 和 Write 设置序列化和反序列化方法 或 显式调用这两个方法
-                nested.Column("MajorId").As("nestedMajorId"),
+                nested.Column(nameof(Major.MajorId)).As("nestedMajorId"),
                 major.All(),
                 DbFunction.Row_Number().Over(w).As("rowNumber"),
                 DbFunction.Row_Number().Over(w => w.OrderBy(student.StudentId).ThenByDescending(student.MajorId)).As("rowNumber2")

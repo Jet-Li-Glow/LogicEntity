@@ -45,7 +45,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Column Column(string columnName)
         {
-            Column column = new Column() { Table = this, ColumnName = columnName };
+            Column column = new Column() { Table = this, EntityPropertyName = columnName, ColumnName = columnName };
 
             column.Read(Columns.SingleOrDefault(s => s.Name == columnName)?.Reader);
 

@@ -122,14 +122,14 @@ namespace LogicEntity.Operator
                 {
                     foreach (Description column in _columnDescriptions)
                     {
-                        if (column is not AllColumnDescription)
+                        if (column is AllColumnDescription)
                         {
-                            columns.Add(column);
+                            columns.AddRange((column as AllColumnDescription).Table?.Columns ?? Enumerable.Empty<Description>());
 
                             continue;
                         }
 
-                        columns.AddRange((column as AllColumnDescription).Table?.Columns ?? Enumerable.Empty<Description>());
+                        columns.Add(column);
                     }
 
                     return columns;
@@ -494,6 +494,12 @@ namespace LogicEntity.Operator
 
             command.Parameters = new();
 
+            command.Readers = new();
+
+            command.BytesReaders = new();
+
+            command.CharsReaders = new();
+
             //CTE
             string with = string.Empty;
 
@@ -533,12 +539,32 @@ namespace LogicEntity.Operator
             //列
             string columns = string.Empty;
 
-            if (_columnDescriptions.Any())
-                columns = string.Join(",\n  ", _columnDescriptions.Select(s => s?.ToString()));
+            List<Description> cols = Columns.ToList();
+
+            if (cols.Any())
+                columns = string.Join(",\n  ", cols.Select(s =>
+                {
+                    Column c = s as Column;
+
+                    if (c is not null && c.EntityPropertyName != c.ColumnName && c.HasAlias == false)
+                        return c.As(c.EntityPropertyName).ToString();
+
+                    return s?.ToString();
+                }));
             else
                 columns = "*";
 
             columns = "  " + columns;
+
+            for (int i = 0; i < cols.Count; i++)
+            {
+                if (cols[i].Reader is not null)
+                    command.Readers[i] = cols[i].Reader;
+                else if (cols[i].BytesReader is not null)
+                    command.BytesReaders[i] = cols[i].BytesReader;
+                else if (cols[i].CharsReader is not null)
+                    command.CharsReaders[i] = cols[i].CharsReader;
+            }
 
             //主表
             string tables = string.Empty;
@@ -668,24 +694,6 @@ namespace LogicEntity.Operator
             command.Parameters.AddRange(ExtraParameters);
 
             command.CommandTimeout = CommandTimeout;
-
-            command.Readers = new();
-
-            command.BytesReaders = new();
-
-            command.CharsReaders = new();
-
-            List<Description> cols = Columns.ToList();
-
-            for (int i = 0; i < cols.Count; i++)
-            {
-                if (cols[i].Reader is not null)
-                    command.Readers[i] = cols[i].Reader;
-                else if (cols[i].BytesReader is not null)
-                    command.BytesReaders[i] = cols[i].BytesReader;
-                else if (cols[i].CharsReader is not null)
-                    command.CharsReaders[i] = cols[i].CharsReader;
-            }
 
             return command;
         }

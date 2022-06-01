@@ -17,7 +17,7 @@ namespace LogicEntity.Operator
     {
         private string _content;
 
-        private bool _hasAlias = false;
+        internal bool HasAlias { get; private set; } = false;
 
         private string _alias;
 
@@ -28,11 +28,16 @@ namespace LogicEntity.Operator
         {
             set
             {
-                _hasAlias = true;
+                HasAlias = true;
 
                 _alias = value;
             }
         }
+
+        /// <summary>
+        /// 参数
+        /// </summary>
+        internal List<KeyValuePair<string, object>> Parameters { get; } = new List<KeyValuePair<string, object>>();
 
         /// <summary>
         /// 读取器
@@ -70,15 +75,29 @@ namespace LogicEntity.Operator
         /// 字符串描述
         /// </summary>
         /// <param name="content">描述内容</param>
-        public Description(string content)
+        public Description(string content, params object[] args)
         {
+            if (args is not null)
+            {
+                List<KeyValuePair<string, object>> keyValues = new();
+
+                foreach (object arg in args)
+                {
+                    keyValues.Add(KeyValuePair.Create(ToolService.UniqueName(), arg));
+                }
+
+                content = string.Format(content, keyValues.Select(s => s.Key).ToArray());
+
+                Parameters.AddRange(keyValues);
+            }
+
             _content = content;
         }
 
         /// <summary>
         /// 名称
         /// </summary>
-        public string Name => _hasAlias ? _alias : ToString();
+        public virtual string Name => HasAlias ? _alias : ToString();
 
         /// <summary>
         /// 添加查询前转换器

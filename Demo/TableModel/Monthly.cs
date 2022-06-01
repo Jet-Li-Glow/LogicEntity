@@ -24,7 +24,7 @@ namespace Demo.TableModel
             _tableName = nameof(Monthly) + dateTime.ToString("_yyyy_MM");
         }
 
-        public override string TableName => _tableName;
+        public override string __TableName => _tableName;
 
         /// <summary>
         /// Guid

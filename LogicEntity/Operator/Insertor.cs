@@ -293,7 +293,7 @@ namespace LogicEntity.Operator
                     command.Parameters.AddRange(_updateDescription.Parameters);
             }
 
-            command.CommandText = $"{operate} {_table.FullName} ({columns}){valueDescription}{update}";
+            command.CommandText = $"{operate} {_table.__FullName} ({columns}){valueDescription}{update}";
 
             command.Parameters.AddRange(ExtraParameters);
 

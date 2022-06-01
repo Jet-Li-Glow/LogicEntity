@@ -317,7 +317,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"{with}Update {_table.FullName}{relations}{set}{conditions}";
+            command.CommandText = $"{with}Update {_table.__FullName}{relations}{set}{conditions}";
 
             command.Parameters.AddRange(ExtraParameters);
 

@@ -16,6 +16,10 @@ namespace LogicEntity.Model
     {
         private readonly List<Column> _columns = new();
 
+        private bool _hasAlias;
+
+        private string _alias;
+
         /// <summary>
         /// 表
         /// </summary>
@@ -29,6 +33,8 @@ namespace LogicEntity.Model
 
                 column.Table = this;
 
+                column.EntityPropertyName = property.Name;
+
                 column.ColumnName = property.Name;
 
                 property.SetValue(this, column);
@@ -40,27 +46,22 @@ namespace LogicEntity.Model
         /// <summary>
         /// 库名
         /// </summary>
-        public virtual string SchemaName => string.Empty;
+        public virtual string __SchemaName => string.Empty;
 
         /// <summary>
         /// 表名
         /// </summary>
-        public virtual string TableName => GetType().Name;
+        public virtual string __TableName => GetType().Name;
 
         /// <summary>
         /// 表全名
         /// </summary>
-        public string FullName => SchemaName.IsValid() ? SchemaName + "." + TableName : TableName;
-
-        /// <summary>
-        /// 别名
-        /// </summary>
-        private string TableAlias { get; set; }
+        public string __FullName => __SchemaName.IsValid() ? $"`{__SchemaName}`.`{__TableName}`" : $"`{__TableName}`";
 
         /// <summary>
         /// 最后的表名
         /// </summary>
-        internal override string FinalTableName => TableAlias ?? FullName;
+        internal override string FinalTableName => _hasAlias ? $"`{_alias}`" : __FullName;
 
         /// <summary>
         /// 列
@@ -74,7 +75,9 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Table As(string alias)
         {
-            TableAlias = alias;
+            _hasAlias = true;
+
+            _alias = alias;
 
             return this;
         }
@@ -87,7 +90,7 @@ namespace LogicEntity.Model
         {
             Command command = new();
 
-            command.CommandText = FullName + (TableAlias is null ? string.Empty : " As " + TableAlias);
+            command.CommandText = __FullName + (_hasAlias ? $" As `{_alias}`" : string.Empty);
 
             command.Parameters = Enumerable.Empty<KeyValuePair<string, object>>();
 

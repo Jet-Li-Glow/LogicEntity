@@ -13,6 +13,8 @@ namespace Demo.Model
 
         public string StudentName { get; set; }
 
+        public string AnotherName { get; set; }
+
         public DateTime? Birthday { get; set; }
 
         public Gender? Gender { get; set; }

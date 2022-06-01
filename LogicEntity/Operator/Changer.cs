@@ -114,7 +114,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            command.CommandText = $"Update {_change.FullName}{set}{condition}";
+            command.CommandText = $"Update {_change.__FullName}{set}{condition}";
 
             command.Parameters.AddRange(ExtraParameters);
 

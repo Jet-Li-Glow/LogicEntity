@@ -12,6 +12,11 @@ namespace Demo.TableModel
     /// </summary>
     public class Major : Table
     {
+        public Major()
+        {
+            MajorId.Read(s => s);
+        }
+
         /// <summary>
         /// 专业Id
         /// </summary>

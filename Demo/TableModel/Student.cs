@@ -21,6 +21,8 @@ namespace Demo.TableModel
 
         public Student()
         {
+            AnotherName.ColumnName = "StudentName";
+
             Json.Read(j =>
             {
                 if (j is null || j is DBNull)
@@ -38,13 +40,15 @@ namespace Demo.TableModel
             });
         }
 
-        public override string SchemaName => "testdb";
+        public override string __SchemaName => "testdb";
 
-        public override string TableName => "Student";
+        public override string __TableName => "Student";
 
         public Column StudentId { get; init; }
 
         public Column StudentName { get; init; }
+
+        public Column AnotherName { get; init; }
 
         public Column Birthday { get; init; }
 
