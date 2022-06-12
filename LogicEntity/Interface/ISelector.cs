@@ -11,7 +11,7 @@ namespace LogicEntity.Interface
     /// <summary>
     /// 查询操作器
     /// </summary>
-    public interface ISelector : IDbOperator
+    public interface ISelector : IAddParameterDbOperator
     {
         /// <summary>
         /// 生成嵌套表
@@ -23,6 +23,6 @@ namespace LogicEntity.Interface
         /// <summary>
         /// 列
         /// </summary>
-        public IEnumerable<Description> Columns { get; }
+        public IEnumerable<Column> Columns { get; }
     }
 }

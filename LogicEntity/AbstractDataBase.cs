@@ -19,7 +19,7 @@ namespace LogicEntity
         /// 获取数据库连接
         /// </summary>
         /// <returns></returns>
-        public abstract IDbConnection GetDbConnection();
+        protected abstract IDbConnection __GetDbConnection();
 
         /// <summary>
         /// 使用SQL语句查询，并返回 T 类型的集合
@@ -32,9 +32,9 @@ namespace LogicEntity
         /// <param name="clientBytesReaders"></param>
         /// <param name="clientCharsReaders"></param>
         /// <returns></returns>
-        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders, Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> clientBytesReaders, Dictionary<int, Func<Func<long, char[], int, int, long>, object>> clientCharsReaders)
+        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Dictionary<int, Func<object, object>> clientReaders, Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> clientBytesReaders, Dictionary<int, Func<Func<long, char[], int, int, long>, object>> clientCharsReaders)
         {
-            using (IDbConnection connection = GetDbConnection())
+            using (IDbConnection connection = __GetDbConnection())
             {
                 connection.Open();
 
@@ -51,9 +51,9 @@ namespace LogicEntity
         /// <param name="commandTimeout"></param>
         /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal override DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
+        protected internal override DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
-            using (IDbConnection connection = GetDbConnection())
+            using (IDbConnection connection = __GetDbConnection())
             {
                 connection.Open();
 
@@ -68,9 +68,9 @@ namespace LogicEntity
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
         /// <returns></returns>
-        protected internal override int AbstractExecuteNonQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal override int AbstractExecuteNonQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout)
         {
-            using (IDbConnection connection = GetDbConnection())
+            using (IDbConnection connection = __GetDbConnection())
             {
                 connection.Open();
 
@@ -86,9 +86,9 @@ namespace LogicEntity
         /// <param name="commandTimeout"></param>
         /// <param name="clientReader"></param>
         /// <returns></returns>
-        protected internal override object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader)
+        protected internal override object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Func<object, object> clientReader)
         {
-            using (IDbConnection connection = GetDbConnection())
+            using (IDbConnection connection = __GetDbConnection())
             {
                 connection.Open();
 
@@ -105,7 +105,7 @@ namespace LogicEntity
         {
             Command insert = DBOperator.Insert(row).GetCommand();
 
-            using (IDbConnection connection = GetDbConnection())
+            using (IDbConnection connection = __GetDbConnection())
             {
                 connection.Open();
 
@@ -188,7 +188,7 @@ namespace LogicEntity
 
             exception = null;
 
-            using (IDbConnection connection = GetDbConnection())
+            using (IDbConnection connection = __GetDbConnection())
             {
                 connection.Open();
 
@@ -219,8 +219,8 @@ namespace LogicEntity
 
                         command.CommandTimeout = 30;
 
-                        if (cmd.CommandTimeout > 0)
-                            command.CommandTimeout = cmd.CommandTimeout;
+                        if (cmd.CommandTimeout.HasValue)
+                            command.CommandTimeout = cmd.CommandTimeout.Value;
 
                         affected += command.ExecuteNonQuery();
                     }
@@ -257,7 +257,7 @@ namespace LogicEntity
             if (action is null)
                 return;
 
-            using (DbTransaction transaction = new DbTransaction(this))
+            using (DbTransaction transaction = new DbTransaction(__GetDbConnection()))
             {
                 action(transaction);
             }

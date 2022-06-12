@@ -19,26 +19,26 @@ namespace LogicEntity.Model
         /// <summary>
         /// 命令参数
         /// </summary>
-        public List<KeyValuePair<string, object>> Parameters { get; set; }
+        public List<KeyValuePair<string, object>> Parameters { get; } = new();
 
         /// <summary>
         /// 命令超时时间（秒）
         /// </summary>
-        public int CommandTimeout { get; set; }
+        public int? CommandTimeout { get; set; }
 
         /// <summary>
         /// 读取器
         /// </summary>
-        public Dictionary<int, Func<object, object>> Readers { get; set; }
+        public Dictionary<int, Func<object, object>> Readers { get; } = new();
 
         /// <summary>
         /// 字节读取器
         /// </summary>
-        public Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> BytesReaders { get; set; }
+        public Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> BytesReaders { get; } = new();
 
         /// <summary>
         /// 字符读取器
         /// </summary>
-        public Dictionary<int, Func<Func<long, char[], int, int, long>, object>> CharsReaders { get; set; }
+        public Dictionary<int, Func<Func<long, char[], int, int, long>, object>> CharsReaders { get; } = new();
     }
 }

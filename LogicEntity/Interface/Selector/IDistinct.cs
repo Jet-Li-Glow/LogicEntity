@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Interface
 {
-    public interface IDistinct : IFrom
+    public interface IDistinct : ISelectColumns
     {
         /// <summary>
         /// 取唯一的结果
         /// </summary>
         /// <returns></returns>
-        public IFrom Distinct();
+        public ISelectColumns Distinct();
     }
 }

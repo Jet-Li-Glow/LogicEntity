@@ -8,10 +8,8 @@ namespace LogicEntity.Interface
 {
     public interface ILimit : IForUpdate
     {
-        public IForUpdate Limit(int limit);
+        public IForUpdate Limit(ulong limit);
 
-        public IForUpdate Limit(int offset, int limit);
-
-        public IForUpdate Top(int limit);
+        public IForUpdate Limit(ulong offset, ulong limit);
     }
 }

@@ -17,6 +17,10 @@ namespace LogicEntity.Model
 
         List<string> _columnNames = new();
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="name"></param>
         public CommonTableExpression(string name)
         {
             _name = name;
@@ -39,9 +43,9 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Column Column(string columnName)
         {
-            Column column = new Column() { Table = this, ColumnName = columnName };
+            Column column = new Column(this, columnName);
 
-            column.Read(Columns.SingleOrDefault(s => s.Name == columnName)?.Reader);
+            column.Read(Columns.SingleOrDefault(s => s.FinalColumnName == columnName)?.Reader);
 
             return column;
         }
@@ -52,59 +56,45 @@ namespace LogicEntity.Model
         public ISelector Selector { get; set; }
 
         /// <summary>
-        /// 最后的表名
+        /// 全名
         /// </summary>
-        internal override string FinalTableName => _name;
+        internal override string FullName => _name;
+
+        /// <summary>
+        /// 是否有别名
+        /// </summary>
+        internal override bool HasAlias => false;
+
+        /// <summary>
+        /// 别名
+        /// </summary>
+        internal override string Alias => string.Empty;
 
         /// <summary>
         /// 列
         /// </summary>
-        internal override IEnumerable<Description> Columns => Selector?.Columns ?? Enumerable.Empty<Description>();
+        internal override IEnumerable<Column> Columns => Selector?.Columns ?? Enumerable.Empty<Column>();
 
         /// <summary>
-        /// 获取命令
+        /// 生成定义
         /// </summary>
-        internal CommonTableExpressionCommand GetCommonTableExpressionCommand()
+        internal (string, IEnumerable<KeyValuePair<string, object>>) BuildDefinition()
         {
-            CommonTableExpressionCommand command = new();
-
-            Model.Command selectorCommand = Selector?.GetCommandWithUniqueParameterName();
-
-            string cols = string.Empty;
+            string columnsDefinition = string.Empty;
 
             if (_columnNames.Any())
-                cols = $" ({string.Join(", ", _columnNames)})";
+                columnsDefinition = $"({string.Join(", ", _columnNames)})";
 
-            command.CommandText = $"  {_name}{cols} As\n  (\n    {selectorCommand?.CommandText.Replace("\n", "\n    ")}\n  )";
-
-            command.Parameters = selectorCommand?.Parameters?.AsEnumerable() ?? Enumerable.Empty<KeyValuePair<string, object>>();
-
-            return command;
+            return new Description(_name + " " + columnsDefinition + " As\n (\n    {0}\n  )", Selector).Build();
         }
 
         /// <summary>
-        /// 获取命令
+        /// 生成
         /// </summary>
         /// <returns></returns>
-        internal override Command GetCommand()
+        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
-            Command command = new();
-
-            command.CommandText = FinalTableName;
-
-            command.Parameters = Enumerable.Empty<KeyValuePair<string, object>>();
-
-            return command;
-        }
-
-        /// <summary>
-        /// 命令
-        /// </summary>
-        internal class CommonTableExpressionCommand
-        {
-            public string CommandText { get; set; }
-
-            public IEnumerable<KeyValuePair<string, object>> Parameters { get; set; }
+            return (_name, null);
         }
     }
 }

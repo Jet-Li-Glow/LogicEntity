@@ -7,7 +7,7 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
-    public interface IInsertorColumns<T> where T : Table
+    public interface IInsertorColumns<T> : IInsertorSet<T> where T : Table, new()
     {
         public IInsertorValues<T> Columns(params Column[] columns);
     }

@@ -7,8 +7,10 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IWhere : IGroupBy
+    public interface IUpdaterOrderBy : IUpdaterLimit
     {
-        public IGroupBy Where(Description condition);
+        public IUpdaterThenBy OrderBy(Description description);
+
+        public IUpdaterThenBy OrderByDescending(Description description);
     }
 }

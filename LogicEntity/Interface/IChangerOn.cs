@@ -7,8 +7,8 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IWhere : IGroupBy
+    public interface IChangerOn
     {
-        public IGroupBy Where(Description condition);
+        public IUpdater On(Description condition);
     }
 }

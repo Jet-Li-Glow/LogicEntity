@@ -14,28 +14,22 @@ namespace LogicEntity.Model
     /// </summary>
     public abstract class Table : TableDescription
     {
-        private readonly List<Column> _columns = new();
+        List<Column> _columns = new();
 
-        private bool _hasAlias;
+        bool _hasAlias;
 
-        private string _alias;
+        string _alias;
 
         /// <summary>
-        /// 表
+        /// 构造
         /// </summary>
         public Table()
         {
-            var properties = GetType().GetProperties().Where(p => p.PropertyType == typeof(Column) || p.PropertyType.IsSubclassOf(typeof(Column)));
+            var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.PropertyType == typeof(Column));
 
             foreach (PropertyInfo property in properties)
             {
-                Column column = Activator.CreateInstance(property.PropertyType) as Column;
-
-                column.Table = this;
-
-                column.EntityPropertyName = property.Name;
-
-                column.ColumnName = property.Name;
+                Column column = new Column(this, property.Name);
 
                 property.SetValue(this, column);
 
@@ -54,19 +48,24 @@ namespace LogicEntity.Model
         public virtual string __TableName => GetType().Name;
 
         /// <summary>
-        /// 表全名
+        /// 全名
         /// </summary>
-        public string __FullName => __SchemaName.IsValid() ? $"`{__SchemaName}`.`{__TableName}`" : $"`{__TableName}`";
-
-        /// <summary>
-        /// 最后的表名
-        /// </summary>
-        internal override string FinalTableName => _hasAlias ? $"`{_alias}`" : __FullName;
+        internal override string FullName => (__SchemaName.IsValid() ? $"`{__SchemaName}`." : string.Empty) + $"`{__TableName}`";
 
         /// <summary>
         /// 列
         /// </summary>
-        internal override IEnumerable<Description> Columns => _columns.AsEnumerable();
+        internal override IEnumerable<Column> Columns => _columns.AsEnumerable();
+
+        /// <summary>
+        /// 是否有别名
+        /// </summary>
+        internal override bool HasAlias => _hasAlias;
+
+        /// <summary>
+        /// 别名
+        /// </summary>
+        internal override string Alias => _alias;
 
         /// <summary>
         /// 添加别名
@@ -75,26 +74,21 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Table As(string alias)
         {
-            _hasAlias = true;
-
             _alias = alias;
+
+            _hasAlias = true;
 
             return this;
         }
 
         /// <summary>
-        /// 获取命令
+        /// 生成
         /// </summary>
         /// <returns></returns>
-        internal override Command GetCommand()
+        /// <exception cref="NotImplementedException"></exception>
+        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
-            Command command = new();
-
-            command.CommandText = __FullName + (_hasAlias ? $" As `{_alias}`" : string.Empty);
-
-            command.Parameters = Enumerable.Empty<KeyValuePair<string, object>>();
-
-            return command;
+            return (FullName + (_hasAlias ? $" As `{_alias}`" : string.Empty), null);
         }
     }
 }

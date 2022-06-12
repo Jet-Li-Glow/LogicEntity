@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity.Interface
+namespace LogicEntity.Model
 {
-    public interface IDeleterLimit : IDeleter
+    internal enum SqlValue
     {
-        public IDeleter Limit(ulong limit);
+        Null
     }
 }

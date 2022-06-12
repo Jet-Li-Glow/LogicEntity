@@ -29,22 +29,6 @@ namespace LogicEntity.Tool
         }
 
         /// <summary>
-        /// 转为Sql字符串参数
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static string ToSqlParam(this object obj)
-        {
-            if (obj is null)
-                return "Null";
-
-            if (obj is string)
-                return $"'{obj}'";
-
-            return obj.ToString();
-        }
-
-        /// <summary>
         /// 唯一名称
         /// </summary>
         /// <returns></returns>

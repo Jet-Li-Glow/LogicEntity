@@ -14,17 +14,13 @@ namespace LogicEntity.Model
     /// </summary>
     public class DbTransaction : AbstractExecuter, IDisposable
     {
-        AbstractDataBase _dataBase;
-
         IDbConnection _connection;
 
         IDbTransaction _transaction;
 
-        public DbTransaction(AbstractDataBase dataBase)
+        public DbTransaction(IDbConnection connection)
         {
-            _dataBase = dataBase;
-
-            _connection = _dataBase.GetDbConnection();
+            _connection = connection;
 
             _connection.Open();
 
@@ -63,7 +59,7 @@ namespace LogicEntity.Model
         /// <param name="clientBytesReaders"></param>
         /// <param name="clientCharsReaders"></param>
         /// <returns></returns>
-        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders, Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> clientBytesReaders, Dictionary<int, Func<Func<long, char[], int, int, long>, object>> clientCharsReaders)
+        protected internal override IEnumerable<T> AbstractQuery<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Dictionary<int, Func<object, object>> clientReaders, Dictionary<int, Func<Func<long, byte[], int, int, long>, object>> clientBytesReaders, Dictionary<int, Func<Func<long, char[], int, int, long>, object>> clientCharsReaders)
         {
             return Query<T>(_connection, sql, keyValues, commandTimeout, clientReaders, clientBytesReaders, clientCharsReaders);
         }
@@ -76,7 +72,7 @@ namespace LogicEntity.Model
         /// <param name="commandTimeout"></param>
         /// <param name="clientReaders"></param>
         /// <returns></returns>
-        protected internal override DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
+        protected internal override DataTable AbstractQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Dictionary<int, Func<object, object>> clientReaders)
         {
             return Query(_connection, sql, keyValues, commandTimeout, clientReaders);
         }
@@ -88,7 +84,7 @@ namespace LogicEntity.Model
         /// <param name="keyValues"></param>
         /// <param name="commandTimeout"></param>
         /// <returns></returns>
-        protected internal override int AbstractExecuteNonQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout)
+        protected internal override int AbstractExecuteNonQuery(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout)
         {
             return ExecuteNonQuery(_connection, sql, keyValues, commandTimeout);
         }
@@ -101,7 +97,7 @@ namespace LogicEntity.Model
         /// <param name="commandTimeout"></param>
         /// <param name="clientReader"></param>
         /// <returns></returns>
-        protected internal override object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int commandTimeout, Func<object, object> clientReader)
+        protected internal override object AbstractExecuteScalar(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Func<object, object> clientReader)
         {
             return ExecuteScalar(_connection, sql, keyValues, commandTimeout, clientReader);
         }

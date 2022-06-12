@@ -17,6 +17,8 @@ namespace LogicEntity.Model
 
         string _alias;
 
+        IEnumerable<Column> _columns;
+
         /// <summary>
         /// 嵌套表
         /// </summary>
@@ -26,17 +28,29 @@ namespace LogicEntity.Model
             _selector = selector;
 
             _alias = alias;
+
+            _columns = _selector?.Columns ?? Enumerable.Empty<Column>();
         }
 
         /// <summary>
-        /// 最后的表名
+        /// 全名
         /// </summary>
-        internal override string FinalTableName => _alias;
+        internal override string FullName => string.Empty;
+
+        /// <summary>
+        /// 是否有别名
+        /// </summary>
+        internal override bool HasAlias => true;
+
+        /// <summary>
+        /// 别名
+        /// </summary>
+        internal override string Alias => _alias;
 
         /// <summary>
         /// 列
         /// </summary>
-        internal override IEnumerable<Description> Columns => _selector?.Columns ?? Enumerable.Empty<Description>();
+        internal override IEnumerable<Column> Columns => _columns;
 
         /// <summary>
         /// 列
@@ -45,28 +59,23 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Column Column(string columnName)
         {
-            Column column = new Column() { Table = this, EntityPropertyName = columnName, ColumnName = columnName };
+            Column column = new Column(this, columnName);
 
-            column.Read(Columns.SingleOrDefault(s => s.Name == columnName)?.Reader);
+            column.Read(_columns.SingleOrDefault(s => s.FinalColumnName == columnName)?.Reader);
 
             return column;
         }
 
         /// <summary>
-        /// 获取命令
+        /// 生成
         /// </summary>
         /// <returns></returns>
-        internal override Command GetCommand()
+        /// <exception cref="NotImplementedException"></exception>
+        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
-            Command command = new();
+            Command selectorCommand = _selector?.GetCommandWithUniqueParameterName();
 
-            Model.Command selectorCommand = _selector?.GetCommandWithUniqueParameterName();
-
-            command.CommandText = "(\n    " + selectorCommand?.CommandText.Replace("\n", "\n    ") + "\n  ) As " + _alias;
-
-            command.Parameters = selectorCommand?.Parameters ?? Enumerable.Empty<KeyValuePair<string, object>>();
-
-            return command;
+            return ($"(\n    {selectorCommand?.CommandText?.Replace("\n", "\n    ")}\n  ) As `{_alias}`", selectorCommand?.Parameters);
         }
     }
 }

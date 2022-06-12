@@ -8,7 +8,6 @@ using System.Text.Json;
 using Demo.Model;
 using Demo.TableModel;
 using LogicEntity;
-using LogicEntity.EnumCollection;
 using LogicEntity.Interface;
 using LogicEntity.Model;
 using LogicEntity.Operator;
@@ -20,13 +19,14 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //开发计划  1.添加Json相关函数支持。
-            //          2.修改底层架构，使用SQLNode实现字符串拼接。
+            //Version 0.7.0
+
+            //开发计划  1.Debug
 
             Console.WriteLine("-- Start --");
 
             //Db
-            MySqlDb myDb = Database.TestDb;
+            MySQL db = Database.TestDb;
 
             string commandText;
 
@@ -42,9 +42,9 @@ namespace Demo
             //查询 1
             Student table = new();
 
-            studentEntitys = myDb.Query<Student>(DBOperator.Select().From(table)).ToList();
+            studentEntitys = db.Query<Student>(DBOperator.Select().From(table)).ToList();
 
-            students = myDb.Query<StudentInfo>(DBOperator.Select().From(table)).ToList();
+            students = db.Query<StudentInfo>(DBOperator.Select().From(table)).ToList();
 
             //查询 2
             Student student = new();
@@ -63,7 +63,7 @@ namespace Demo
 
             Window w = new Window("w").PartitionBy(student.StudentId).OrderBy(student.StudentId).Rows().Between().UnboundedPreceding().And().UnboundedFollowing();
 
-            Window w2 = new Window("w2").PartitionBy(student.StudentId).OrderBy(student.StudentId).Rows().Between().Preceding(new Description("1")).And().Following(new Description("1"));
+            Window w2 = new Window("w2").PartitionBy(student.StudentId).OrderBy(student.StudentId).Rows().Between().Preceding(1).And().Following(1);
 
             selector = DBOperator.Select(
                 student.StudentId,
@@ -89,7 +89,7 @@ namespace Demo
 
                     return new string(chars.ToArray(), 0, chars.Count);
                 }),
-                student.StudentName.Distinct().OrderBy(student.StudentId).ThenByDescending(student.StudentName).Separator("*").Group_Concat().As("concatName"),
+                DbFunction.Group_Concat(student.StudentName.Distinct().OrderBy(student.StudentId).ThenByDescending(student.StudentName).Separator("*")).As("concatName"),
                 student.AnotherName,  //自定义列名
                 student.Birthday,
                 student.Gender,
@@ -122,12 +122,13 @@ namespace Demo
                 nested.Column(nameof(Major.MajorId)).As("nestedMajorId"),
                 major.All(),
                 DbFunction.Row_Number().Over(w).As("rowNumber"),
-                DbFunction.Row_Number().Over(w => w.OrderBy(student.StudentId).ThenByDescending(student.MajorId)).As("rowNumber2")
+                DbFunction.Row_Number().Over(t => t.OrderBy(student.StudentId).ThenByDescending(student.MajorId)).As("rowNumber2")
                 )
-                .From(student)
+                .From(student
                 .InnerJoin(studentBeta.As("studentBeta")).On(student.StudentId == studentBeta.StudentId)
                 .LeftJoin(major).On(major.MajorId == student.MajorId)
-                .LeftJoin(nested).On(nested.Column("MajorId") == student.MajorId)
+                .LeftJoin(nested).On(nested.Column(nameof(Major.MajorId)) == student.MajorId)
+                )
                 .Where(true & (student.StudentId == 1 | student.StudentName.Like("%小红%"))
                             & student.Birthday < DateTime.Now
                             & student.StudentId.In(1, 2, 3, 4, 5, 6, 7, "8", ")a")
@@ -143,9 +144,9 @@ namespace Demo
                 .ThenBy(major.MajorId)
                 .Limit(1000);
 
-            commandText = selector.GetCommand().CommandText;
+            Command command = selector.GetCommand();
 
-            students = myDb.Query<StudentInfo>(selector).ToList();
+            students = db.Query<StudentInfo>(selector).ToList();
 
             //查询 3
             Student mulStudent = new Student();
@@ -161,7 +162,7 @@ namespace Demo
 
             commandText = selector.GetCommand().CommandText;
 
-            students = myDb.Query<StudentInfo>(selector).ToList();
+            students = db.Query<StudentInfo>(selector).ToList();
 
             //查询 4
             Student unionA = new Student();
@@ -176,17 +177,17 @@ namespace Demo
 
             commandText = selector.GetCommand().CommandText;
 
-            students = myDb.Query<StudentInfo>(selector).ToList();
+            students = db.Query<StudentInfo>(selector).ToList();
 
             //查询 5
             Student singleColumnTable = new Student();
 
-            List<Guid?> guids = myDb.Query<Guid?>(DBOperator.Select(singleColumnTable.Guid).From(singleColumnTable).Where(singleColumnTable.StudentId < 10)).ToList();
+            List<Guid?> guids = db.Query<Guid?>(DBOperator.Select(singleColumnTable.Guid).From(singleColumnTable).Where(singleColumnTable.StudentId < 10)).ToList();
 
             //查询 6
             Student singleObjectTable = new();
 
-            Dictionary<string, object> keyValues = myDb.ExecuteScalar<Dictionary<string, object>>(DBOperator.Select(singleObjectTable.Json).From(singleObjectTable).Limit(1));
+            Dictionary<string, object> keyValues = db.ExecuteScalar<Dictionary<string, object>>(DBOperator.Select(singleObjectTable.Json).From(singleObjectTable).Limit(1));
 
             //查询 7
             CommonTableExpression cte = new CommonTableExpression("cte");
@@ -214,7 +215,7 @@ namespace Demo
 
             commandText = selector.GetCommand().CommandText;
 
-            List<int> ns = myDb.Query<int>(selector).ToList();
+            List<int> ns = db.Query<int>(selector).ToList();
 
 
             //插入
@@ -231,14 +232,14 @@ namespace Demo
             IInsertor insertor;
 
             //插入 1
-            ulong Id = myDb.InsertNext(data);
+            ulong Id = db.InsertNext(data);
 
             //插入 2
             insertor = DBOperator.Insert(data);
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //插入 3 Ignore
             Student insertIgnoreTable = new();
@@ -247,22 +248,22 @@ namespace Demo
 
             insertor = DBOperator.InsertIgnore(insertIgnoreTable)
                 .Columns(insertIgnoreTable.StudentId, insertIgnoreTable.StudentName, insertIgnoreTable.MajorId, insertIgnoreTable.Birthday, insertIgnoreTable.Guid)
-                .Row(data);
+                .Rows(data);
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //插入 4 Replace
             Student replaceIntoTable = new();
 
             insertor = DBOperator.ReplaceInto(replaceIntoTable)
                 .Columns(replaceIntoTable.StudentId, replaceIntoTable.StudentName, replaceIntoTable.MajorId, replaceIntoTable.Birthday, replaceIntoTable.Guid)
-                .Row(data);
+                .Rows(data);
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //插入 5 Save (OnDuplicateKeyUpdate)
             Student saveData = new Student();
@@ -278,7 +279,7 @@ namespace Demo
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //插入 6 OnDuplicateKeyUpdate
             Student insertUpdateTable = new();
@@ -291,7 +292,7 @@ namespace Demo
                     insertUpdateTable.Birthday,
                     insertUpdateTable.Guid
                 )
-                .Row(data, data)
+                .Rows(data, data)
                 .OnDuplicateKeyUpdate((s, row) =>
                 {
                     s.StudentName.Value = row.StudentName;
@@ -301,7 +302,7 @@ namespace Demo
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             Student insertUpdateTableBeta = new();
 
@@ -313,7 +314,7 @@ namespace Demo
                     insertUpdateTableBeta.Birthday,
                     insertUpdateTableBeta.Guid
                 )
-                .Rows(new List<Student>() { data, data })
+                .Rows(new Student[] { data, data })
                 .OnDuplicateKeyUpdate(s =>
                 {
                     s.StudentName.Value = s.StudentName.Values();
@@ -323,14 +324,14 @@ namespace Demo
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //插入 7 Partition
             Monthly monthly_2021_12 = new Monthly(new DateTime(2021, 12, 1));
 
             insertor = DBOperator.InsertInto(monthly_2021_12)
                 .Columns(monthly_2021_12.Guid, monthly_2021_12.DateTime, monthly_2021_12.Description)
-                .Row(new
+                .Rows(new
                 {
                     Guid = new Guid("{5954B812-D34B-4F10-8A07-B17A146FAB5C}"),
                     DateTime = DateTime.Now,
@@ -343,7 +344,7 @@ namespace Demo
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //插入 8
 
@@ -352,7 +353,7 @@ namespace Demo
             Major Original = new Major();
 
             insertor = DBOperator.InsertInto(Target).Columns(Target.StudentName, Target.Birthday, Target.MajorId)
-                .Rows(
+                .SelectRows(
                     DBOperator.Select(
                         Original.MajorName.As("StudentName"),
                         DbFunction.Now().As("Birthday"),
@@ -363,7 +364,7 @@ namespace Demo
 
             commandText = insertor.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(insertor);
+            rowsAffected = db.ExecuteNonQuery(insertor);
 
             //更新
             Student updateData = new();
@@ -377,14 +378,15 @@ namespace Demo
 
             commandText = updater.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(updater);
+            rowsAffected = db.ExecuteNonQuery(updater);
 
             //更新 2
             Major updateMajor = new();
 
-            updater = DBOperator.Update(updateData)
+            updater = DBOperator.Update(updateData
                 .LeftJoin(updateMajor).On(updateData.MajorId == updateMajor.MajorId)
-                .Set(s =>
+                )
+                .Set<Student>(s =>
                 {
                     s.StudentName.Value = updateMajor.MajorName;
                     s.Birthday.Value = DateTime.Now;
@@ -394,7 +396,7 @@ namespace Demo
 
             commandText = updater.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(updater);
+            rowsAffected = db.ExecuteNonQuery(updater);
 
             //更新 3
             Major cteMajor = new();
@@ -406,13 +408,14 @@ namespace Demo
             Major cteUpdateMajor = new();
 
             updater = DBOperator.With(updateCTE)
-                                .Update(cteUpdateMajor)
+                                .Update(cteUpdateMajor
                                 .InnerJoin(updateCTE).On(updateCTE.Column("MajorId") == cteUpdateMajor.MajorId)
-                                .Set(s => s.MajorName.Value = s.MajorName.Concat("+"));
+                                )
+                                .Set<Major>(s => s.MajorName.Value = DbFunction.Concat(s.MajorName, "+"));
 
             commandText = updater.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(updater);
+            rowsAffected = db.ExecuteNonQuery(updater);
 
             //删除
             IDeleter deleter;
@@ -420,11 +423,11 @@ namespace Demo
             //删除 1
             Student deleteTable = new Student();
 
-            deleter = DBOperator.DeleterFrom(deleteTable).Where(deleteTable.StudentId.In(71116, -1)).OrderBy(deleteTable.StudentId).Limit(2);
+            deleter = DBOperator.DeleteFrom(deleteTable).Where(deleteTable.StudentId.In(71116, -1)).OrderBy(deleteTable.StudentId).Limit(2);
 
             commandText = deleter.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(deleter);
+            rowsAffected = db.ExecuteNonQuery(deleter);
 
             //删除 2
             Student deleteStudent = new();
@@ -432,13 +435,14 @@ namespace Demo
             Major deleteMajor = new();
 
             deleter = DBOperator.Delete(deleteStudent)
-                                .From(deleteStudent)
+                                .From(deleteStudent
                                 .InnerJoin(deleteMajor).On(deleteMajor.MajorId == deleteStudent.MajorId)
+                                )
                                 .Where(deleteMajor.MajorId == 5);
 
             commandText = deleter.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(deleter);
+            rowsAffected = db.ExecuteNonQuery(deleter);
 
             //删除 3
             CommonTableExpression deleteCTE = new("cte");
@@ -447,16 +451,16 @@ namespace Demo
 
             Student cteDeleteStudent = new();
 
-            deleter = DBOperator.With(deleteCTE).DeleterFrom(cteDeleteStudent).Where(cteDeleteStudent.StudentId.In(DBOperator.Select().From(deleteCTE)));
+            deleter = DBOperator.With(deleteCTE).DeleteFrom(cteDeleteStudent).Where(cteDeleteStudent.StudentId.In(DBOperator.Select().From(deleteCTE)));
 
             commandText = deleter.GetCommand().CommandText;
 
-            rowsAffected = myDb.ExecuteNonQuery(deleter);
+            rowsAffected = db.ExecuteNonQuery(deleter);
 
             //事务 1
             Student transactionDeleteTable = new Student();
 
-            IDeleter transactionDeleter = DBOperator.DeleterFrom(transactionDeleteTable).Where(transactionDeleteTable.StudentId.In(71116, -1));
+            IDeleter transactionDeleter = DBOperator.DeleteFrom(transactionDeleteTable).Where(transactionDeleteTable.StudentId.In(71116, -1));
 
             Student transactionStudent = new Student();
             transactionStudent.StudentId.Value = 71116;
@@ -464,10 +468,10 @@ namespace Demo
 
             IInsertor transactionInsertor = DBOperator.Insert(transactionStudent);
 
-            bool success = myDb.ExecuteTransaction(transactionDeleter, transactionInsertor);
+            bool success = db.ExecuteTransaction(transactionDeleter, transactionInsertor);
 
             //事务2
-            myDb.ExecuteTransaction(transaction =>
+            db.ExecuteTransaction(transaction =>
             {
                 try
                 {
@@ -507,20 +511,20 @@ namespace Demo
     {
         public static Description MyFunction(this Description description)
         {
-            return description?.Next(s => $"MyFunction({s})");
+            return new Description("MyFunction({0})", description);
         }
     }
 
-    class MySqlDb : AbstractDataBase
+    class MySQL : AbstractDataBase
     {
         private readonly string _connectionStr;
 
-        public MySqlDb(string connectionStr)
+        public MySQL(string connectionStr)
         {
             _connectionStr = connectionStr;
         }
 
-        public override IDbConnection GetDbConnection()
+        protected override IDbConnection __GetDbConnection()
         {
             return new MySqlConnection(_connectionStr);
         }
@@ -530,11 +534,11 @@ namespace Demo
     {
         static string connectionStr = File.ReadAllText("ConnectionString.txt");
 
-        public readonly static MySqlDb TestDb = new(connectionStr);
+        public readonly static MySQL TestDb = new(connectionStr);
 
         /// <summary>
         /// 只读库
         /// </summary>
-        public readonly static MySqlDb TestReadOnlyDb = new(connectionStr);
+        public readonly static MySQL TestReadOnlyDb = new(connectionStr);
     }
 }

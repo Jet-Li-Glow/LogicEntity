@@ -9,9 +9,9 @@ namespace LogicEntity.Operator
     public class Window
     {
         /// <summary>
-        /// 转换函数
+        /// 节点
         /// </summary>
-        List<Func<string, string>> _beforeConvertors = new();
+        List<Description> _nodes = new();
 
         /// <summary>
         /// 别名
@@ -37,7 +37,7 @@ namespace LogicEntity.Operator
             if (descriptions is null)
                 descriptions = new Description[0];
 
-            _beforeConvertors.Add(s => s + $"Partition By {string.Join<Description>(", ", descriptions)}");
+            _nodes.Add(new Description($"Partition By {string.Join(", ", descriptions.Select((_, i) => "{" + i + "}"))}", descriptions));
 
             return this;
         }
@@ -49,7 +49,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window OrderBy(Description description)
         {
-            _beforeConvertors.Add(s => s + $" Order By {description}");
+            _nodes.Add(new Description("Order By {0} Asc", description));
 
             return this;
         }
@@ -61,7 +61,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window OrderByDescending(Description description)
         {
-            _beforeConvertors.Add(s => s + $" Order By {description} Desc");
+            _nodes.Add(new Description("Order By {0} Desc", description));
 
             return this;
         }
@@ -73,7 +73,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window ThenBy(Description description)
         {
-            _beforeConvertors.Add(s => s + $", {description}");
+            _nodes.Add(new Description(", {0} Asc", description));
 
             return this;
         }
@@ -85,7 +85,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window ThenByDescending(Description description)
         {
-            _beforeConvertors.Add(s => s + $", {description} Desc");
+            _nodes.Add(new Description(", {0} Desc", description));
 
             return this;
         }
@@ -96,7 +96,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Rows()
         {
-            _beforeConvertors.Add(s => s + " Rows");
+            _nodes.Add(new Description(nameof(Rows)));
 
             return this;
         }
@@ -107,7 +107,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Range()
         {
-            _beforeConvertors.Add(s => s + " Range");
+            _nodes.Add(new Description(nameof(Range)));
 
             return this;
         }
@@ -118,7 +118,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Between()
         {
-            _beforeConvertors.Add(s => s + " Between");
+            _nodes.Add(new Description(nameof(Between)));
 
             return this;
         }
@@ -129,7 +129,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window And()
         {
-            _beforeConvertors.Add(s => s + " And");
+            _nodes.Add(new Description(nameof(And)));
 
             return this;
         }
@@ -140,7 +140,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window CurrentRow()
         {
-            _beforeConvertors.Add(s => s + " Current Row");
+            _nodes.Add(new Description("Current Row"));
 
             return this;
         }
@@ -151,7 +151,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window UnboundedPreceding()
         {
-            _beforeConvertors.Add(s => s + " Unbounded Preceding");
+            _nodes.Add(new Description("Unbounded Preceding"));
 
             return this;
         }
@@ -162,7 +162,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window UnboundedFollowing()
         {
-            _beforeConvertors.Add(s => s + " Unbounded Following");
+            _nodes.Add(new Description("Unbounded Following"));
 
             return this;
         }
@@ -174,7 +174,19 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Preceding(Description description)
         {
-            _beforeConvertors.Add(s => s + $" {description} Preceding");
+            _nodes.Add(new Description("{0} Preceding", description));
+
+            return this;
+        }
+
+        /// <summary>
+        /// 向前
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public Window Preceding(int count)
+        {
+            _nodes.Add(new Description($"{count} Preceding"));
 
             return this;
         }
@@ -186,9 +198,30 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Following(Description description)
         {
-            _beforeConvertors.Add(s => s + $" {description} Following");
+            _nodes.Add(new Description("{0} Following", description));
 
             return this;
+        }
+
+        /// <summary>
+        /// 向后
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public Window Following(int count)
+        {
+            _nodes.Add(new Description($"{count} Following"));
+
+            return this;
+        }
+
+        /// <summary>
+        /// 生成
+        /// </summary>
+        /// <returns></returns>
+        internal (string, IEnumerable<KeyValuePair<string, object>>) Build()
+        {
+            return new Description(string.Join(" ", _nodes.Select((_, i) => "{" + i + "}")), _nodes.ToArray()).Build();
         }
 
         /// <summary>
@@ -197,17 +230,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public override string ToString()
         {
-            string result = string.Empty;
-
-            foreach (Func<string, string> convert in _beforeConvertors)
-            {
-                if (convert is null)
-                    continue;
-
-                result = convert(result);
-            }
-
-            return result;
+            throw new NotImplementedException();
         }
     }
 }

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Operator;
+using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
-    public interface IWhere : IGroupBy
+    public interface IApplyChanges<T> where T : Table, new()
     {
-        public IGroupBy Where(Description condition);
+        public IChangerOn ApplyChanges(T table);
     }
 }

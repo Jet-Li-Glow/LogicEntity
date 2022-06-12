@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Model;
 using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
     public interface IDeleterFrom
     {
-        IDeleterJoin From(params TableDescription[] tables);
+        IDeleterWhere From(Table table);
+
+        IDeleterWhere From(JoinedTable table);
     }
 }

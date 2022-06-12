@@ -10,6 +10,6 @@ namespace LogicEntity.Interface
 {
     public interface IUpdaterWhere : IUpdater
     {
-        public IUpdater Where(ConditionDescription condition);
+        public IUpdater Where(Description condition);
     }
 }

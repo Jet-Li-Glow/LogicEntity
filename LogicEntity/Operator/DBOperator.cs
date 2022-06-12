@@ -22,9 +22,9 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="commonTableExpressions"></param>
         /// <returns></returns>
-        public static ICTEDataManipulation With(params CommonTableExpression[] commonTableExpressions)
+        public static IOperate With(params CommonTableExpression[] commonTableExpressions)
         {
-            return new CTEDataManipulation().With(commonTableExpressions);
+            return new DBOperatorImplement().With(false, commonTableExpressions);
         }
 
         /// <summary>
@@ -32,54 +32,41 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="commonTableExpressions"></param>
         /// <returns></returns>
-        public static ICTEDataManipulation WithRecursive(params CommonTableExpression[] commonTableExpressions)
+        public static IOperate WithRecursive(params CommonTableExpression[] commonTableExpressions)
         {
-            return new CTEDataManipulation().WithRecursive(commonTableExpressions);
+            return new DBOperatorImplement().With(true, commonTableExpressions);
         }
 
         /// <summary>
         /// 查询
         /// </summary>
-        /// <param name="columnDescriptions"></param>
+        /// <param name="columns"></param>
         /// <returns></returns>
-        public static IDistinct Select(params Description[] columnDescriptions)
+        public static IFrom Select(params ColumnCollection[] columns)
         {
-            return With(null).Select(columnDescriptions);
+            return ((IOperate)new DBOperatorImplement()).Select(columns);
         }
 
         /// <summary>
         /// 查询
         /// </summary>
-        /// <param name="columnDescriptions"></param>
+        /// <param name="columns"></param>
         /// <returns></returns>
-        public static IFrom SelectDistinct(params Description[] columnDescriptions)
+        public static IFrom SelectDistinct(params ColumnCollection[] columns)
         {
-            return With(null).SelectDistinct(columnDescriptions);
+            return ((IOperate)new DBOperatorImplement()).SelectDistinct(columns);
         }
 
         /// <summary>
         /// 插入
         /// </summary>
-        /// <param name="table">数据实体</param>
+        /// <param name="row"></param>
         /// <returns></returns>
         public static IInsertor Insert<T>(T row) where T : Table, new()
         {
-            List<Column> colums = new();
-
-            foreach (PropertyInfo property in row.GetType().GetProperties())
-            {
-                Column column = property.GetValue(row) as Column;
-
-                if (column is null)
-                    continue;
-
-                if (column.IsValueSet == false)
-                    continue;
-
-                colums.Add(column);
-            }
-
-            return InsertInto(row).Columns(colums.ToArray()).Row(row);
+            return new DBOperatorImplement().Insert().Table(row)
+                .Columns(row.Columns.Where(c => c.IsValueSet).ToArray())
+                .Rows(row);
         }
 
         /// <summary>
@@ -90,37 +77,21 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertor Save<T>(T row) where T : Table, new()
         {
-            T table = new T();
+            Column[] settedColumns = row.Columns.Where(c => c.IsValueSet).ToArray();
 
-            List<Column> colums = new();
-
-            foreach (PropertyInfo property in typeof(T).GetProperties())
-            {
-                Column column = property.GetValue(row) as Column;
-
-                if (column is null)
-                    continue;
-
-                if (column.IsValueSet == false)
-                    continue;
-
-                colums.Add(property.GetValue(table) as Column);
-            }
-
-            return InsertInto(table).Columns(colums.ToArray()).Row(row).OnDuplicateKeyUpdate(t =>
-            {
-                Type type = t.GetType();
-
-                foreach (Column column in colums)
+            return new DBOperatorImplement().Insert().Table(row)
+                .Columns(settedColumns)
+                .Rows(row)
+                .OnDuplicateKeyUpdate(r =>
                 {
-                    Column col = type.GetProperty(column.ColumnName)?.GetValue(t) as Column;
+                    foreach (Column column in settedColumns)
+                    {
+                        Column col = r.Columns.FirstOrDefault(c => c.EntityPropertyName == column.EntityPropertyName);
 
-                    if (col is null)
-                        continue;
-
-                    col.Value = col.Values();
-                }
-            });
+                        if (col is not null)
+                            col.Value = col.Values();
+                    }
+                });
         }
 
         /// <summary>
@@ -131,7 +102,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertorColumns<T> InsertInto<T>(T table) where T : Table, new()
         {
-            return new Insertor<T>(table);
+            return new DBOperatorImplement().Insert().Into().Table(table);
         }
 
         /// <summary>
@@ -142,7 +113,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertorColumns<T> InsertIgnore<T>(T table) where T : Table, new()
         {
-            return new Insertor<T>(table, true, false);
+            return new DBOperatorImplement().Insert().Ignore().Table(table);
         }
 
         /// <summary>
@@ -153,25 +124,34 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertorColumns<T> ReplaceInto<T>(T table) where T : Table, new()
         {
-            return new Insertor<T>(table, false, true);
+            return new DBOperatorImplement().Replace().Into().Table(table);
         }
 
         /// <summary>
         /// 更新
         /// </summary>
         /// <returns></returns>
-        public static IUpdaterJoin<T> Update<T>(T table) where T : Table, new()
+        public static IUpdaterSet<T> Update<T>(T table) where T : Table, new()
         {
-            return With(null).Update(table);
+            return new DBOperatorImplement().Update(table);
         }
 
         /// <summary>
         /// 更新
         /// </summary>
         /// <returns></returns>
-        public static IChanger ApplyChanges(Table change)
+        public static IUpdaterSet Update(JoinedTable table)
         {
-            return new Changer(change);
+            return new DBOperatorImplement().Update(table);
+        }
+
+        /// <summary>
+        /// 更新
+        /// </summary>
+        /// <returns></returns>
+        public static IChangerOn ApplyChanges<T>(T row) where T : Table, new()
+        {
+            return new DBOperatorImplement<T>().ApplyChanges(row);
         }
 
         /// <summary>
@@ -181,7 +161,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IDeleterFrom Delete(params Table[] tables)
         {
-            return With(null).Delete(tables);
+            return new DBOperatorImplement().Delete(tables);
         }
 
         /// <summary>
@@ -189,9 +169,9 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tables"></param>
         /// <returns></returns>
-        public static IDeleterJoin DeleterFrom(params TableDescription[] tables)
+        public static IDeleterWhere DeleteFrom(Table table)
         {
-            return With(null).DeleterFrom(tables);
+            return ((IOperate)new DBOperatorImplement()).DeleteFrom(table);
         }
     }
 }

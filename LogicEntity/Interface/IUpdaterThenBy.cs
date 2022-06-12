@@ -7,8 +7,10 @@ using LogicEntity.Operator;
 
 namespace LogicEntity.Interface
 {
-    public interface IDeleterOn : IDeleterWhere
+    public interface IUpdaterThenBy : IUpdaterLimit
     {
-        public IDeleterJoin On(Condition condition);
+        public IUpdaterThenBy ThenBy(Description description);
+
+        public IUpdaterThenBy ThenByDescending(Description description);
     }
 }

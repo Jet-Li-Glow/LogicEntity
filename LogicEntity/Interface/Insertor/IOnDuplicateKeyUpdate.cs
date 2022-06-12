@@ -7,10 +7,10 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Interface
 {
-    public interface IOnDuplicateKeyUpdate<T> : IInsertor where T : Table
+    public interface IOnDuplicateKeyUpdate<T> : IInsertor where T : Table, new()
     {
-        public IInsertor OnDuplicateKeyUpdate(Action<T> updateValue);
+        public IInsertor OnDuplicateKeyUpdate(Action<T> setValue);
 
-        public IInsertor OnDuplicateKeyUpdate(Action<T, T> updateValueWithRow);
+        public IInsertor OnDuplicateKeyUpdate(Action<T, T> setValueWithRow);
     }
 }

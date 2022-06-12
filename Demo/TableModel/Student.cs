@@ -23,21 +23,21 @@ namespace Demo.TableModel
         {
             AnotherName.ColumnName = "StudentName";
 
-            Json.Read(j =>
+            Json.Reader = j =>
             {
                 if (j is null || j is DBNull)
                     return null;
 
                 return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
-            });
+            };
 
-            Json.Write(j =>
+            Json.Writer = j =>
             {
                 if (j is null || j is string)
                     return j;
 
                 return JsonSerializer.Serialize(j);
-            });
+            };
         }
 
         public override string __SchemaName => "testdb";

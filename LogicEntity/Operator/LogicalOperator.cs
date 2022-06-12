@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity.EnumCollection
+namespace LogicEntity.Operator
 {
     /// <summary>
     /// 逻辑运算符
@@ -13,27 +13,13 @@ namespace LogicEntity.EnumCollection
     public enum LogicalOperator
     {
         /// <summary>
-        /// Null
-        /// </summary>
-        [Description("")]
-        Null = 0,
-
-        /// <summary>
         /// 与
         /// </summary>
-        [Description("And")]
-        And = 1,
+        And,
 
         /// <summary>
         /// 或
         /// </summary>
-        [Description("Or")]
-        Or = 2,
-
-        /// <summary>
-        /// 非
-        /// </summary>
-        [Description("Not")]
-        Not = 3
+        Or
     }
 }
