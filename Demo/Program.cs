@@ -385,16 +385,15 @@ namespace Demo
             //更新 2
             Major updateMajor = new();
 
+            updateData.StudentName.Value = updateMajor.MajorName;
+            updateData.Birthday.Value = DateTime.Now;
+            updateData.Json.Value = new Dictionary<string, object>() { { "Number", new Random().NextDouble() }, { "Object", new object() } };
+
             updater = DBOperator.Update(updateData
                 .LeftJoin(updateMajor).On(updateData.MajorId == updateMajor.MajorId)
                 )
-                .Set<Student>(s =>
-                {
-                    s.StudentName.Value = updateMajor.MajorName;
-                    s.Birthday.Value = DateTime.Now;
-                    s.Json.Value = new Dictionary<string, object>() { { "Number", new Random().NextDouble() }, { "Object", new object() } };
-                })
-                .Where(updateData.StudentId == Id);
+                .ApplyChanges(updateData)
+                .On(updateData.StudentId == Id);
 
             commandText = updater.GetCommand().CommandText;
 
@@ -409,11 +408,13 @@ namespace Demo
 
             Major cteUpdateMajor = new();
 
+            cteUpdateMajor.MajorName.Value = DbFunction.Concat(cteUpdateMajor.MajorName, "+");
+
             updater = DBOperator.With(updateCTE)
                                 .Update(cteUpdateMajor
                                 .InnerJoin(updateCTE).On(updateCTE.Column("MajorId") == cteUpdateMajor.MajorId)
                                 )
-                                .Set<Major>(s => s.MajorName.Value = DbFunction.Concat(s.MajorName, "+"));
+                                .ApplyChanges(cteUpdateMajor);
 
             commandText = updater.GetCommand().CommandText;
 

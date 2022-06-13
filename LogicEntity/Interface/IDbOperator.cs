@@ -51,9 +51,7 @@ namespace LogicEntity.Interface
                 if (command.Parameters[i].Key != key)
                     throw new Exception("参数名称错误");
 
-                var collection = new System.Text.RegularExpressions.Regex("[^0-9a-zA-Z]" + key + "[^0-9a-zA-Z]").Matches(command.CommandText);
-
-                if (collection.Count != 1)
+                if (command.CommandText.Contains(key) == false)
                     throw new Exception("参数名称错误");
             }
 

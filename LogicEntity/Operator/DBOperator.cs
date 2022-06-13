@@ -131,15 +131,6 @@ namespace LogicEntity.Operator
         /// 更新
         /// </summary>
         /// <returns></returns>
-        public static IUpdaterSet<T> Update<T>(T table) where T : Table, new()
-        {
-            return new DBOperatorImplement().Update(table);
-        }
-
-        /// <summary>
-        /// 更新
-        /// </summary>
-        /// <returns></returns>
         public static IUpdaterSet Update(JoinedTable table)
         {
             return new DBOperatorImplement().Update(table);
@@ -149,9 +140,9 @@ namespace LogicEntity.Operator
         /// 更新
         /// </summary>
         /// <returns></returns>
-        public static IChangerOn ApplyChanges<T>(T row) where T : Table, new()
+        public static IUpdaterOn ApplyChanges(Table row)
         {
-            return new DBOperatorImplement<T>().ApplyChanges(row);
+            return new DBOperatorImplement().ApplyChanges(row);
         }
 
         /// <summary>

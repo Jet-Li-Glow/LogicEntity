@@ -41,14 +41,14 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public IUpdaterSet<T> Update<T>(T table) where T : Table, new();
+        public IUpdaterSet Update(JoinedTable table);
 
         /// <summary>
         /// 更新
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public IUpdaterSet Update(JoinedTable table);
+        public IUpdaterOn ApplyChanges(Table table);
 
         /// <summary>
         /// 删除

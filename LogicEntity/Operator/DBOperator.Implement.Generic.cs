@@ -9,7 +9,7 @@ using LogicEntity.Model;
 
 namespace LogicEntity.Operator
 {
-    internal class DBOperatorImplement<T> : DBOperatorImplement, IUpdaterSet<T>, IUpdaterWhere<T>, IApplyChanges<T>, IInsertorColumns<T>,
+    internal class DBOperatorImplement<T> : DBOperatorImplement, IInsertorColumns<T>,
         IInsertorSet<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table, new()
     {
         T _instance;
@@ -42,7 +42,16 @@ namespace LogicEntity.Operator
 
         IOnDuplicateKeyUpdate<T> IInsertorSet<T>.Set(Action<T> setValue)
         {
-            return (DBOperatorImplement<T>)Set(setValue);
+            T t = new();
+
+            foreach (Column column in t.Columns)
+            {
+                column.Table = _instance;
+            }
+
+            setValue?.Invoke(t);
+
+            return (DBOperatorImplement<T>)ApplyChanges(new Table[] { t });
         }
 
         public IOnDuplicateKeyUpdate<T> Rows<TRow>(params TRow[] rows)
@@ -144,27 +153,6 @@ namespace LogicEntity.Operator
                 .Select((column, i) => KeyValuePair.Create(column.FullName + " = {" + i + "}", column.Value)).ToList();
 
             Nodes.Add(new Description($"On Duplicate Key Update\n  {string.Join(",\n  ", commands.Select(c => c.Key))}", commands.Select(c => c.Value).ToArray()));
-
-            return this;
-        }
-
-        //Update
-
-        public IChangerOn ApplyChanges(T table)
-        {
-            Update(table);
-
-            return Set(table);
-        }
-
-        public IUpdaterWhere<T> Set(Action<T> setValue)
-        {
-            return (DBOperatorImplement<T>)Set<T>(setValue);
-        }
-
-        IUpdaterOrderBy IUpdaterWhere<T>.Where(Description condition)
-        {
-            Nodes.Add(new Description("Where {0}", condition));
 
             return this;
         }
