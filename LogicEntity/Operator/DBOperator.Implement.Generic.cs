@@ -12,14 +12,18 @@ namespace LogicEntity.Operator
     internal class DBOperatorImplement<T> : DBOperatorImplement, IUpdaterSet<T>, IUpdaterWhere<T>, IApplyChanges<T>, IInsertorColumns<T>,
         IInsertorSet<T>, IInsertorValues<T>, IOnDuplicateKeyUpdate<T> where T : Table, new()
     {
+        T _instance;
+
         public DBOperatorImplement()
         {
 
         }
 
-        public DBOperatorImplement(IEnumerable<Description> nodes)
+        public DBOperatorImplement(IEnumerable<Description> nodes, T instance)
         {
             Nodes.AddRange(nodes);
+
+            _instance = instance;
         }
 
         //Insert
@@ -97,6 +101,11 @@ namespace LogicEntity.Operator
         {
             T t = new();
 
+            foreach (Column column in t.Columns)
+            {
+                column.Table = _instance;
+            }
+
             setValue?.Invoke(t);
 
             return OnDuplicateKeyUpdate(t);
@@ -106,7 +115,17 @@ namespace LogicEntity.Operator
         {
             T t = new();
 
+            foreach (Column column in t.Columns)
+            {
+                column.Table = _instance;
+            }
+
             T row = new();
+
+            foreach (Column column in row.Columns)
+            {
+                column.Table = _instance;
+            }
 
             string rowAlias = "rowData";
 

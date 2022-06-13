@@ -32,7 +32,7 @@ namespace LogicEntity.Interface
                     throw new Exception("参数名称错误");
 #endif
 
-                string key = "@param" + i.ToString();
+                string key = "@param" + i;
 
                 command.CommandText = command.CommandText.Replace(parameter.Key, key);
 
@@ -42,6 +42,24 @@ namespace LogicEntity.Interface
             command.Parameters.Clear();
 
             command.Parameters.AddRange(parameters);
+
+#if DEBUG
+            for (int i = 0; i < command.Parameters.Count; i++)
+            {
+                string key = ("@param" + i);
+
+                if (command.Parameters[i].Key != key)
+                    throw new Exception("参数名称错误");
+
+                var collection = new System.Text.RegularExpressions.Regex("[^0-9a-zA-Z]" + key + "[^0-9a-zA-Z]").Matches(command.CommandText);
+
+                if (collection.Count != 1)
+                    throw new Exception("参数名称错误");
+            }
+
+            if (command.CommandText.Contains(" @param" + command.Parameters.Count + " "))
+                throw new Exception("参数名称错误");
+#endif
 
             return command;
         }

@@ -71,6 +71,8 @@ namespace Demo
                 student.StudentId.As("Alpha"),
                 studentBeta.StudentId.As("Beta"),
                 new Description("student.StudentId").As("Gamma"),
+                student.StudentId > 50,
+                new Description("student.StudentId > {0}", 100),
                 student.StudentName.ReadChars(read =>
                 {
                     List<char> chars = new();
@@ -326,7 +328,7 @@ namespace Demo
 
             rowsAffected = db.ExecuteNonQuery(insertor);
 
-            //插入 7 Partition
+            //插入 7 Sharding
             Monthly monthly_2021_12 = new Monthly(new DateTime(2021, 12, 1));
 
             insertor = DBOperator.InsertInto(monthly_2021_12)

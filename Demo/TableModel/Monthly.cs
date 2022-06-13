@@ -16,7 +16,7 @@ namespace Demo.TableModel
 
         public Monthly()
         {
-            string _tableName = nameof(Monthly);
+            _tableName = nameof(Monthly);
         }
 
         public Monthly(DateTime dateTime)
@@ -29,16 +29,16 @@ namespace Demo.TableModel
         /// <summary>
         /// Guid
         /// </summary>
-        public Column Guid { get; set; }
+        public Column Guid { get; init; }
 
         /// <summary>
         /// 时间
         /// </summary>
-        public Column DateTime { get; set; }
+        public Column DateTime { get; init; }
 
         /// <summary>
         /// 描述
         /// </summary>
-        public Column Description { get; set; }
+        public Column Description { get; init; }
     }
 }

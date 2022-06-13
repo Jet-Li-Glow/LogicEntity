@@ -50,7 +50,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 全名
         /// </summary>
-        internal override string FullName => (__SchemaName.IsValid() ? $"`{__SchemaName}`." : string.Empty) + $"`{__TableName}`";
+        internal override string FullName => (string.IsNullOrEmpty(__SchemaName) ? string.Empty : $"`{__SchemaName}`.") + $"`{__TableName}`";
 
         /// <summary>
         /// 列

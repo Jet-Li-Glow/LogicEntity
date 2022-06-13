@@ -193,7 +193,7 @@ namespace LogicEntity.Operator
         {
             Nodes.Add(new Description($"Update {table.FullName}"));
 
-            return new DBOperatorImplement<T>(Nodes);
+            return new DBOperatorImplement<T>(Nodes, table);
         }
 
         //Update
@@ -902,7 +902,7 @@ namespace LogicEntity.Operator
         {
             Nodes.Add(new Description(table.FullName));
 
-            return new DBOperatorImplement<TTable>(Nodes);
+            return new DBOperatorImplement<TTable>(Nodes, table);
         }
 
         //Operator
@@ -944,12 +944,23 @@ namespace LogicEntity.Operator
                 }
             }
 
-            (var cmd, var ps) = new Description(string.Join("\n", Nodes.Select((_, i) => "{" + i + "}")), Nodes.ToArray()).Build();
+            StringBuilder stringBuilder = new();
 
-            command.CommandText = cmd;
+            int last = Nodes.Count - 1;
 
-            if (ps is not null)
-                command.Parameters.AddRange(ps);
+            for (int i = 0; i < Nodes.Count; i++)
+            {
+                Description node = Nodes[i];
+
+                (var cmd, var ps) = node.Build();
+
+                stringBuilder.Append(cmd + (i == last ? string.Empty : "\n"));
+
+                if (ps is not null)
+                    command.Parameters.AddRange(ps);
+            }
+
+            command.CommandText = stringBuilder.ToString();
 
             command.Parameters.AddRange(_addedParameters);
 

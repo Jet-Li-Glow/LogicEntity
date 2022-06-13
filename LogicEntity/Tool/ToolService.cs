@@ -13,21 +13,6 @@ namespace LogicEntity.Tool
     /// </summary>
     internal static class ToolService
     {
-        public static string Description(this Enum enumValue)
-        {
-            return enumValue?.GetType().GetField(enumValue.ToString())?.GetCustomAttribute<DescriptionAttribute>()?.Description ?? enumValue.ToString();
-        }
-
-        /// <summary>
-        /// 是否有效
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static bool IsValid(this string str)
-        {
-            return !string.IsNullOrEmpty(str);
-        }
-
         /// <summary>
         /// 唯一名称
         /// </summary>

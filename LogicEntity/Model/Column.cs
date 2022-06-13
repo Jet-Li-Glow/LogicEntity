@@ -38,7 +38,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 列所属表
         /// </summary>
-        internal TableDescription Table { get; init; }
+        internal TableDescription Table { get; set; }
 
         /// <summary>
         /// 实体属性名称（Table构造时，ColumnName还没有被重新赋值）

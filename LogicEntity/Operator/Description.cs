@@ -298,7 +298,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Description In(IDbOperator dbOperator)
         {
-            return new Description("{0} In\n(\n{1}\n)", this, dbOperator);
+            return new Description("{0} In\n\n(\n{1}\n)\n", this, dbOperator);
         }
 
         /// <summary>
