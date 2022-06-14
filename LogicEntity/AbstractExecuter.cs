@@ -56,7 +56,7 @@ namespace LogicEntity
         static readonly MethodInfo _GetValue = typeof(IDataRecord).GetMethod(nameof(IDataRecord.GetValue));
         static readonly MethodInfo _IsDBNull = typeof(IDataRecord).GetMethod(nameof(IDataRecord.IsDBNull));
         static readonly MethodInfo _ChangeType = typeof(Convert).GetMethod(nameof(Convert.ChangeType), new[] { typeof(object), typeof(Type) });
-        static readonly MethodInfo _EnumParse = typeof(Enum).GetMethod(nameof(Enum.Parse), new[] { typeof(Type), typeof(string) });
+        static readonly MethodInfo _EnumParse = typeof(Enum).GetMethod(nameof(Enum.Parse), new[] { typeof(Type), typeof(string), typeof(bool) });
         static readonly MethodInfo _EnumIsDefined = typeof(Enum).GetMethod(nameof(Enum.IsDefined), new[] { typeof(Type), typeof(object) });
         static readonly ConstructorInfo _InvalidEnumArgumentExceptionConstructor = typeof(InvalidEnumArgumentException).GetConstructor(new[] { typeof(string) });
         static readonly MethodInfo _StringConcat = typeof(string).GetMethod(nameof(string.Concat), new[] { typeof(string), typeof(string), typeof(string) });
@@ -520,13 +520,13 @@ namespace LogicEntity
 
                     Expression assign = Expression.Assign(
                         enumValue,
-                        Expression.Call(_EnumParse, Expression.Constant(dataType), Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)))
+                        Expression.Call(_EnumParse, Expression.Constant(dataType), Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)), Expression.Constant(true))
                         );
 
                     Expression exceptionInfo = Expression.Call(_StringConcat,
                         Expression.Constant("尝试将【"),
                         Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)),
-                        Expression.Constant("】转换为 " + dataType.Name)
+                        Expression.Constant("】转换为 " + dataType.FullName)
                         );
 
                     Expression check = Expression.IfThen(
@@ -841,7 +841,29 @@ namespace LogicEntity
         /// <returns></returns>
         public T ExecuteScalar<T>(string sql, IEnumerable<KeyValuePair<string, object>> keyValues, int? commandTimeout, Func<object, object> clientReader)
         {
-            return (T)Convert.ChangeType(ExecuteScalar(sql, keyValues, commandTimeout, clientReader), typeof(T));
+            object obj = ExecuteScalar(sql, keyValues, commandTimeout, clientReader);
+
+            if (obj is T)
+                return (T)obj;
+
+            if (obj is null)
+                return default(T);
+
+            Type type = typeof(T);
+
+            type = Nullable.GetUnderlyingType(type) ?? type;
+
+            if (type.IsSubclassOf(typeof(Enum)))
+            {
+                object enumValue = Enum.Parse(type, obj.ToString(), true);
+
+                if (Enum.IsDefined(type, enumValue) == false)
+                    throw new InvalidEnumArgumentException($"尝试将【{obj}】转换为{type.FullName}");
+
+                return (T)enumValue;
+            }
+
+            return (T)Convert.ChangeType(obj, typeof(T));
         }
 
         /// <summary>
@@ -902,6 +924,9 @@ namespace LogicEntity
                 command.CommandTimeout = commandTimeout.Value;
 
             object result = command.ExecuteScalar();
+
+            if (result is DBNull)
+                result = null;
 
             if (clientReader is not null)
                 result = clientReader(result);

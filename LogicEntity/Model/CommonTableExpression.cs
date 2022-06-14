@@ -15,7 +15,9 @@ namespace LogicEntity.Model
     {
         string _name;
 
-        List<string> _columnNames = new();
+        ISelector _selector;
+
+        List<Column> _columns = new();
 
         /// <summary>
         /// 构造函数
@@ -33,7 +35,11 @@ namespace LogicEntity.Model
         public void DefineColumns(params string[] columnNames)
         {
             if (columnNames is not null)
-                _columnNames.AddRange(columnNames);
+            {
+                _columns.Clear();
+
+                _columns.AddRange(columnNames.Select(name => new Column(this, name)));
+            }
         }
 
         /// <summary>
@@ -43,17 +49,32 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Column Column(string columnName)
         {
-            Column column = new Column(this, columnName);
-
-            column.Read(Columns.SingleOrDefault(s => s.FinalColumnName == columnName)?.Reader);
-
-            return column;
+            return _columns.Single(column => column.ColumnName.Equals(columnName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
         /// 查询器
         /// </summary>
-        public ISelector Selector { get; set; }
+        public ISelector Selector
+        {
+            get
+            {
+                return _selector;
+            }
+
+            set
+            {
+                _selector = value;
+
+                if (_selector is not null)
+                {
+                    if (_columns.Any() == false)
+                    {
+                        _columns.AddRange(_selector.Columns.Select(column => new Column(this, column.FinalColumnName)));
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 全名
@@ -73,7 +94,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 列
         /// </summary>
-        internal override IEnumerable<Column> Columns => Selector?.Columns ?? Enumerable.Empty<Column>();
+        internal override IEnumerable<Column> Columns => _columns.AsEnumerable();
 
         /// <summary>
         /// 生成定义
@@ -82,10 +103,10 @@ namespace LogicEntity.Model
         {
             string columnsDefinition = string.Empty;
 
-            if (_columnNames.Any())
-                columnsDefinition = $"({string.Join(", ", _columnNames)})";
+            if (_columns.Any())
+                columnsDefinition = $"({string.Join(", ", _columns.Select(column => column.ColumnName))})";
 
-            return new Description(_name + " " + columnsDefinition + " As\n (\n    {0}\n  )", Selector).Build();
+            return new Description(_name + " " + columnsDefinition + " As\n  (\n{0}\n  )", Selector).Build();
         }
 
         /// <summary>

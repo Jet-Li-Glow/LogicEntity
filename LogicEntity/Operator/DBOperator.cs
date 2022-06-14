@@ -66,7 +66,7 @@ namespace LogicEntity.Operator
         {
             return new DBOperatorImplement().Insert().Table(row)
                 .Columns(row.Columns.Where(c => c.IsValueSet).ToArray())
-                .Rows(row);
+                .Row(row);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace LogicEntity.Operator
 
             return new DBOperatorImplement().Insert().Table(row)
                 .Columns(settedColumns)
-                .Rows(row)
+                .Row(row)
                 .OnDuplicateKeyUpdate(r =>
                 {
                     foreach (Column column in settedColumns)

@@ -29,7 +29,8 @@ namespace LogicEntity.Model
 
             _alias = alias;
 
-            _columns = _selector?.Columns ?? Enumerable.Empty<Column>();
+            if (_selector is not null)
+                _columns = _selector.Columns.Select(column => new Column(this, column.FinalColumnName));
         }
 
         /// <summary>
@@ -59,11 +60,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public Column Column(string columnName)
         {
-            Column column = new Column(this, columnName);
-
-            column.Read(_columns.SingleOrDefault(s => s.FinalColumnName == columnName)?.Reader);
-
-            return column;
+            return _columns.Single(column => column.ColumnName.Equals(columnName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

@@ -193,14 +193,14 @@ namespace LogicEntity.Operator
 
         public IUpdaterSet Update(JoinedTable table)
         {
-            Nodes.Add(new Description("Update {0}", table));
+            Nodes.Add(new Description("Update\n  {0}", table));
 
             return this;
         }
 
         public IUpdaterOn ApplyChanges(Table table)
         {
-            Nodes.Add(new Description($"Update {table?.FullName}"));
+            Nodes.Add(new Description($"Update\n  {table?.FullName}"));
 
             return ApplyChanges(new Table[] { table });
         }
@@ -227,7 +227,7 @@ namespace LogicEntity.Operator
                 }
             }
 
-            Nodes.Add(new Description($"Set\n    {string.Join(",\n    ", commands.Select(c => c.Key))}", commands.Select(c => c.Value).ToArray()));
+            Nodes.Add(new Description($"Set\n  {string.Join(",\n  ", commands.Select(c => c.Key))}", commands.Select(c => c.Value).ToArray()));
 
             return this;
         }
@@ -288,14 +288,14 @@ namespace LogicEntity.Operator
 
         public IDeleterWhere From(Table table)
         {
-            Nodes.Add(new Description($"From {table.FullName}"));
+            Nodes.Add(new Description($"From\n  {table.FullName}"));
 
             return this;
         }
 
         public IDeleterWhere From(JoinedTable table)
         {
-            Nodes.Add(new Description("From {0}", table));
+            Nodes.Add(new Description("From\n  {0}", table));
 
             return this;
         }

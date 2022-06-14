@@ -54,7 +54,7 @@ namespace LogicEntity.Operator
             return (DBOperatorImplement<T>)ApplyChanges(new Table[] { t });
         }
 
-        public IOnDuplicateKeyUpdate<T> Rows<TRow>(params TRow[] rows)
+        public IOnDuplicateKeyUpdate<T> Row<TRow>(params TRow[] rows)
         {
             Type rowType = typeof(TRow);
 
@@ -99,7 +99,7 @@ namespace LogicEntity.Operator
             return this;
         }
 
-        public IOnDuplicateKeyUpdate<T> SelectRows(ISelector selector)
+        public IOnDuplicateKeyUpdate<T> Rows(ISelector selector)
         {
             Nodes.Add(new Description("{0}", selector));
 
@@ -130,11 +130,6 @@ namespace LogicEntity.Operator
             }
 
             T row = new();
-
-            foreach (Column column in row.Columns)
-            {
-                column.Table = _instance;
-            }
 
             string rowAlias = "rowData";
 
