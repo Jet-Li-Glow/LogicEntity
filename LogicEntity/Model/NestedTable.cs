@@ -30,7 +30,16 @@ namespace LogicEntity.Model
             _alias = alias;
 
             if (_selector is not null)
-                _columns = _selector.Columns.Select(column => new Column(this, column.FinalColumnName));
+            {
+                _selector.Indent = 4;
+
+                _columns = _selector.Columns.Select(column => new Column(this, column.FinalColumnName)
+                {
+                    Reader = column.Reader,
+                    BytesReader = column.BytesReader,
+                    CharsReader = column.CharsReader
+                });
+            }
         }
 
         /// <summary>
@@ -70,9 +79,7 @@ namespace LogicEntity.Model
         /// <exception cref="NotImplementedException"></exception>
         internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
-            Command selectorCommand = _selector?.GetCommandWithUniqueParameterName();
-
-            return ($"(\n    {selectorCommand?.CommandText?.Replace("\n", "\n    ")}\n  ) As `{_alias}`", selectorCommand?.Parameters);
+            return new Description("\n  (\n{0}\n  ) As `" + _alias + "`", _selector).Build();
         }
     }
 }

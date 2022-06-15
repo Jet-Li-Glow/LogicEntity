@@ -24,9 +24,25 @@ namespace LogicEntity.Operator
         int? _commandTimeout;
 
         /// <summary>
+        /// 缩进
+        /// </summary>
+        int _indent = 0;
+
+        /// <summary>
         /// 节点
         /// </summary>
         protected List<Description> Nodes { get; } = new();
+
+        /// <summary>
+        /// 缩进
+        /// </summary>
+        int IDbOperator.Indent
+        {
+            set
+            {
+                _indent = value;
+            }
+        }
 
         /// <summary>
         /// 列
@@ -40,7 +56,7 @@ namespace LogicEntity.Operator
             if (commonTableExpressions is null)
                 commonTableExpressions = Array.Empty<CommonTableExpression>();
 
-            Nodes.Add(new Description($"With {(isRecursive ? "Recursive" : string.Empty)}\n  {string.Join(",\n  ", commonTableExpressions.Select((_, i) => "{" + i + "}"))}",
+            Nodes.Add(new Description($"With {(isRecursive ? "Recursive" : string.Empty)}\n  {string.Join(",\n  ", commonTableExpressions.Select((_, i) => "{" + i + "}"))}\n",
                 commonTableExpressions.Select(c => new Description(c)).ToArray()));
 
             return this;
@@ -418,9 +434,9 @@ namespace LogicEntity.Operator
                 }
             }
 
-            StringBuilder stringBuilder = new();
+            string indentStr = new(Enumerable.Repeat(' ', _indent).ToArray());
 
-            int last = Nodes.Count - 1;
+            List<string> lines = new();
 
             for (int i = 0; i < Nodes.Count; i++)
             {
@@ -428,13 +444,19 @@ namespace LogicEntity.Operator
 
                 (var cmd, var ps) = node.Build();
 
-                stringBuilder.Append(cmd + (i == last ? string.Empty : "\n"));
+                lines.Add(cmd);
 
                 if (ps is not null)
                     command.Parameters.AddRange(ps);
             }
 
-            command.CommandText = stringBuilder.ToString();
+            StringBuilder stringBuilder = new();
+
+            stringBuilder.Append(indentStr);
+
+            stringBuilder.AppendJoin("\n", lines);
+
+            command.CommandText = stringBuilder.ToString().Replace("\n", "\n" + indentStr);
 
             command.Parameters.AddRange(_addedParameters);
 

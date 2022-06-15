@@ -188,7 +188,9 @@ namespace Demo
             //查询 6
             student = new();
 
-            Dictionary<string, object> keyValues = db.ExecuteScalar<Dictionary<string, object>>(DBOperator.Select(student.Json).From(student).Limit(1));
+            nested = DBOperator.Select(student.Json.As("studentJson")).From(student).Limit(1).As("nestedStudent");
+
+            Dictionary<string, object> keyValues = db.ExecuteScalar<Dictionary<string, object>>(DBOperator.Select(nested.Column("studentJson")).From(nested));
 
             student = new();
 
@@ -217,8 +219,8 @@ namespace Demo
 
             selector = DBOperator.WithRecursive(cte, cte2)
                                  .Select()
-                                 .From(cte)
-                                 .UnionAll(DBOperator.Select().From(cte2));
+                                 .From(cte.As("a"))
+                                 .UnionAll(DBOperator.Select().From(cte2.As("b")));
 
             commandText = selector.GetCommand().CommandText;
 
@@ -368,6 +370,21 @@ namespace Demo
                     .From(major)
                     .Where(major.MajorId == 3)
                 );
+
+            commandText = insertor.GetCommand().CommandText;
+
+            rowsAffected = db.ExecuteNonQuery(insertor);
+
+            //插入 9
+            student = new();
+
+            insertor = DBOperator.InsertInto(student)
+                .Set(s =>
+                {
+                    s.StudentName.Value = "Insert Set";
+                    s.MajorId.Value = 3;
+                    s.Birthday.Value = DateTime.Now;
+                });
 
             commandText = insertor.GetCommand().CommandText;
 

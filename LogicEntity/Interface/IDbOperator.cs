@@ -65,6 +65,11 @@ namespace LogicEntity.Interface
         }
 
         /// <summary>
+        /// 缩进
+        /// </summary>
+        internal int Indent { set; }
+
+        /// <summary>
         /// 获取参数名称唯一的命令
         /// </summary>
         /// <returns></returns>

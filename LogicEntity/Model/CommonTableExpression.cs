@@ -11,9 +11,9 @@ namespace LogicEntity.Model
     /// <summary>
     /// 公共表格表达式
     /// </summary>
-    public class CommonTableExpression : TableDescription
+    public class CommonTableExpression : Table
     {
-        string _name;
+        string _tableName;
 
         ISelector _selector;
 
@@ -25,8 +25,13 @@ namespace LogicEntity.Model
         /// <param name="name"></param>
         public CommonTableExpression(string name)
         {
-            _name = name;
+            _tableName = name;
         }
+
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public override string __TableName => _tableName;
 
         /// <summary>
         /// 定义列
@@ -70,26 +75,16 @@ namespace LogicEntity.Model
                 {
                     if (_columns.Any() == false)
                     {
-                        _columns.AddRange(_selector.Columns.Select(column => new Column(this, column.FinalColumnName)));
+                        _columns.AddRange(_selector.Columns.Select(column => new Column(this, column.FinalColumnName)
+                        {
+                            Reader = column.Reader,
+                            BytesReader = column.BytesReader,
+                            CharsReader = column.CharsReader
+                        }));
                     }
                 }
             }
         }
-
-        /// <summary>
-        /// 全名
-        /// </summary>
-        internal override string FullName => _name;
-
-        /// <summary>
-        /// 是否有别名
-        /// </summary>
-        internal override bool HasAlias => false;
-
-        /// <summary>
-        /// 别名
-        /// </summary>
-        internal override string Alias => string.Empty;
 
         /// <summary>
         /// 列
@@ -106,16 +101,7 @@ namespace LogicEntity.Model
             if (_columns.Any())
                 columnsDefinition = $"({string.Join(", ", _columns.Select(column => column.ColumnName))})";
 
-            return new Description(_name + " " + columnsDefinition + " As\n  (\n{0}\n  )", Selector).Build();
-        }
-
-        /// <summary>
-        /// 生成
-        /// </summary>
-        /// <returns></returns>
-        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
-        {
-            return (_name, null);
+            return new Description(_tableName + " " + columnsDefinition + " As\n  (\n{0}\n  )", Selector).Build();
         }
     }
 }

@@ -14,6 +14,8 @@ namespace LogicEntity.Model
     /// </summary>
     public abstract class Table : TableDescription
     {
+        string _tableName;
+
         List<Column> _columns = new();
 
         bool _hasAlias;
@@ -25,6 +27,8 @@ namespace LogicEntity.Model
         /// </summary>
         public Table()
         {
+            _tableName = GetType().Name;
+
             var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.PropertyType == typeof(Column));
 
             foreach (PropertyInfo property in properties)
@@ -45,7 +49,7 @@ namespace LogicEntity.Model
         /// <summary>
         /// 表名
         /// </summary>
-        public virtual string __TableName => GetType().Name;
+        public virtual string __TableName => _tableName;
 
         /// <summary>
         /// 全名
