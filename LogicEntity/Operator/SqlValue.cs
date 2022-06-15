@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity.Model
+namespace LogicEntity.Operator
 {
     internal enum SqlValue
     {

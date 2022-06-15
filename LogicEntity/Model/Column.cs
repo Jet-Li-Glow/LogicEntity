@@ -30,9 +30,9 @@ namespace LogicEntity.Model
             _columnBuild = () => ($"{Table?.FinalTableName}.`{ColumnName}`", null);
         }
 
-        public Column(Description description)
+        public Column(IValueExpression valueExpression)
         {
-            _columnBuild = description.Build;
+            _columnBuild = valueExpression.Build;
         }
 
         /// <summary>

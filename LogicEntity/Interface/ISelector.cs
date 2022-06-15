@@ -11,7 +11,7 @@ namespace LogicEntity.Interface
     /// <summary>
     /// 查询操作器
     /// </summary>
-    public interface ISelector : IAddParameterDbOperator
+    public interface ISelector : IDbOperator, IValueExpression
     {
         /// <summary>
         /// 生成嵌套表

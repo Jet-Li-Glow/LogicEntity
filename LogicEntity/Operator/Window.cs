@@ -223,14 +223,5 @@ namespace LogicEntity.Operator
         {
             return new Description(string.Join(" ", _nodes.Select((_, i) => "{" + i + "}")), _nodes.ToArray()).Build();
         }
-
-        /// <summary>
-        /// 转为字符串
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

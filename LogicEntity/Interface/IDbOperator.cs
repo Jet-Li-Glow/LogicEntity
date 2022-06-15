@@ -14,6 +14,13 @@ namespace LogicEntity.Interface
     public interface IDbOperator
     {
         /// <summary>
+        /// 设置超时时间
+        /// </summary>
+        /// <param name="seconds">超时时间（秒）</param>
+        /// <returns></returns>
+        public void SetCommandTimeout(int seconds);
+
+        /// <summary>
         /// 获取命令
         /// </summary>
         /// <returns></returns>

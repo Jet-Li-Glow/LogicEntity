@@ -13,7 +13,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 字符串描述
     /// </summary>
-    public class Description
+    public class Description : IValueExpression
     {
         /// <summary>
         /// 生成
@@ -45,16 +45,9 @@ namespace LogicEntity.Operator
                 {
                     foreach (object obj in objects)
                     {
-                        if (obj is null)
+                        if (obj is IValueExpression valueExpression)
                         {
-                            formatArgs.Add(string.Empty);
-
-                            continue;
-                        }
-
-                        if (obj is Description description)
-                        {
-                            (var cmd, var ps) = description.Build();
+                            (var cmd, var ps) = valueExpression.Build();
 
                             formatArgs.Add(cmd);
 
@@ -88,21 +81,6 @@ namespace LogicEntity.Operator
                             continue;
                         }
 
-                        if (obj is IDbOperator dbOperator)
-                        {
-                            Command cmd = dbOperator.GetCommandWithUniqueParameterName();
-
-                            if (cmd is not null)
-                            {
-                                formatArgs.Add(cmd.CommandText);
-
-                                if (cmd.Parameters is not null)
-                                    parameters.AddRange(cmd.Parameters);
-                            }
-
-                            continue;
-                        }
-
                         string key = ToolService.UniqueName();
 
                         formatArgs.Add(key);
@@ -113,15 +91,6 @@ namespace LogicEntity.Operator
 
                 return (string.Format(command, formatArgs.ToArray()), parameters);
             };
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="convertor"></param>
-        public Description(Func<string> content)
-        {
-            _build = () => (content(), null);
         }
 
         /// <summary>
@@ -142,18 +111,18 @@ namespace LogicEntity.Operator
         /// 生成
         /// </summary>
         /// <returns></returns>
-        internal (string, IEnumerable<KeyValuePair<string, object>>) Build()
+        (string, IEnumerable<KeyValuePair<string, object>>) IValueExpression.Build()
         {
-            return _build?.Invoke() ?? (null, null);
+            return Build();
         }
 
         /// <summary>
-        /// 转为字符串
+        /// 生成
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
+        public (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
-            throw new NotImplementedException();
+            return _build?.Invoke() ?? (null, null);
         }
 
         /// <summary>
@@ -387,7 +356,7 @@ namespace LogicEntity.Operator
         /// <param name="logicalOperator"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        static Description LogicalDescription(object left, string logicalOperator, object right)
+        internal static Description LogicalDescription(object left, string logicalOperator, object right)
         {
             int index = 0;
 

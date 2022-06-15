@@ -21,9 +21,8 @@ namespace Demo
         {
             //Version 0.7.0
 
-            //开发计划  1.Debug
-            //          2.统一接口IValueExpression
-            //          3.Column<int>
+            //开发计划  1.统一接口IValueExpression
+            //          2.Column<int>
 
             Console.WriteLine("-- Start --");
 
@@ -131,13 +130,14 @@ namespace Demo
                 .LeftJoin(major).On(major.MajorId == student.MajorId)
                 .LeftJoin(nested).On(nested.Column(nameof(Major.MajorId)) == student.MajorId)
                 )
-                .Where(true & (student.StudentId == 1 | student.StudentName.Like("%小红%"))
+                .Where(true & (student.StudentId == 1 | student.StudentName.Like("%小红%") | student.StudentId == null)
                             & student.Birthday < DateTime.Now
-                            & student.StudentId.In(1, 2, 3, 4, 5, 6, 7, "8", ")a")
+                            & student.StudentId.In(1, 2, 3, 4, 5, 6, 7, "8", ")a; -- ")
                             & student.StudentId.In(DBOperator.Select(inStudent.StudentId)
                                                              .From(inStudent)
                                                              .Where(inStudent.StudentId.In(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)))
                             & student.StudentId >= 0
+                            & student.StudentId != null
                        )
                 .GroupBy(student.StudentId, major.MajorId)
                 .Having(student.StudentId > 0)
@@ -145,6 +145,8 @@ namespace Demo
                 .OrderBy(student.StudentId)
                 .ThenBy(major.MajorId)
                 .Limit(1000);
+
+            selector.SetCommandTimeout(30);
 
             Command command = selector.GetCommand();
 

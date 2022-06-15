@@ -11,11 +11,6 @@ namespace LogicEntity.Interface
     /// </summary>
     public interface IAddParameterDbOperator : ITimerDbOperator
     {
-        /// <summary>
-        /// 添加参数
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        public IAddParameterDbOperator AddParameter(string key, object value);
+        
     }
 }

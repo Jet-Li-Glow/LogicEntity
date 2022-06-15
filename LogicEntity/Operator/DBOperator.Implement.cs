@@ -14,11 +14,6 @@ namespace LogicEntity.Operator
         IDeleterFrom, IDeleterWhere, IDeleterThenBy, IInsert, IInsertIgnore, IInsertInto, IInsertTable
     {
         /// <summary>
-        /// 额外的参数
-        /// </summary>
-        List<KeyValuePair<string, object>> _addedParameters = new();
-
-        /// <summary>
         /// 超时时间
         /// </summary>
         int? _commandTimeout;
@@ -397,18 +392,9 @@ namespace LogicEntity.Operator
 
         //Operator
 
-        public IAddParameterDbOperator AddParameter(string key, object value)
-        {
-            _addedParameters.Add(KeyValuePair.Create(key, value));
-
-            return this;
-        }
-
-        public IDbOperator SetCommandTimeout(int seconds)
+        public void SetCommandTimeout(int seconds)
         {
             _commandTimeout = seconds;
-
-            return this;
         }
 
         Command IDbOperator.GetCommandWithUniqueParameterName()
@@ -458,11 +444,16 @@ namespace LogicEntity.Operator
 
             command.CommandText = stringBuilder.ToString().Replace("\n", "\n" + indentStr);
 
-            command.Parameters.AddRange(_addedParameters);
-
             command.CommandTimeout = _commandTimeout;
 
             return command;
+        }
+
+        (string, IEnumerable<KeyValuePair<string, object>>) IValueExpression.Build()
+        {
+            Command command = ((IDbOperator)this).GetCommandWithUniqueParameterName();
+
+            return (command.CommandText, command.Parameters);
         }
     }
 }
