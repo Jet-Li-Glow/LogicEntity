@@ -9,8 +9,8 @@ namespace LogicEntity.Interface
 {
     public interface IOrderBy : ILimit
     {
-        public IThenBy OrderBy(Description description);
+        public IThenBy OrderBy(IValueExpression valueExpression);
 
-        public IThenBy OrderByDescending(Description description);
+        public IThenBy OrderByDescending(IValueExpression valueExpression);
     }
 }

@@ -42,7 +42,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="columns"></param>
         /// <returns></returns>
-        public static IFrom Select(params ColumnCollection[] columns)
+        public static IFrom Select(params IEnumerable<Column>[] columns)
         {
             return ((IOperate)new DBOperatorImplement()).Select(columns);
         }
@@ -52,7 +52,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="columns"></param>
         /// <returns></returns>
-        public static IFrom SelectDistinct(params ColumnCollection[] columns)
+        public static IFrom SelectDistinct(params IEnumerable<Column>[] columns)
         {
             return ((IOperate)new DBOperatorImplement()).SelectDistinct(columns);
         }
@@ -65,7 +65,7 @@ namespace LogicEntity.Operator
         public static IInsertor Insert<T>(T row) where T : Table, new()
         {
             return new DBOperatorImplement().Insert().Table(row)
-                .Columns(row.Columns.Where(c => c.IsValueSet).ToArray())
+                .Columns((row as TableExpression).Columns.Where(c => c.IsValueSet).ToArray())
                 .Row(row);
         }
 
@@ -77,7 +77,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static IInsertor Save<T>(T row) where T : Table, new()
         {
-            Column[] settedColumns = row.Columns.Where(c => c.IsValueSet).ToArray();
+            Column[] settedColumns = (row as TableExpression).Columns.Where(c => c.IsValueSet).ToArray();
 
             return new DBOperatorImplement().Insert().Table(row)
                 .Columns(settedColumns)
@@ -86,7 +86,7 @@ namespace LogicEntity.Operator
                 {
                     foreach (Column column in settedColumns)
                     {
-                        Column col = r.Columns.FirstOrDefault(c => c.EntityPropertyName == column.EntityPropertyName);
+                        Column col = (r as TableExpression).Columns.FirstOrDefault(c => c.EntityPropertyName == column.EntityPropertyName);
 
                         if (col is not null)
                             col.Value = col.Values();
@@ -131,7 +131,7 @@ namespace LogicEntity.Operator
         /// 更新
         /// </summary>
         /// <returns></returns>
-        public static IUpdaterSet Update(JoinedTable table)
+        public static IUpdaterSet Update(TableExpression table)
         {
             return new DBOperatorImplement().Update(table);
         }

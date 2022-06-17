@@ -21,7 +21,7 @@ namespace Demo
         {
             //Version 0.7.0
 
-            //开发计划  1.统一接口IValueExpression
+            //开发计划  1.Debug
             //          2.Column<int>
 
             Console.WriteLine("-- Start --");
@@ -69,9 +69,9 @@ namespace Demo
                 (student.StudentId + 1).As("StudentIdPlus"),
                 student.StudentId.As("Alpha"),
                 studentBeta.StudentId.As("Beta"),
-                new Description("student.StudentId").As("Gamma"),
+                new ValueExpression("student.StudentId").As("Gamma"),
                 student.StudentId > 50,
-                new Description("student.StudentId > {0}", 100),
+                new ValueExpression("student.StudentId > {0}", 100),
                 student.StudentName.ReadChars(read =>
                 {
                     List<char> chars = new();
@@ -203,19 +203,18 @@ namespace Demo
 
             cte.DefineColumns("n");
 
-            cte.Selector = DBOperator.Select(new Description("1"))
-                           .UnionAll(DBOperator.Select(new Description("n") + 1)
+            cte.Selector = DBOperator.Select(new ValueExpression("1"))
+                           .UnionAll(DBOperator.Select(new ValueExpression("n") + 1)
                                      .From(cte)
                                      .Where(cte.Column("n") < 10)
-                                     .Limit(20)
-                                     );
+                                     ).Limit(20);
 
             CommonTableExpression cte2 = new CommonTableExpression("cte2");
 
             cte2.DefineColumns("n");
 
-            cte2.Selector = DBOperator.Select(new Description("20"))
-                           .UnionAll(DBOperator.Select(new Description("n") + 1)
+            cte2.Selector = DBOperator.Select(new ValueExpression("20"))
+                           .UnionAll(DBOperator.Select(new ValueExpression("n") + 1)
                                      .From(cte2)
                                      .Where(cte2.Column("n") < 30));
 
@@ -481,7 +480,7 @@ namespace Demo
             //删除 3
             cte = new("cte");
 
-            cte.Selector = DBOperator.Select(new Description("-1").As("n"));
+            cte.Selector = DBOperator.Select(new ValueExpression("-1").As("n"));
 
             student = new();
 
@@ -543,9 +542,9 @@ namespace Demo
     /// </summary>
     static class MyDbFunction
     {
-        public static Description MyFunction(this Description description)
+        public static IValueExpression MyFunction(this IValueExpression description)
         {
-            return new Description("MyFunction({0})", description);
+            return new ValueExpression("MyFunction({0})", description);
         }
     }
 

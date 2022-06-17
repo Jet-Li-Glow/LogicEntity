@@ -10,19 +10,19 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 关联表
     /// </summary>
-    public class JoinedTable : TableDescription
+    public class JoinedTable : TableExpression
     {
-        TableDescription _left;
+        TableExpression _left;
 
         string _join;
 
-        TableDescription _right;
+        TableExpression _right;
 
-        Description _joinSpecification;
+        IValueExpression _joinSpecification;
 
         IEnumerable<Column> _columns;
 
-        internal JoinedTable(TableDescription left, string join, TableDescription right)
+        internal JoinedTable(TableExpression left, string join, TableExpression right)
         {
             _left = left;
 
@@ -41,14 +41,14 @@ namespace LogicEntity.Operator
 
         internal override IEnumerable<Column> Columns => _columns;
 
-        public JoinedTable On(Description joinSpecification)
+        public TableExpression On(IValueExpression joinSpecification)
         {
             _joinSpecification = joinSpecification;
 
             return this;
         }
 
-        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
+        internal protected override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
             List<KeyValuePair<string, object>> parameters = new();
 

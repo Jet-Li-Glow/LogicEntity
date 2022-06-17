@@ -11,7 +11,7 @@ namespace LogicEntity.Model
     /// <summary>
     /// 嵌套表
     /// </summary>
-    public class NestedTable : TableDescription
+    public class NestedTable : TableExpression
     {
         ISelector _selector;
 
@@ -31,7 +31,7 @@ namespace LogicEntity.Model
 
             if (_selector is not null)
             {
-                _selector.Indent = 4;
+                _selector.__Indent = 4;
 
                 _columns = _selector.Columns.Select(column => new Column(this, column.FinalColumnName)
                 {
@@ -77,9 +77,9 @@ namespace LogicEntity.Model
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
+        internal protected override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
-            return new Description("\n  (\n{0}\n  ) As `" + _alias + "`", _selector).Build();
+            return (new SqlExpression("\n  (\n{0}\n  ) As `" + _alias + "`", _selector) as ISqlExpression).Build();
         }
     }
 }

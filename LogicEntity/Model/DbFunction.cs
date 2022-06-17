@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Tool;
 using LogicEntity.Operator;
+using System.Collections;
+using LogicEntity.Interface;
 
 namespace LogicEntity.Model
 {
@@ -13,36 +15,25 @@ namespace LogicEntity.Model
     /// </summary>
     public static class DbFunction
     {
-        static Description __GetDbFunctionDescription(string methodName, params object[] args)
+        static IValueExpression __GetDbFunctionDescription(string methodName, params object[] args)
         {
             List<string> strs = new();
 
             if (args is not null)
                 strs.AddRange(args.Select((_, i) => "{" + i + "}"));
 
-            return new Description(methodName + "(" + string.Join(", ", strs) + ")", args);
+            return new ValueExpression(methodName + "(" + string.Join(", ", strs) + ")", args);
         }
 
         /// <summary>
         /// 读取
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="reader"></param>
         /// <returns></returns>
-        public static Column Read(this Description description, Func<object, object> reader)
+        public static Column Read(this IValueExpression valueExpression, Func<object, object> reader)
         {
-            Column column = new Column(description);
-
-            if (description is Column col)
-            {
-                column.Reader = col.Reader;
-
-                column.BytesReader = col.BytesReader;
-
-                column.CharsReader = col.CharsReader;
-
-                column.Writer = col.Writer;
-            }
+            Column column = new Column(valueExpression);
 
             column.Reader = reader;
 
@@ -52,23 +43,12 @@ namespace LogicEntity.Model
         /// <summary>
         /// 读取字节
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="bytesReader"></param>
         /// <returns></returns>
-        public static Column ReadBytes(this Description description, Func<Func<long, byte[], int, int, long>, object> bytesReader)
+        public static Column ReadBytes(this IValueExpression valueExpression, Func<Func<long, byte[], int, int, long>, object> bytesReader)
         {
-            Column column = new Column(description);
-
-            if (description is Column col)
-            {
-                column.Reader = col.Reader;
-
-                column.BytesReader = col.BytesReader;
-
-                column.CharsReader = col.CharsReader;
-
-                column.Writer = col.Writer;
-            }
+            Column column = new Column(valueExpression);
 
             column.BytesReader = bytesReader;
 
@@ -78,23 +58,12 @@ namespace LogicEntity.Model
         /// <summary>
         /// 读取字符
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="charsReader"></param>
         /// <returns></returns>
-        public static Column ReadChars(this Description description, Func<Func<long, char[], int, int, long>, object> charsReader)
+        public static Column ReadChars(this IValueExpression valueExpression, Func<Func<long, char[], int, int, long>, object> charsReader)
         {
-            Column column = new Column(description);
-
-            if (description is Column col)
-            {
-                column.Reader = col.Reader;
-
-                column.BytesReader = col.BytesReader;
-
-                column.CharsReader = col.CharsReader;
-
-                column.Writer = col.Writer;
-            }
+            Column column = new Column(valueExpression);
 
             column.CharsReader = charsReader;
 
@@ -104,14 +73,14 @@ namespace LogicEntity.Model
         /// <summary>
         /// 写入
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="writer"></param>
         /// <returns></returns>
-        public static Column Write(this Description description, Func<object, object> writer)
+        public static Column Write(this IValueExpression valueExpression, Func<object, object> writer)
         {
-            Column column = new Column(description);
+            Column column = new Column(valueExpression);
 
-            if (description is Column col)
+            if (valueExpression is Column col)
             {
                 column.Reader = col.Reader;
 
@@ -128,26 +97,134 @@ namespace LogicEntity.Model
         }
 
         /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="vs"></param>
+        /// <returns></returns>
+        public static IValueExpression In(this IValueExpression valueExpression, IEnumerable vs)
+        {
+            if (vs is null)
+                vs = Enumerable.Empty<object>();
+
+            object[] objs = vs.OfType<object>().ToArray();
+
+            return new ValueExpression("{0} In (" + string.Join(", ", objs.Select((_, i) => "{" + (i + 1) + "}")) + ")", new object[] { valueExpression }.Concat(objs).ToArray());
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="vs"></param>
+        /// <returns></returns>
+        public static IValueExpression In(this IValueExpression valueExpression, params object[] vs)
+        {
+            return valueExpression.In(vs.AsEnumerable());
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public static IValueExpression In(this IValueExpression valueExpression, ISelector selector)
+        {
+            if (selector is not null)
+                selector.__Indent = 4;
+
+            return new ValueExpression("{0} In {1}", valueExpression, selector);
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="vs"></param>
+        /// <returns></returns>
+        public static IValueExpression NotIn(this IValueExpression valueExpression, IEnumerable vs)
+        {
+            if (vs is null)
+                vs = Enumerable.Empty<object>();
+
+            object[] objs = vs.OfType<object>().ToArray();
+
+            return new ValueExpression("{0} Not In (" + string.Join(", ", objs.Select((_, i) => "{" + (i + 1) + "}")) + ")", new object[] { valueExpression }.Concat(objs).ToArray());
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="vs"></param>
+        /// <returns></returns>
+        public static IValueExpression NotIn(this IValueExpression valueExpression, params object[] vs)
+        {
+            return valueExpression.NotIn(vs.AsEnumerable());
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="selector"></param>
+        /// <returns></returns>
+        public static IValueExpression NotIn(this IValueExpression valueExpression, ISelector selector)
+        {
+            if (selector is not null)
+                selector.__Indent = 4;
+
+            return new ValueExpression("{0} Not In {1}", valueExpression, selector);
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static IValueExpression Between(this IValueExpression valueExpression, object left, object right)
+        {
+            return new ValueExpression("{0} Between {1} And {2}", valueExpression, left, right);
+        }
+
+        /// <summary>
+        /// 范围查找
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static IValueExpression NotBetween(this IValueExpression valueExpression, object left, object right)
+        {
+            return new ValueExpression("{0} Not Between {1} And {2}", valueExpression, left, right);
+        }
+
+        /// <summary>
+        /// 相似
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static IValueExpression Like(this IValueExpression valueExpression, string str)
+        {
+            return new ValueExpression("{0} Like {1}", valueExpression, str);
+        }
+
+        /// <summary>
         /// 列值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Values(this Description description)
+        public static IValueExpression Values(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Values), description);
+            return __GetDbFunctionDescription(nameof(Values), valueExpression);
         }
 
         /// <summary>
         /// 设置别名
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="sqlExpression"></param>
         /// <param name="alias"></param>
         /// <returns></returns>
-        public static Column As(this Description description, string alias)
+        public static Column As(this ISqlExpression sqlExpression, string alias)
         {
-            Column column = new Column(description);
+            Column column = new Column(sqlExpression);
 
-            if (description is Column col)
+            if (sqlExpression is Column col)
             {
                 column.Reader = col.Reader;
 
@@ -168,31 +245,31 @@ namespace LogicEntity.Model
         /// <summary>
         /// 第一个字符的ASCII码
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description ASCII(this Description description)
+        public static IValueExpression ASCII(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(ASCII), description);
+            return __GetDbFunctionDescription(nameof(ASCII), valueExpression);
         }
 
         /// <summary>
         /// 字符串的字符数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Char_Length(this Description description)
+        public static IValueExpression Char_Length(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Char_Length), description);
+            return __GetDbFunctionDescription(nameof(Char_Length), valueExpression);
         }
 
         /// <summary>
         /// 字符串的字符数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Character_Length(this Description description)
+        public static IValueExpression Character_Length(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Character_Length), description);
+            return __GetDbFunctionDescription(nameof(Character_Length), valueExpression);
         }
 
         /// <summary>
@@ -200,7 +277,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values">值</param>
         /// <returns></returns>
-        public static Description Concat(params object[] values)
+        public static IValueExpression Concat(params object[] values)
         {
             return __GetDbFunctionDescription(nameof(Concat), values);
         }
@@ -210,7 +287,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static Description Concat_Ws(params object[] values)
+        public static IValueExpression Concat_Ws(params object[] values)
         {
             return __GetDbFunctionDescription(nameof(Concat_Ws), values);
         }
@@ -220,7 +297,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Description Group_Concat(object value)
+        public static IValueExpression Group_Concat(object value)
         {
             return __GetDbFunctionDescription(nameof(Group_Concat), value);
         }
@@ -230,7 +307,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static Description Field(params object[] values)
+        public static IValueExpression Field(params object[] values)
         {
             return __GetDbFunctionDescription(nameof(Field), values);
         }
@@ -238,255 +315,255 @@ namespace LogicEntity.Model
         /// <summary>
         /// 当前字符串在字符串列表中的位置
         /// </summary>
-        /// <param name="description">当前字符串</param>
+        /// <param name="valueExpression">当前字符串</param>
         /// <param name="strList">字符串列表（以 , 分隔）</param>
         /// <returns></returns>
-        public static Description Find_In_Set(this Description description, object strList)
+        public static IValueExpression Find_In_Set(this IValueExpression valueExpression, object strList)
         {
-            return __GetDbFunctionDescription(nameof(Find_In_Set), description, strList);
+            return __GetDbFunctionDescription(nameof(Find_In_Set), valueExpression, strList);
         }
 
         /// <summary>
         /// 将数字格式化为 '##,###.##' 的形式
         /// </summary>
-        /// <param name="description">数字</param>
+        /// <param name="valueExpression">数字</param>
         /// <param name="digits">保留的小数位数</param>
         /// <returns></returns>
-        public static Description Format(this Description description, int digits)
+        public static IValueExpression Format(this IValueExpression valueExpression, int digits)
         {
-            return __GetDbFunctionDescription(nameof(Format), description, digits);
+            return __GetDbFunctionDescription(nameof(Format), valueExpression, digits);
         }
 
         /// <summary>
         /// 替换字符串中的一部分
         /// </summary>
-        /// <param name="description">原始字符串</param>
+        /// <param name="valueExpression">原始字符串</param>
         /// <param name="start">开始位置</param>
         /// <param name="length">替换长度</param>
         /// <param name="replace">字符串</param>
         /// <returns></returns>
-        public static Description Insert(this Description description, int start, int length, object replace)
+        public static IValueExpression Insert(this IValueExpression valueExpression, int start, int length, object replace)
         {
-            return __GetDbFunctionDescription(nameof(Insert), description, start, length, replace);
+            return __GetDbFunctionDescription(nameof(Insert), valueExpression, start, length, replace);
         }
 
         /// <summary>
         /// 在字符串中的开始位置
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static Description Locate(this Description description, object str)
+        public static IValueExpression Locate(this IValueExpression valueExpression, object str)
         {
-            return __GetDbFunctionDescription(nameof(Locate), description, str);
+            return __GetDbFunctionDescription(nameof(Locate), valueExpression, str);
         }
 
         /// <summary>
         /// 将字母转换为小写字母
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Lcase(this Description description)
+        public static IValueExpression Lcase(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Lcase), description);
+            return __GetDbFunctionDescription(nameof(Lcase), valueExpression);
         }
 
         /// <summary>
         /// 将字母转换为大写字母
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Ucase(this Description description)
+        public static IValueExpression Ucase(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ucase), description);
+            return __GetDbFunctionDescription(nameof(Ucase), valueExpression);
         }
 
         /// <summary>
         /// 将字母转换为小写字母
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Lower(this Description description)
+        public static IValueExpression Lower(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Lower), description);
+            return __GetDbFunctionDescription(nameof(Lower), valueExpression);
         }
 
         /// <summary>
         /// 将字母转换为大写字母
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Upper(this Description description)
+        public static IValueExpression Upper(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Upper), description);
+            return __GetDbFunctionDescription(nameof(Upper), valueExpression);
         }
 
         /// <summary>
         /// 字符串左侧的字符
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static Description Left(this Description description, int length)
+        public static IValueExpression Left(this IValueExpression valueExpression, int length)
         {
-            return __GetDbFunctionDescription(nameof(Left), description, length);
+            return __GetDbFunctionDescription(nameof(Left), valueExpression, length);
         }
 
         /// <summary>
         /// 字符串右侧的字符
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static Description Right(this Description description, int length)
+        public static IValueExpression Right(this IValueExpression valueExpression, int length)
         {
-            return __GetDbFunctionDescription(nameof(Right), description, length);
+            return __GetDbFunctionDescription(nameof(Right), valueExpression, length);
         }
 
         /// <summary>
         /// 在字符串左侧填充字符串达到总长度
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="length">总长度</param>
         /// <param name="str">用于填充的字符串</param>
         /// <returns></returns>
-        public static Description LPad(this Description description, int length, object str)
+        public static IValueExpression LPad(this IValueExpression valueExpression, int length, object str)
         {
-            return __GetDbFunctionDescription(nameof(LPad), description, length, str);
+            return __GetDbFunctionDescription(nameof(LPad), valueExpression, length, str);
         }
 
         /// <summary>
         /// 在字符串右侧填充字符串达到总长度
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="length">总长度</param>
         /// <param name="str">用于填充的字符串</param>
         /// <returns></returns>
-        public static Description RPad(this Description description, int length, object str)
+        public static IValueExpression RPad(this IValueExpression valueExpression, int length, object str)
         {
-            return __GetDbFunctionDescription(nameof(RPad), description, length, str);
+            return __GetDbFunctionDescription(nameof(RPad), valueExpression, length, str);
         }
 
         /// <summary>
         /// 去掉字符串左侧空格
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description LTrim(this Description description)
+        public static IValueExpression LTrim(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(LTrim), description);
+            return __GetDbFunctionDescription(nameof(LTrim), valueExpression);
         }
 
         /// <summary>
         /// 去掉字符串右侧空格
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description RTrim(this Description description)
+        public static IValueExpression RTrim(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(RTrim), description);
+            return __GetDbFunctionDescription(nameof(RTrim), valueExpression);
         }
 
         /// <summary>
         /// 去掉字符串两侧空格
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Trim(this Description description)
+        public static IValueExpression Trim(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Trim), description);
+            return __GetDbFunctionDescription(nameof(Trim), valueExpression);
         }
 
         /// <summary>
         /// 截取字符串
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="start">开始位置</param>
         /// <param name="length">截取长度</param>
         /// <returns></returns>
-        public static Description Mid(this Description description, int start, int length)
+        public static IValueExpression Mid(this IValueExpression valueExpression, int start, int length)
         {
-            return __GetDbFunctionDescription(nameof(Mid), description, start, length);
+            return __GetDbFunctionDescription(nameof(Mid), valueExpression, start, length);
         }
 
         /// <summary>
         /// 截取字符串
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="start">开始位置</param>
         /// <param name="length">截取长度</param>
         /// <returns></returns>
-        public static Description SubStr(this Description description, int start, int length)
+        public static IValueExpression SubStr(this IValueExpression valueExpression, int start, int length)
         {
-            return __GetDbFunctionDescription(nameof(SubStr), description, start, length);
+            return __GetDbFunctionDescription(nameof(SubStr), valueExpression, start, length);
         }
 
         /// <summary>
         /// 截取字符串
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="start">开始位置</param>
         /// <param name="length">截取长度</param>
         /// <returns></returns>
-        public static Description SubString(this Description description, int start, int length)
+        public static IValueExpression SubString(this IValueExpression valueExpression, int start, int length)
         {
-            return __GetDbFunctionDescription(nameof(SubString), description, start, length);
+            return __GetDbFunctionDescription(nameof(SubString), valueExpression, start, length);
         }
 
         /// <summary>
         /// 截取字符串
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="separator">分隔符</param>
         /// <param name="num">分隔符序号</param>
         /// <returns></returns>
-        public static Description SubString_Index(this Description description, object separator, int num)
+        public static IValueExpression SubString_Index(this IValueExpression valueExpression, object separator, int num)
         {
-            return __GetDbFunctionDescription(nameof(SubString_Index), description, separator, num);
+            return __GetDbFunctionDescription(nameof(SubString_Index), valueExpression, separator, num);
         }
 
         /// <summary>
         /// 字符串1 在 字符串2 中的位置
         /// </summary>
-        /// <param name="description">字符串1</param>
+        /// <param name="valueExpression">字符串1</param>
         /// <param name="str">字符串2</param>
         /// <returns></returns>
-        public static Description Position(this Description description, object str)
+        public static IValueExpression Position(this IValueExpression valueExpression, object str)
         {
-            return __GetDbFunctionDescription(nameof(Position), description, new Description(" In {0} ", str));
+            return __GetDbFunctionDescription(nameof(Position), valueExpression, new ValueExpression(" In {0} ", str));
         }
 
         /// <summary>
         /// 重复字符串
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="times">重复次数</param>
         /// <returns></returns>
-        public static Description Repeat(this Description description, int times)
+        public static IValueExpression Repeat(this IValueExpression valueExpression, int times)
         {
-            return __GetDbFunctionDescription(nameof(Repeat), description, times);
+            return __GetDbFunctionDescription(nameof(Repeat), valueExpression, times);
         }
 
         /// <summary>
         /// 替换字符串
         /// </summary>
-        /// <param name="description">字符串</param>
+        /// <param name="valueExpression">字符串</param>
         /// <param name="original">旧字符串</param>
         /// <param name="replace">新字符串</param>
         /// <returns></returns>
-        public static Description Replace(this Description description, object original, object replace)
+        public static IValueExpression Replace(this IValueExpression valueExpression, object original, object replace)
         {
-            return __GetDbFunctionDescription(nameof(Replace), description, original, replace);
+            return __GetDbFunctionDescription(nameof(Replace), valueExpression, original, replace);
         }
 
         /// <summary>
         /// 反转字符串
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Reverse(this Description description)
+        public static IValueExpression Reverse(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Reverse), description);
+            return __GetDbFunctionDescription(nameof(Reverse), valueExpression);
         }
 
         /// <summary>
@@ -494,7 +571,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="count">空格的数量</param>
         /// <returns></returns>
-        public static Description Space(int count)
+        public static IValueExpression Space(int count)
         {
             return __GetDbFunctionDescription(nameof(Space), count);
         }
@@ -505,7 +582,7 @@ namespace LogicEntity.Model
         /// <param name="left">左值</param>
         /// <param name="right">右值</param>
         /// <returns></returns>
-        public static Description Strcmp(this Description left, Description right)
+        public static IValueExpression Strcmp(this IValueExpression left, IValueExpression right)
         {
             return __GetDbFunctionDescription(nameof(Strcmp), left, right);
         }
@@ -513,81 +590,81 @@ namespace LogicEntity.Model
         /// <summary>
         /// 绝对值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Abs(this Description description)
+        public static IValueExpression Abs(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Abs), description);
+            return __GetDbFunctionDescription(nameof(Abs), valueExpression);
         }
 
         /// <summary>
         /// 正弦
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Sin(this Description description)
+        public static IValueExpression Sin(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sin), description);
+            return __GetDbFunctionDescription(nameof(Sin), valueExpression);
         }
 
         /// <summary>
         /// 余弦
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Cos(this Description description)
+        public static IValueExpression Cos(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Cos), description);
+            return __GetDbFunctionDescription(nameof(Cos), valueExpression);
         }
 
         /// <summary>
         /// 正切
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Tan(this Description description)
+        public static IValueExpression Tan(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Tan), description);
+            return __GetDbFunctionDescription(nameof(Tan), valueExpression);
         }
 
         /// <summary>
         /// 余切
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Cot(this Description description)
+        public static IValueExpression Cot(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Cot), description);
+            return __GetDbFunctionDescription(nameof(Cot), valueExpression);
         }
 
         /// <summary>
         /// 反正弦
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Asin(this Description description)
+        public static IValueExpression Asin(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Asin), description);
+            return __GetDbFunctionDescription(nameof(Asin), valueExpression);
         }
 
         /// <summary>
         /// 反余弦
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Acos(this Description description)
+        public static IValueExpression Acos(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Acos), description);
+            return __GetDbFunctionDescription(nameof(Acos), valueExpression);
         }
 
         /// <summary>
         /// 反正切
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Atan(this Description description)
+        public static IValueExpression Atan(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Atan), description);
+            return __GetDbFunctionDescription(nameof(Atan), valueExpression);
         }
 
         /// <summary>
@@ -596,7 +673,7 @@ namespace LogicEntity.Model
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public static Description Atan2(object x, object y)
+        public static IValueExpression Atan2(object x, object y)
         {
             return __GetDbFunctionDescription(nameof(Atan2), x, y);
         }
@@ -604,50 +681,50 @@ namespace LogicEntity.Model
         /// <summary>
         /// 平均值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Avg(this Description description)
+        public static IValueExpression Avg(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Avg), description);
+            return __GetDbFunctionDescription(nameof(Avg), valueExpression);
         }
 
         /// <summary>
         /// 向上取整
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Ceil(this Description description)
+        public static IValueExpression Ceil(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ceil), description);
+            return __GetDbFunctionDescription(nameof(Ceil), valueExpression);
         }
 
         /// <summary>
         /// 向上取整
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Ceiling(this Description description)
+        public static IValueExpression Ceiling(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ceiling), description);
+            return __GetDbFunctionDescription(nameof(Ceiling), valueExpression);
         }
 
         /// <summary>
         /// 向下取整
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Floor(this Description description)
+        public static IValueExpression Floor(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Floor), description);
+            return __GetDbFunctionDescription(nameof(Floor), valueExpression);
         }
 
         /// <summary>
         /// 总数
         /// </summary>
         /// <returns></returns>
-        public static Description Count()
+        public static IValueExpression Count()
         {
-            return new Description("Count(*)");
+            return new ValueExpression("Count(*)");
         }
 
         /// <summary>
@@ -655,7 +732,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
-        public static Description Count(int i)
+        public static IValueExpression Count(int i)
         {
             return __GetDbFunctionDescription(nameof(Count), i);
         }
@@ -663,31 +740,31 @@ namespace LogicEntity.Model
         /// <summary>
         /// 总数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Count(this Description description)
+        public static IValueExpression Count(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Count), description);
+            return __GetDbFunctionDescription(nameof(Count), valueExpression);
         }
 
         /// <summary>
         /// 角度
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Degrees(this Description description)
+        public static IValueExpression Degrees(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Degrees), description);
+            return __GetDbFunctionDescription(nameof(Degrees), valueExpression);
         }
 
         /// <summary>
         /// 弧度
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Radians(this Description description)
+        public static IValueExpression Radians(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Radians), description);
+            return __GetDbFunctionDescription(nameof(Radians), valueExpression);
         }
 
         /// <summary>
@@ -696,9 +773,9 @@ namespace LogicEntity.Model
         /// <param name="divided"></param>
         /// <param name="divider"></param>
         /// <returns></returns>
-        public static Description Div(this Description divided, object divider)
+        public static IValueExpression Div(this IValueExpression divided, object divider)
         {
-            return new Description("{0} Div {1}", divided, divider);
+            return new ValueExpression("{0} Div {1}", divided, divider);
         }
 
         /// <summary>
@@ -707,7 +784,7 @@ namespace LogicEntity.Model
         /// <param name="divided"></param>
         /// <param name="divider"></param>
         /// <returns></returns>
-        public static Description Mod(this Description divided, object divider)
+        public static IValueExpression Mod(this IValueExpression divided, object divider)
         {
             return __GetDbFunctionDescription(nameof(Mod), divided, divider);
         }
@@ -717,7 +794,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public static Description Exp(object index)
+        public static IValueExpression Exp(object index)
         {
             return __GetDbFunctionDescription(nameof(Exp), index);
         }
@@ -725,10 +802,10 @@ namespace LogicEntity.Model
         /// <summary>
         /// 最大值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="more"></param>
         /// <returns></returns>
-        public static Description Greatest(this Description description, params object[] more)
+        public static IValueExpression Greatest(this IValueExpression valueExpression, params object[] more)
         {
             return __GetDbFunctionDescription(nameof(Greatest), more);
         }
@@ -736,10 +813,10 @@ namespace LogicEntity.Model
         /// <summary>
         /// 最小值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="more"></param>
         /// <returns></returns>
-        public static Description Least(this Description description, params object[] more)
+        public static IValueExpression Least(this IValueExpression valueExpression, params object[] more)
         {
             return __GetDbFunctionDescription(nameof(Least), more);
         }
@@ -747,11 +824,11 @@ namespace LogicEntity.Model
         /// <summary>
         /// e 的对数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Ln(this Description description)
+        public static IValueExpression Ln(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ln), description);
+            return __GetDbFunctionDescription(nameof(Ln), valueExpression);
         }
 
         /// <summary>
@@ -760,7 +837,7 @@ namespace LogicEntity.Model
         /// <param name="baseNum"></param>
         /// <param name="power"></param>
         /// <returns></returns>
-        public static Description Log(Description baseNum, object power)
+        public static IValueExpression Log(IValueExpression baseNum, object power)
         {
             return __GetDbFunctionDescription(nameof(Log), baseNum, power);
         }
@@ -768,50 +845,50 @@ namespace LogicEntity.Model
         /// <summary>
         /// 10 的对数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Log10(this Description description)
+        public static IValueExpression Log10(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Log10), description);
+            return __GetDbFunctionDescription(nameof(Log10), valueExpression);
         }
 
         /// <summary>
         /// 2 的对数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Log2(this Description description)
+        public static IValueExpression Log2(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Log2), description);
+            return __GetDbFunctionDescription(nameof(Log2), valueExpression);
         }
 
         /// <summary>
         /// 最大值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Max(this Description description)
+        public static IValueExpression Max(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Max), description);
+            return __GetDbFunctionDescription(nameof(Max), valueExpression);
         }
 
         /// <summary>
         /// 最小值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Min(this Description description)
+        public static IValueExpression Min(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Min), description);
+            return __GetDbFunctionDescription(nameof(Min), valueExpression);
         }
 
         /// <summary>
         /// 圆周率
         /// </summary>
         /// <returns></returns>
-        public static Description PI()
+        public static IValueExpression PI()
         {
-            return new Description("PI()");
+            return new ValueExpression("PI()");
         }
 
         /// <summary>
@@ -820,7 +897,7 @@ namespace LogicEntity.Model
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public static Description Pow(this Description x, object y)
+        public static IValueExpression Pow(this IValueExpression x, object y)
         {
             return __GetDbFunctionDescription(nameof(Pow), x, y);
         }
@@ -829,144 +906,144 @@ namespace LogicEntity.Model
         /// 随机数
         /// </summary>
         /// <returns></returns>
-        public static Description Rand()
+        public static IValueExpression Rand()
         {
-            return new Description("Rand()");
+            return new ValueExpression("Rand()");
         }
 
         /// <summary>
         /// 取整
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Round(this Description description)
+        public static IValueExpression Round(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Round), description);
+            return __GetDbFunctionDescription(nameof(Round), valueExpression);
         }
 
         /// <summary>
         /// 正数、0 或 负数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Sign(this Description description)
+        public static IValueExpression Sign(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sign), description);
+            return __GetDbFunctionDescription(nameof(Sign), valueExpression);
         }
 
         /// <summary>
         /// 算术平方根
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Sqrt(this Description description)
+        public static IValueExpression Sqrt(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sqrt), description);
+            return __GetDbFunctionDescription(nameof(Sqrt), valueExpression);
         }
 
         /// <summary>
         /// 求和
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Sum(this Description description)
+        public static IValueExpression Sum(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sum), description);
+            return __GetDbFunctionDescription(nameof(Sum), valueExpression);
         }
 
         /// <summary>
         /// 保留小数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="digits"></param>
         /// <returns></returns>
-        public static Description Truncate(this Description description, int digits)
+        public static IValueExpression Truncate(this IValueExpression valueExpression, int digits)
         {
-            return __GetDbFunctionDescription(nameof(Truncate), description, digits);
+            return __GetDbFunctionDescription(nameof(Truncate), valueExpression, digits);
         }
 
         /// <summary>
         /// 加年
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="years"></param>
         /// <returns></returns>
-        public static Description AddYears(this Description description, int years)
+        public static IValueExpression AddYears(this IValueExpression valueExpression, int years)
         {
-            return new Description("AddDate({0}, Interval {1} Year)", description, years);
+            return new ValueExpression("AddDate({0}, Interval {1} Year)", valueExpression, years);
         }
 
         /// <summary>
         /// 加月
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="months"></param>
         /// <returns></returns>
-        public static Description AddMonths(this Description description, int months)
+        public static IValueExpression AddMonths(this IValueExpression valueExpression, int months)
         {
-            return new Description("AddDate({0}, Interval {1} Month)", description, months);
+            return new ValueExpression("AddDate({0}, Interval {1} Month)", valueExpression, months);
         }
 
         /// <summary>
         /// 加日
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="days"></param>
         /// <returns></returns>
-        public static Description AddDays(this Description description, int days)
+        public static IValueExpression AddDays(this IValueExpression valueExpression, int days)
         {
-            return new Description("AddDate({0}, Interval {1} Day)", description, days);
+            return new ValueExpression("AddDate({0}, Interval {1} Day)", valueExpression, days);
         }
 
         /// <summary>
         /// 加小时
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="hours"></param>
         /// <returns></returns>
-        public static Description AddHours(this Description description, int hours)
+        public static IValueExpression AddHours(this IValueExpression valueExpression, int hours)
         {
-            return new Description("AddDate({0}, Interval {1} Hour)", description, hours);
+            return new ValueExpression("AddDate({0}, Interval {1} Hour)", valueExpression, hours);
         }
 
         /// <summary>
         /// 加分钟
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="minutes"></param>
         /// <returns></returns>
-        public static Description AddMinutes(this Description description, int minutes)
+        public static IValueExpression AddMinutes(this IValueExpression valueExpression, int minutes)
         {
-            return new Description("AddDate({0}, Interval {1} Minute)", description, minutes);
+            return new ValueExpression("AddDate({0}, Interval {1} Minute)", valueExpression, minutes);
         }
 
         /// <summary>
         /// 加秒
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public static Description AddSeconds(this Description description, int seconds)
+        public static IValueExpression AddSeconds(this IValueExpression valueExpression, int seconds)
         {
-            return new Description("AddDate({0}, Interval {1} Second)", description, seconds);
+            return new ValueExpression("AddDate({0}, Interval {1} Second)", valueExpression, seconds);
         }
 
         /// <summary>
         /// 加时间
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static Description AddTime(this Description description, object time)
+        public static IValueExpression AddTime(this IValueExpression valueExpression, object time)
         {
-            return __GetDbFunctionDescription(nameof(AddTime), description, time);
+            return __GetDbFunctionDescription(nameof(AddTime), valueExpression, time);
         }
 
         /// <summary>
         /// 当前日期
         /// </summary>
         /// <returns></returns>
-        public static Description CurDate()
+        public static IValueExpression CurDate()
         {
             return __GetDbFunctionDescription(nameof(CurDate));
         }
@@ -975,7 +1052,7 @@ namespace LogicEntity.Model
         /// 当前日期
         /// </summary>
         /// <returns></returns>
-        public static Description Current_Date()
+        public static IValueExpression Current_Date()
         {
             return __GetDbFunctionDescription(nameof(Current_Date));
         }
@@ -984,7 +1061,7 @@ namespace LogicEntity.Model
         /// 当前时间
         /// </summary>
         /// <returns></returns>
-        public static Description CurTime()
+        public static IValueExpression CurTime()
         {
             return __GetDbFunctionDescription(nameof(CurTime));
         }
@@ -993,7 +1070,7 @@ namespace LogicEntity.Model
         /// 当前时间
         /// </summary>
         /// <returns></returns>
-        public static Description Current_Time()
+        public static IValueExpression Current_Time()
         {
             return __GetDbFunctionDescription(nameof(Current_Time));
         }
@@ -1002,7 +1079,7 @@ namespace LogicEntity.Model
         /// 当前日期和时间
         /// </summary>
         /// <returns></returns>
-        public static Description Current_TimeStamp()
+        public static IValueExpression Current_TimeStamp()
         {
             return __GetDbFunctionDescription(nameof(Current_TimeStamp));
         }
@@ -1011,7 +1088,7 @@ namespace LogicEntity.Model
         /// 当前日期和时间
         /// </summary>
         /// <returns></returns>
-        public static Description LocalTime()
+        public static IValueExpression LocalTime()
         {
             return __GetDbFunctionDescription(nameof(LocalTime));
         }
@@ -1020,7 +1097,7 @@ namespace LogicEntity.Model
         /// 当前日期和时间
         /// </summary>
         /// <returns></returns>
-        public static Description LocalTimeStamp()
+        public static IValueExpression LocalTimeStamp()
         {
             return __GetDbFunctionDescription(nameof(LocalTimeStamp));
         }
@@ -1029,7 +1106,7 @@ namespace LogicEntity.Model
         /// 当前日期和时间
         /// </summary>
         /// <returns></returns>
-        public static Description Now()
+        public static IValueExpression Now()
         {
             return __GetDbFunctionDescription(nameof(Now));
         }
@@ -1038,7 +1115,7 @@ namespace LogicEntity.Model
         /// 当前日期和时间
         /// </summary>
         /// <returns></returns>
-        public static Description SysDate()
+        public static IValueExpression SysDate()
         {
             return __GetDbFunctionDescription(nameof(SysDate));
         }
@@ -1046,211 +1123,211 @@ namespace LogicEntity.Model
         /// <summary>
         /// 取日期
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Date(this Description description)
+        public static IValueExpression Date(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Date), description);
+            return __GetDbFunctionDescription(nameof(Date), valueExpression);
         }
 
         /// <summary>
         /// 取时间
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Time(this Description description)
+        public static IValueExpression Time(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Time), description);
+            return __GetDbFunctionDescription(nameof(Time), valueExpression);
         }
 
         /// <summary>
         /// 取年
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Year(this Description description)
+        public static IValueExpression Year(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Year), description);
+            return __GetDbFunctionDescription(nameof(Year), valueExpression);
         }
 
         /// <summary>
         /// 取月
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Month(this Description description)
+        public static IValueExpression Month(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Month), description);
+            return __GetDbFunctionDescription(nameof(Month), valueExpression);
         }
 
         /// <summary>
         /// 取天
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Day(this Description description)
+        public static IValueExpression Day(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Day), description);
+            return __GetDbFunctionDescription(nameof(Day), valueExpression);
         }
 
         /// <summary>
         /// 取小时
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Hour(this Description description)
+        public static IValueExpression Hour(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Hour), description);
+            return __GetDbFunctionDescription(nameof(Hour), valueExpression);
         }
 
         /// <summary>
         /// 取分钟
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Minute(this Description description)
+        public static IValueExpression Minute(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Minute), description);
+            return __GetDbFunctionDescription(nameof(Minute), valueExpression);
         }
 
         /// <summary>
         /// 取秒
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Second(this Description description)
+        public static IValueExpression Second(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Second), description);
+            return __GetDbFunctionDescription(nameof(Second), valueExpression);
         }
 
         /// <summary>
         /// 取微秒
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description MicroSecond(this Description description)
+        public static IValueExpression MicroSecond(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(MicroSecond), description);
+            return __GetDbFunctionDescription(nameof(MicroSecond), valueExpression);
         }
 
         /// <summary>
         /// 当前月份的最后一天
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Last_Day(this Description description)
+        public static IValueExpression Last_Day(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Last_Day), description);
+            return __GetDbFunctionDescription(nameof(Last_Day), valueExpression);
         }
 
         /// <summary>
         /// 星期几
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description WeekDay(this Description description)
+        public static IValueExpression WeekDay(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(WeekDay), description);
+            return __GetDbFunctionDescription(nameof(WeekDay), valueExpression);
         }
 
         /// <summary>
         /// 星期几的名称
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description DayName(this Description description)
+        public static IValueExpression DayName(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayName), description);
+            return __GetDbFunctionDescription(nameof(DayName), valueExpression);
         }
 
         /// <summary>
         /// 月份的名称
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description MonthName(this Description description)
+        public static IValueExpression MonthName(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(MonthName), description);
+            return __GetDbFunctionDescription(nameof(MonthName), valueExpression);
         }
 
         /// <summary>
         /// 季度
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Quarter(this Description description)
+        public static IValueExpression Quarter(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Quarter), description);
+            return __GetDbFunctionDescription(nameof(Quarter), valueExpression);
         }
 
         /// <summary>
         /// 当年的第几天
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description DayOfYear(this Description description)
+        public static IValueExpression DayOfYear(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayOfYear), description);
+            return __GetDbFunctionDescription(nameof(DayOfYear), valueExpression);
         }
 
         /// <summary>
         /// 当月的第几天
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description DayOfMonth(this Description description)
+        public static IValueExpression DayOfMonth(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayOfMonth), description);
+            return __GetDbFunctionDescription(nameof(DayOfMonth), valueExpression);
         }
 
         /// <summary>
         /// 当前星期的第几天
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description DayOfWeek(this Description description)
+        public static IValueExpression DayOfWeek(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayOfWeek), description);
+            return __GetDbFunctionDescription(nameof(DayOfWeek), valueExpression);
         }
 
         /// <summary>
         /// 当年的第几个星期
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Week(this Description description)
+        public static IValueExpression Week(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Week), description);
+            return __GetDbFunctionDescription(nameof(Week), valueExpression);
         }
 
         /// <summary>
         /// 当年的第几个星期
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description WeekOfYear(this Description description)
+        public static IValueExpression WeekOfYear(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(WeekOfYear), description);
+            return __GetDbFunctionDescription(nameof(WeekOfYear), valueExpression);
         }
 
         /// <summary>
         /// 从 0000 年 1 月 1 日开始 n 天后的日期
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description From_Days(object description)
+        public static IValueExpression From_Days(object valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(From_Days), description);
+            return __GetDbFunctionDescription(nameof(From_Days), valueExpression);
         }
 
         /// <summary>
         /// 距离 0000 年 1 月 1 日的天数
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description To_Days(this Description description)
+        public static IValueExpression To_Days(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(To_Days), description);
+            return __GetDbFunctionDescription(nameof(To_Days), valueExpression);
         }
 
         /// <summary>
@@ -1259,7 +1336,7 @@ namespace LogicEntity.Model
         /// <param name="year"></param>
         /// <param name="day"></param>
         /// <returns></returns>
-        public static Description MakeDate(object year, object day)
+        public static IValueExpression MakeDate(object year, object day)
         {
             return __GetDbFunctionDescription(nameof(MakeDate), year, day);
         }
@@ -1271,7 +1348,7 @@ namespace LogicEntity.Model
         /// <param name="minute"></param>
         /// <param name="second"></param>
         /// <returns></returns>
-        public static Description MakeTime(object hour, object minute, object second)
+        public static IValueExpression MakeTime(object hour, object minute, object second)
         {
             return __GetDbFunctionDescription(nameof(MakeTime), hour, minute, second);
         }
@@ -1282,7 +1359,7 @@ namespace LogicEntity.Model
         /// <param name="date1"></param>
         /// <param name="date2"></param>
         /// <returns></returns>
-        public static Description DateDiff(this Description date1, object date2)
+        public static IValueExpression DateDiff(this IValueExpression date1, object date2)
         {
             return __GetDbFunctionDescription(nameof(DateDiff), date1, date2);
         }
@@ -1293,7 +1370,7 @@ namespace LogicEntity.Model
         /// <param name="date"></param>
         /// <param name="format"></param>
         /// <returns></returns>
-        public static Description Date_Format(this Description date, object format)
+        public static IValueExpression Date_Format(this IValueExpression date, object format)
         {
             return __GetDbFunctionDescription(nameof(Date_Format), date, format);
         }
@@ -1304,7 +1381,7 @@ namespace LogicEntity.Model
         /// <param name="time"></param>
         /// <param name="format"></param>
         /// <returns></returns>
-        public static Description Time_Format(this Description time, object format)
+        public static IValueExpression Time_Format(this IValueExpression time, object format)
         {
             return __GetDbFunctionDescription(nameof(Time_Format), time, format);
         }
@@ -1314,7 +1391,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public static Description Sec_To_Time(this Description seconds)
+        public static IValueExpression Sec_To_Time(this IValueExpression seconds)
         {
             return __GetDbFunctionDescription(nameof(Sec_To_Time), seconds);
         }
@@ -1324,7 +1401,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static Description Time_To_Sec(this Description time)
+        public static IValueExpression Time_To_Sec(this IValueExpression time)
         {
             return __GetDbFunctionDescription(nameof(Time_To_Sec), time);
         }
@@ -1335,7 +1412,7 @@ namespace LogicEntity.Model
         /// <param name="time1"></param>
         /// <param name="time2"></param>
         /// <returns></returns>
-        public static Description TimeDiff(this Description time1, object time2)
+        public static IValueExpression TimeDiff(this IValueExpression time1, object time2)
         {
             return __GetDbFunctionDescription(nameof(TimeDiff), time1, time2);
         }
@@ -1343,96 +1420,96 @@ namespace LogicEntity.Model
         /// <summary>
         /// 二进制数字
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Bin(this Description description)
+        public static IValueExpression Bin(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Bin), description);
+            return __GetDbFunctionDescription(nameof(Bin), valueExpression);
         }
 
         /// <summary>
         /// 二进制字符串
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Binary(this Description description)
+        public static IValueExpression Binary(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Binary), description);
+            return __GetDbFunctionDescription(nameof(Binary), valueExpression);
         }
 
         /// <summary>
         /// Case
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Case(this Description description)
+        public static IValueExpression Case(this IValueExpression valueExpression)
         {
-            return new Description("Case {0}", description);
+            return new ValueExpression("Case {0}", valueExpression);
         }
 
         /// <summary>
         /// When
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Description When(this Description description, object value)
+        public static IValueExpression When(this IValueExpression valueExpression, object value)
         {
-            return new Description("{0}\n  When {1}", description, value);
+            return new ValueExpression("{0}\n  When {1}", valueExpression, value);
         }
 
         /// <summary>
         /// Then
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Description Then(this Description description, object value)
+        public static IValueExpression Then(this IValueExpression valueExpression, object value)
         {
-            return new Description("{0} Then {1}", description, value);
+            return new ValueExpression("{0} Then {1}", valueExpression, value);
         }
 
         /// <summary>
         /// Else
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Description Else(this Description description, object value)
+        public static IValueExpression Else(this IValueExpression valueExpression, object value)
         {
-            return new Description("{0}\n  Else {1}", description, value);
+            return new ValueExpression("{0}\n  Else {1}", valueExpression, value);
         }
 
         /// <summary>
         /// End
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description End(this Description description)
+        public static IValueExpression End(this IValueExpression valueExpression)
         {
-            return new Description("{0}\nEnd", description);
+            return new ValueExpression("{0}\nEnd", valueExpression);
         }
 
         /// <summary>
         /// 转换数据类型
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static Description Cast(this Description description, object type)
+        public static IValueExpression Cast(this IValueExpression valueExpression, object type)
         {
-            return new Description("Cast({0} As {1})", description, type);
+            return new ValueExpression("Cast({0} As {1})", valueExpression, type);
         }
 
         /// <summary>
         /// 转换字符串的字符集
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="charset"></param>
         /// <returns></returns>
-        public static Description Convert(this Description description, object charset)
+        public static IValueExpression Convert(this IValueExpression valueExpression, object charset)
         {
-            return new Description("Convert({0} Using {1})", description, charset);
+            return new ValueExpression("Convert({0} Using {1})", valueExpression, charset);
         }
 
         /// <summary>
@@ -1440,7 +1517,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static Description Coalesce(params object[] values)
+        public static IValueExpression Coalesce(params object[] values)
         {
             return __GetDbFunctionDescription(nameof(Coalesce), values);
         }
@@ -1448,13 +1525,13 @@ namespace LogicEntity.Model
         /// <summary>
         /// 进制转换
         /// </summary>
-        /// <param name="description">被转换的值</param>
+        /// <param name="valueExpression">被转换的值</param>
         /// <param name="src">原始进制</param>
         /// <param name="des">新进制</param>
         /// <returns></returns>
-        public static Description Conv(this Description description, int src, int des)
+        public static IValueExpression Conv(this IValueExpression valueExpression, int src, int des)
         {
-            return __GetDbFunctionDescription(nameof(Conv), description, src, des);
+            return __GetDbFunctionDescription(nameof(Conv), valueExpression, src, des);
         }
 
         /// <summary>
@@ -1464,7 +1541,7 @@ namespace LogicEntity.Model
         /// <param name="trueResult"></param>
         /// <param name="falseResult"></param>
         /// <returns></returns>
-        public static Description IF(object condition, object trueResult, object falseResult)
+        public static IValueExpression IF(object condition, object trueResult, object falseResult)
         {
             return __GetDbFunctionDescription(nameof(IF), condition, trueResult, falseResult);
         }
@@ -1472,40 +1549,40 @@ namespace LogicEntity.Model
         /// <summary>
         /// 空替代
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="replace"></param>
         /// <returns></returns>
-        public static Description IFNull(this Description description, object replace)
+        public static IValueExpression IFNull(this IValueExpression valueExpression, object replace)
         {
-            return __GetDbFunctionDescription(nameof(IFNull), description, replace);
+            return __GetDbFunctionDescription(nameof(IFNull), valueExpression, replace);
         }
 
         /// <summary>
         /// 是否为空
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description IsNull(this Description description)
+        public static IValueExpression IsNull(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(IsNull), description);
+            return __GetDbFunctionDescription(nameof(IsNull), valueExpression);
         }
 
         /// <summary>
         /// 相等时返回 Null，不等时返回原值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="compare"></param>
         /// <returns></returns>
-        public static Description NullIF(this Description description, object compare)
+        public static IValueExpression NullIF(this IValueExpression valueExpression, object compare)
         {
-            return __GetDbFunctionDescription(nameof(NullIF), description, compare);
+            return __GetDbFunctionDescription(nameof(NullIF), valueExpression, compare);
         }
 
         /// <summary>
         /// 版本
         /// </summary>
         /// <returns></returns>
-        public static Description Version()
+        public static IValueExpression Version()
         {
             return __GetDbFunctionDescription(nameof(Version));
         }
@@ -1514,7 +1591,7 @@ namespace LogicEntity.Model
         /// 连接Id
         /// </summary>
         /// <returns></returns>
-        public static Description Connection_Id()
+        public static IValueExpression Connection_Id()
         {
             return __GetDbFunctionDescription(nameof(Connection_Id));
         }
@@ -1523,7 +1600,7 @@ namespace LogicEntity.Model
         /// 当前用户
         /// </summary>
         /// <returns></returns>
-        public static Description Current_User()
+        public static IValueExpression Current_User()
         {
             return __GetDbFunctionDescription(nameof(Current_User));
         }
@@ -1532,7 +1609,7 @@ namespace LogicEntity.Model
         /// 当前用户
         /// </summary>
         /// <returns></returns>
-        public static Description Session_User()
+        public static IValueExpression Session_User()
         {
             return __GetDbFunctionDescription(nameof(Session_User));
         }
@@ -1541,7 +1618,7 @@ namespace LogicEntity.Model
         /// 当前用户
         /// </summary>
         /// <returns></returns>
-        public static Description System_User()
+        public static IValueExpression System_User()
         {
             return __GetDbFunctionDescription(nameof(System_User));
         }
@@ -1550,7 +1627,7 @@ namespace LogicEntity.Model
         /// 当前用户
         /// </summary>
         /// <returns></returns>
-        public static Description User()
+        public static IValueExpression User()
         {
             return __GetDbFunctionDescription(nameof(User));
         }
@@ -1559,7 +1636,7 @@ namespace LogicEntity.Model
         /// 当前数据库名
         /// </summary>
         /// <returns></returns>
-        public static Description Database()
+        public static IValueExpression Database()
         {
             return __GetDbFunctionDescription(nameof(Database));
         }
@@ -1568,7 +1645,7 @@ namespace LogicEntity.Model
         /// 最后插入的Id
         /// </summary>
         /// <returns></returns>
-        public static Description Last_Insert_Id()
+        public static IValueExpression Last_Insert_Id()
         {
             return __GetDbFunctionDescription(nameof(Last_Insert_Id));
         }
@@ -1579,66 +1656,66 @@ namespace LogicEntity.Model
         /// <summary>
         /// 去重
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Distinct(this Description description)
+        public static IValueExpression Distinct(this IValueExpression valueExpression)
         {
-            return new Description("Distinct {0}", description);
+            return new ValueExpression("Distinct {0}", valueExpression);
         }
 
         /// <summary>
         /// 按升序排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="order"></param>
         /// <returns></returns>
-        public static Description OrderBy(this Description description, object order)
+        public static IValueExpression OrderBy(this IValueExpression valueExpression, object order)
         {
-            return new Description("{0} Order By {1} Asc", description, order);
+            return new ValueExpression("{0} Order By {1} Asc", valueExpression, order);
         }
 
         /// <summary>
         /// 按降序排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="order"></param>
         /// <returns></returns>
-        public static Description OrderByDescending(this Description description, object order)
+        public static IValueExpression OrderByDescending(this IValueExpression valueExpression, object order)
         {
-            return new Description("{0} Order By {1} Desc", description, order);
+            return new ValueExpression("{0} Order By {1} Desc", valueExpression, order);
         }
 
         /// <summary>
         /// 后续按升序排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="order"></param>
         /// <returns></returns>
-        public static Description ThenBy(this Description description, object order)
+        public static IValueExpression ThenBy(this IValueExpression valueExpression, object order)
         {
-            return new Description("{0}, {1}", description, order);
+            return new ValueExpression("{0}, {1}", valueExpression, order);
         }
 
         /// <summary>
         /// 后续按降序排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="order"></param>
         /// <returns></returns>
-        public static Description ThenByDescending(this Description description, object order)
+        public static IValueExpression ThenByDescending(this IValueExpression valueExpression, object order)
         {
-            return new Description("{0}, {1} Desc", description, order);
+            return new ValueExpression("{0}, {1} Desc", valueExpression, order);
         }
 
         /// <summary>
         /// 添加分隔符
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="sep"></param>
         /// <returns></returns>
-        public static Description Separator(this Description description, string sep)
+        public static IValueExpression Separator(this IValueExpression valueExpression, string sep)
         {
-            return new Description("{0} Separator '" + sep + "'", description);
+            return new ValueExpression("{0} Separator '" + sep + "'", valueExpression);
         }
 
         // Window Function
@@ -1646,34 +1723,34 @@ namespace LogicEntity.Model
         /// <summary>
         /// 窗口
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="window"></param>
         /// <returns></returns>
-        public static Description Over(this Description description, Window window)
+        public static ISqlExpression Over(this IValueExpression valueExpression, Window window)
         {
-            return new Description("{0} Over " + window.Alias, description);
+            return new SqlExpression("{0} Over " + window.Alias, valueExpression);
         }
 
         /// <summary>
         /// 窗口
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="setWindow"></param>
         /// <returns></returns>
-        public static Description Over(this Description description, Action<Window> setWindow)
+        public static ISqlExpression Over(this IValueExpression valueExpression, Action<Window> setWindow)
         {
             Window window = new("");
 
             setWindow(window);
 
-            return new Description("{0} Over ({1})", description, window);
+            return new SqlExpression("{0} Over ({1})", valueExpression, window);
         }
 
         /// <summary>
         /// 累计分布
         /// </summary>
         /// <returns></returns>
-        public static Description Cume_Dist()
+        public static IValueExpression Cume_Dist()
         {
             return __GetDbFunctionDescription(nameof(Cume_Dist));
         }
@@ -1682,7 +1759,7 @@ namespace LogicEntity.Model
         /// 排名
         /// </summary>
         /// <returns></returns>
-        public static Description Dense_Rank()
+        public static IValueExpression Dense_Rank()
         {
             return __GetDbFunctionDescription(nameof(Dense_Rank));
         }
@@ -1690,25 +1767,25 @@ namespace LogicEntity.Model
         /// <summary>
         /// 第一个值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description First_Value(this Description description)
+        public static IValueExpression First_Value(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(First_Value), description);
+            return __GetDbFunctionDescription(nameof(First_Value), valueExpression);
         }
 
         /// <summary>
         /// 前值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="n"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static Description Lag(this Description description, ulong? n = null, object defaultValue = null)
+        public static IValueExpression Lag(this IValueExpression valueExpression, ulong? n = null, object defaultValue = null)
         {
             List<object> args = new();
 
-            args.Add(description);
+            args.Add(valueExpression);
 
             if (n.HasValue)
                 args.Add(n.Value);
@@ -1722,25 +1799,25 @@ namespace LogicEntity.Model
         /// <summary>
         /// 最后一个值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public static Description Last_Value(this Description description)
+        public static IValueExpression Last_Value(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Last_Value), description);
+            return __GetDbFunctionDescription(nameof(Last_Value), valueExpression);
         }
 
         /// <summary>
         /// 后值
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="n"></param>
         /// <param name="defaultValue"></param>
         /// <returns></returns>
-        public static Description Lead(Description description, ulong? n = null, object defaultValue = null)
+        public static IValueExpression Lead(IValueExpression valueExpression, ulong? n = null, object defaultValue = null)
         {
             List<object> args = new();
 
-            args.Add(description);
+            args.Add(valueExpression);
 
             if (n.HasValue)
                 args.Add(n.Value);
@@ -1754,10 +1831,10 @@ namespace LogicEntity.Model
         /// <summary>
         /// 第n行
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        public static Description Nth_Value(Description description, ulong n)
+        public static IValueExpression Nth_Value(IValueExpression valueExpression, ulong n)
         {
             return __GetDbFunctionDescription(nameof(Nth_Value), n);
         }
@@ -1767,7 +1844,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="n"></param>
         /// <returns></returns>
-        public static Description Ntile(ulong n)
+        public static IValueExpression Ntile(ulong n)
         {
             return __GetDbFunctionDescription(nameof(Ntile), n);
         }
@@ -1776,7 +1853,7 @@ namespace LogicEntity.Model
         /// 百分比排名
         /// </summary>
         /// <returns></returns>
-        public static Description Percent_Rank()
+        public static IValueExpression Percent_Rank()
         {
             return __GetDbFunctionDescription(nameof(Percent_Rank));
         }
@@ -1785,7 +1862,7 @@ namespace LogicEntity.Model
         /// 排名
         /// </summary>
         /// <returns></returns>
-        public static Description Rank()
+        public static IValueExpression Rank()
         {
             return __GetDbFunctionDescription(nameof(Rank));
         }
@@ -1794,7 +1871,7 @@ namespace LogicEntity.Model
         /// 行号
         /// </summary>
         /// <returns></returns>
-        public static Description Row_Number()
+        public static IValueExpression Row_Number()
         {
             return __GetDbFunctionDescription(nameof(Row_Number));
         }
@@ -1806,7 +1883,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static Description Json_Array(params object[] values)
+        public static IValueExpression Json_Array(params object[] values)
         {
             return __GetDbFunctionDescription(nameof(Json_Array), values);
         }
@@ -1816,7 +1893,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static Description Json_Object(params object[] values)
+        public static IValueExpression Json_Object(params object[] values)
         {
             return __GetDbFunctionDescription(nameof(Json_Object), values);
         }
@@ -1826,7 +1903,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static Description Json_Quote(this Description str)
+        public static IValueExpression Json_Quote(this IValueExpression str)
         {
             return __GetDbFunctionDescription(nameof(Json_Quote), str);
         }
@@ -1838,7 +1915,7 @@ namespace LogicEntity.Model
         /// <param name="candidate"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static Description Json_Contains(this Description target, object candidate, object path = null)
+        public static IValueExpression Json_Contains(this IValueExpression target, object candidate, object path = null)
         {
             List<object> args = new() { target, candidate };
 
@@ -1855,7 +1932,7 @@ namespace LogicEntity.Model
         /// <param name="one_or_all"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static Description Json_Contains_Path(this Description json_doc, string one_or_all, params object[] paths)
+        public static IValueExpression Json_Contains_Path(this IValueExpression json_doc, string one_or_all, params object[] paths)
         {
             if (one_or_all.Equals("one", StringComparison.OrdinalIgnoreCase) == false && one_or_all.Equals("all", StringComparison.OrdinalIgnoreCase) == false)
                 one_or_all = "Null";
@@ -1871,7 +1948,7 @@ namespace LogicEntity.Model
                 args.AddRange(paths);
             }
 
-            return new Description("Json_Contains_Path({0}, '" + one_or_all + "' " + string.Join(string.Empty, strs) + ")", args.ToArray());
+            return new ValueExpression("Json_Contains_Path({0}, '" + one_or_all + "' " + string.Join(string.Empty, strs) + ")", args.ToArray());
         }
 
         /// <summary>
@@ -1881,7 +1958,7 @@ namespace LogicEntity.Model
         /// <param name="path"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static Description Json_Extract(this Description json_doc, object path, params object[] paths)
+        public static IValueExpression Json_Extract(this IValueExpression json_doc, object path, params object[] paths)
         {
             List<object> args = new() { json_doc, path };
 
@@ -1897,7 +1974,7 @@ namespace LogicEntity.Model
         /// <param name="json_doc"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static Description Json_Keys(this Description json_doc, params object[] paths)
+        public static IValueExpression Json_Keys(this IValueExpression json_doc, params object[] paths)
         {
             List<object> args = new() { json_doc };
 
@@ -1913,7 +1990,7 @@ namespace LogicEntity.Model
         /// <param name="json_doc1"></param>
         /// <param name="json_doc2"></param>
         /// <returns></returns>
-        public static Description Json_Overlaps(this Description json_doc1, object json_doc2)
+        public static IValueExpression Json_Overlaps(this IValueExpression json_doc1, object json_doc2)
         {
             return __GetDbFunctionDescription(nameof(Json_Overlaps), json_doc1, json_doc2);
         }
@@ -1927,7 +2004,7 @@ namespace LogicEntity.Model
         /// <param name="escape_char"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static Description Json_Search(this Description json_doc, string one_or_all, object search_str, object escape_char = null, params object[] paths)
+        public static IValueExpression Json_Search(this IValueExpression json_doc, string one_or_all, object search_str, object escape_char = null, params object[] paths)
         {
             if (one_or_all.Equals("one", StringComparison.OrdinalIgnoreCase) == false && one_or_all.Equals("all", StringComparison.OrdinalIgnoreCase) == false)
                 one_or_all = "Null";
@@ -1943,7 +2020,7 @@ namespace LogicEntity.Model
                 args.AddRange(paths);
             }
 
-            return new Description("Json_Search({0}, '" + one_or_all + "', {1} " + string.Join(string.Empty, strs) + ")", args.ToArray());
+            return new ValueExpression("Json_Search({0}, '" + one_or_all + "', {1} " + string.Join(string.Empty, strs) + ")", args.ToArray());
         }
 
         /// <summary>
@@ -1952,9 +2029,9 @@ namespace LogicEntity.Model
         /// <param name="value"></param>
         /// <param name="json_array"></param>
         /// <returns></returns>
-        public static Description Member_Of(this Description value, object json_array)
+        public static IValueExpression Member_Of(this IValueExpression value, object json_array)
         {
-            return new Description("{0} Member Of {1}", value, json_array);
+            return new ValueExpression("{0} Member Of {1}", value, json_array);
         }
 
         /// <summary>
@@ -1965,7 +2042,7 @@ namespace LogicEntity.Model
         /// <param name="val"></param>
         /// <param name="more"></param>
         /// <returns></returns>
-        public static Description Json_Array_Append(this Description json_doc, object path, object val, params object[] more)
+        public static IValueExpression Json_Array_Append(this IValueExpression json_doc, object path, object val, params object[] more)
         {
             List<object> args = new() { json_doc, path, val };
 
@@ -1980,7 +2057,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static Description Json_Array_Insert(this Description json_doc, object path, object val, params object[] more)
+        public static IValueExpression Json_Array_Insert(this IValueExpression json_doc, object path, object val, params object[] more)
         {
             List<object> args = new() { json_doc, path, val };
 
@@ -1998,7 +2075,7 @@ namespace LogicEntity.Model
         /// <param name="val"></param>
         /// <param name="more"></param>
         /// <returns></returns>
-        public static Description Json_Insert(this Description json_doc, object path, object val, params object[] more)
+        public static IValueExpression Json_Insert(this IValueExpression json_doc, object path, object val, params object[] more)
         {
             List<object> args = new() { json_doc, path, val };
 
@@ -2015,7 +2092,7 @@ namespace LogicEntity.Model
         /// <param name="json_doc2"></param>
         /// <param name="json_docs"></param>
         /// <returns></returns>
-        public static Description Json_Merge(this Description json_doc1, object json_doc2, params object[] json_docs)
+        public static IValueExpression Json_Merge(this IValueExpression json_doc1, object json_doc2, params object[] json_docs)
         {
             List<object> args = new() { json_doc1, json_doc2 };
 
@@ -2032,7 +2109,7 @@ namespace LogicEntity.Model
         /// <param name="json_doc2"></param>
         /// <param name="json_docs"></param>
         /// <returns></returns>
-        public static Description Json_Merge_Patch(this Description json_doc1, object json_doc2, params object[] json_docs)
+        public static IValueExpression Json_Merge_Patch(this IValueExpression json_doc1, object json_doc2, params object[] json_docs)
         {
             List<object> args = new() { json_doc1, json_doc2 };
 
@@ -2049,7 +2126,7 @@ namespace LogicEntity.Model
         /// <param name="json_doc2"></param>
         /// <param name="json_docs"></param>
         /// <returns></returns>
-        public static Description Json_Merge_Preserve(object json_doc1, object json_doc2, params object[] json_docs)
+        public static IValueExpression Json_Merge_Preserve(object json_doc1, object json_doc2, params object[] json_docs)
         {
             List<object> args = new() { json_doc1, json_doc2 };
 
@@ -2066,7 +2143,7 @@ namespace LogicEntity.Model
         /// <param name="path"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static Description Json_Remove(this Description json_doc, object path, params object[] paths)
+        public static IValueExpression Json_Remove(this IValueExpression json_doc, object path, params object[] paths)
         {
             List<object> args = new() { json_doc, path };
 
@@ -2084,7 +2161,7 @@ namespace LogicEntity.Model
         /// <param name="val"></param>
         /// <param name="more"></param>
         /// <returns></returns>
-        public static Description Json_Replace(this Description json_doc, object path, object val, params object[] more)
+        public static IValueExpression Json_Replace(this IValueExpression json_doc, object path, object val, params object[] more)
         {
             List<object> args = new() { json_doc, path, val };
 
@@ -2102,7 +2179,7 @@ namespace LogicEntity.Model
         /// <param name="val"></param>
         /// <param name="more"></param>
         /// <returns></returns>
-        public static Description Json_Set(this Description json_doc, object path, object val, params object[] more)
+        public static IValueExpression Json_Set(this IValueExpression json_doc, object path, object val, params object[] more)
         {
             List<object> args = new() { json_doc, path, val };
 
@@ -2117,7 +2194,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="json_val"></param>
         /// <returns></returns>
-        public static Description Json_Unquote(this Description json_val)
+        public static IValueExpression Json_Unquote(this IValueExpression json_val)
         {
             return __GetDbFunctionDescription(nameof(Json_Unquote), json_val);
         }
@@ -2127,7 +2204,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="json_doc"></param>
         /// <returns></returns>
-        public static Description Json_Depth(this Description json_doc)
+        public static IValueExpression Json_Depth(this IValueExpression json_doc)
         {
             return __GetDbFunctionDescription(nameof(Json_Depth), json_doc);
         }
@@ -2138,7 +2215,7 @@ namespace LogicEntity.Model
         /// <param name="json_doc"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static Description Json_Length(this Description json_doc, params object[] paths)
+        public static IValueExpression Json_Length(this IValueExpression json_doc, params object[] paths)
         {
             List<object> args = new() { json_doc };
 
@@ -2153,7 +2230,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="json_val"></param>
         /// <returns></returns>
-        public static Description Json_Type(this Description json_val)
+        public static IValueExpression Json_Type(this IValueExpression json_val)
         {
             return __GetDbFunctionDescription(nameof(Json_Type), json_val);
         }
@@ -2163,7 +2240,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="json_val"></param>
         /// <returns></returns>
-        public static Description Json_Valid(this Description val)
+        public static IValueExpression Json_Valid(this IValueExpression val)
         {
             return __GetDbFunctionDescription(nameof(Json_Valid), val);
         }
@@ -2174,7 +2251,7 @@ namespace LogicEntity.Model
         /// <param name="schema"></param>
         /// <param name="document"></param>
         /// <returns></returns>
-        public static Description Json_Schema_Valid(this Description schema, object document)
+        public static IValueExpression Json_Schema_Valid(this IValueExpression schema, object document)
         {
             return __GetDbFunctionDescription(nameof(Json_Schema_Valid), schema, document);
         }
@@ -2185,7 +2262,7 @@ namespace LogicEntity.Model
         /// <param name="schema"></param>
         /// <param name="document"></param>
         /// <returns></returns>
-        public static Description Json_Schema_Validation_Report(this Description schema, object document)
+        public static IValueExpression Json_Schema_Validation_Report(this IValueExpression schema, object document)
         {
             return __GetDbFunctionDescription(nameof(Json_Schema_Validation_Report), schema, document);
         }
@@ -2195,7 +2272,7 @@ namespace LogicEntity.Model
         /// </summary>
         /// <param name="json_val"></param>
         /// <returns></returns>
-        public static Description Json_Pretty(this Description json_val)
+        public static IValueExpression Json_Pretty(this IValueExpression json_val)
         {
             return __GetDbFunctionDescription(nameof(Json_Pretty), json_val);
         }

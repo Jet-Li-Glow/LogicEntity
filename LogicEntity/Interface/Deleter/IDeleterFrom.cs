@@ -10,8 +10,6 @@ namespace LogicEntity.Interface
 {
     public interface IDeleterFrom
     {
-        IDeleterWhere From(Table table);
-
-        IDeleterWhere From(JoinedTable table);
+        IDeleterWhere From(TableExpression table);
     }
 }

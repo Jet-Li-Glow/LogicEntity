@@ -7,19 +7,17 @@ namespace LogicEntity.Model
     /// <summary>
     /// 列
     /// </summary>
-    public sealed class Column : Description
+    public sealed class Column : ValueExpression, IValueExpression
     {
-        string _columnName;
+        string _columnName = string.Empty;
 
         string _alias;
 
         object _value;
 
-        Func<(string, IEnumerable<KeyValuePair<string, object>>)> _columnBuild;
+        Func<(string, IEnumerable<KeyValuePair<string, object>>)> _build;
 
-        protected override Func<(string, IEnumerable<KeyValuePair<string, object>>)> _build => _columnBuild;
-
-        public Column(TableDescription table, string columnName)
+        public Column(TableExpression table, string columnName)
         {
             Table = table;
 
@@ -27,18 +25,18 @@ namespace LogicEntity.Model
 
             _columnName = columnName;
 
-            _columnBuild = () => ($"{Table?.FinalTableName}.`{ColumnName}`", null);
+            _build = () => ($"{Table?.FinalTableName}.`{ColumnName}`", null);
         }
 
-        public Column(IValueExpression valueExpression)
+        public Column(ISqlExpression valueExpression)
         {
-            _columnBuild = valueExpression.Build;
+            _build = valueExpression.Build;
         }
 
         /// <summary>
         /// 列所属表
         /// </summary>
-        internal TableDescription Table { get; set; }
+        internal TableExpression Table { get; set; }
 
         /// <summary>
         /// 实体属性名称（Table构造时，ColumnName还没有被重新赋值）
@@ -139,5 +137,23 @@ namespace LogicEntity.Model
         /// 写入器
         /// </summary>
         public Func<object, object> Writer { get; set; }
+
+        /// <summary>
+        /// 生成
+        /// </summary>
+        /// <returns></returns>
+        (string, IEnumerable<KeyValuePair<string, object>>) ISqlExpression.Build()
+        {
+            return _build?.Invoke() ?? (null, null);
+        }
+
+        /// <summary>
+        /// 枚举
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator<Column> IEnumerable<Column>.GetEnumerator()
+        {
+            yield return this;
+        }
     }
 }

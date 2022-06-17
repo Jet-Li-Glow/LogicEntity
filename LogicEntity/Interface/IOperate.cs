@@ -21,7 +21,7 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <param name="columns"></param>
         /// <returns></returns>
-        public IFrom Select(params ColumnCollection[] columns)
+        public IFrom Select(params IEnumerable<Column>[] columns)
         {
             return Select().SetColumns(columns);
         }
@@ -31,7 +31,7 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <param name="columns"></param>
         /// <returns></returns>
-        public IFrom SelectDistinct(params ColumnCollection[] columns)
+        public IFrom SelectDistinct(params IEnumerable<Column>[] columns)
         {
             return Select().Distinct().SetColumns(columns);
         }
@@ -41,7 +41,7 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <param name="table"></param>
         /// <returns></returns>
-        public IUpdaterSet Update(JoinedTable table);
+        public IUpdaterSet Update(TableExpression table);
 
         /// <summary>
         /// 更新

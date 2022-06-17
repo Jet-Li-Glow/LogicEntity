@@ -9,6 +9,6 @@ namespace LogicEntity.Interface
 {
     public interface IUpdaterOn : IUpdaterOrderBy
     {
-        public IUpdaterOrderBy On(Description condition);
+        public IUpdaterOrderBy On(IValueExpression condition);
     }
 }

@@ -12,7 +12,7 @@ namespace LogicEntity.Model
     /// <summary>
     /// 表
     /// </summary>
-    public abstract class Table : TableDescription
+    public abstract class Table : TableExpression
     {
         string _tableName;
 
@@ -89,8 +89,7 @@ namespace LogicEntity.Model
         /// 生成
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        internal override (string, IEnumerable<KeyValuePair<string, object>>) Build()
+        internal protected override (string, IEnumerable<KeyValuePair<string, object>>) Build()
         {
             return (FullName + (_hasAlias ? $" As `{_alias}`" : string.Empty), null);
         }

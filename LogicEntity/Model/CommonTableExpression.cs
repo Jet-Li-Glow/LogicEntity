@@ -62,17 +62,14 @@ namespace LogicEntity.Model
         /// </summary>
         public ISelector Selector
         {
-            get
-            {
-                return _selector;
-            }
-
             set
             {
                 _selector = value;
 
                 if (_selector is not null)
                 {
+                    _selector.__Indent = 4;
+
                     if (_columns.Any() == false)
                     {
                         _columns.AddRange(_selector.Columns.Select(column => new Column(this, column.FinalColumnName)
@@ -101,7 +98,9 @@ namespace LogicEntity.Model
             if (_columns.Any())
                 columnsDefinition = $"({string.Join(", ", _columns.Select(column => column.ColumnName))})";
 
-            return new Description(_tableName + " " + columnsDefinition + " As\n  (\n{0}\n  )", Selector).Build();
+            (var cmd, var ps) = (_selector as IValueExpression)?.Build() ?? (null, null);
+
+            return (_tableName + " " + columnsDefinition + $" As\n  (\n{cmd}\n  )", ps);
         }
     }
 }

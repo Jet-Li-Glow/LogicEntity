@@ -19,7 +19,7 @@ namespace LogicEntity.Operator
 
         }
 
-        public DBOperatorImplement(IEnumerable<Description> nodes, T instance)
+        public DBOperatorImplement(IEnumerable<ISqlExpression> nodes, T instance)
         {
             Nodes.AddRange(nodes);
 
@@ -35,7 +35,7 @@ namespace LogicEntity.Operator
 
             Columns = columns.AsEnumerable();
 
-            Nodes.Add(new Description($"({string.Join(", ", columns.Select(column => column.FullName))})"));
+            Nodes.Add(new SqlExpression($"({string.Join(", ", columns.Select(column => column.FullName))})"));
 
             return this;
         }
@@ -44,7 +44,7 @@ namespace LogicEntity.Operator
         {
             T t = new();
 
-            foreach (Column column in t.Columns)
+            foreach (Column column in (t as TableExpression).Columns)
             {
                 column.Table = _instance;
             }
@@ -64,16 +64,14 @@ namespace LogicEntity.Operator
                 Writer = column.Writer
             }).ToList();
 
-            int index = 0;
-
-            List<object> values = new();
-
-            var rowCommands = rows.Select((row, i) =>
+            var rowExpressions = rows.Select(row =>
             {
-                List<string> pNames = new();
+                List<KeyValuePair<string, object>> ps = new();
 
-                foreach (var property in properties)
+                for (int i = 0; i < properties.Count; i++)
                 {
+                    var property = properties[i];
+
                     object v = property.PropertyInfo?.GetValue(row);
 
                     if (v is Column column)
@@ -84,24 +82,20 @@ namespace LogicEntity.Operator
                     if (property.Writer is not null)
                         v = property.Writer(v);
 
-                    pNames.Add("{" + index + "}");
-
-                    index++;
-
-                    values.Add(v);
+                    ps.Add(KeyValuePair.Create("{" + i + "}", v));
                 }
 
-                return $"({string.Join(", ", pNames)})";
+                return new SqlExpression($"({string.Join(", ", ps.Select(p => p.Key))})", ps.Select(p => p.Value).ToArray());
             });
 
-            Nodes.Add(new Description($"Values\n  {string.Join(",\n  ", rowCommands)}", values.ToArray()));
+            Nodes.Add(new SqlExpression("Values\n  {0}", SqlExpression.__Join(",\n  ", rowExpressions)));
 
             return this;
         }
 
         public IOnDuplicateKeyUpdate<T> Rows(ISelector selector)
         {
-            Nodes.Add(new Description("{0}", selector));
+            Nodes.Add(new SqlExpression("{0}", selector));
 
             return this;
         }
@@ -110,7 +104,7 @@ namespace LogicEntity.Operator
         {
             T t = new();
 
-            foreach (Column column in t.Columns)
+            foreach (Column column in (t as TableExpression).Columns)
             {
                 column.Table = _instance;
             }
@@ -124,7 +118,7 @@ namespace LogicEntity.Operator
         {
             T t = new();
 
-            foreach (Column column in t.Columns)
+            foreach (Column column in (t as TableExpression).Columns)
             {
                 column.Table = _instance;
             }
@@ -137,17 +131,17 @@ namespace LogicEntity.Operator
 
             setValueWithRow?.Invoke(t, row);
 
-            Nodes.Add(new Description($"As {rowAlias}"));
+            Nodes.Add(new SqlExpression($"As {rowAlias}"));
 
             return OnDuplicateKeyUpdate(t);
         }
 
         DBOperatorImplement<T> OnDuplicateKeyUpdate(T t)
         {
-            List<KeyValuePair<string, object>> commands = t.Columns.Where(column => column.IsValueSet)
-                .Select((column, i) => KeyValuePair.Create(column.FullName + " = {" + i + "}", column.Value)).ToList();
+            IEnumerable<SqlExpression> expressions = (t as TableExpression).Columns.Where(column => column.IsValueSet)
+                .Select(column => new SqlExpression(column.FullName + " = {0}", column.Value));
 
-            Nodes.Add(new Description($"On Duplicate Key Update\n  {string.Join(",\n  ", commands.Select(c => c.Key))}", commands.Select(c => c.Value).ToArray()));
+            Nodes.Add(new SqlExpression("On Duplicate Key Update\n  {0}", SqlExpression.__Join(",\n  ", expressions)));
 
             return this;
         }

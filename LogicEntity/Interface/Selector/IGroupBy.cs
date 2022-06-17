@@ -9,6 +9,6 @@ namespace LogicEntity.Interface
 {
     public interface IGroupBy : IUnion
     {
-        public IHaving GroupBy(params Description[] columns);
+        public IHaving GroupBy(params IValueExpression[] columns);
     }
 }

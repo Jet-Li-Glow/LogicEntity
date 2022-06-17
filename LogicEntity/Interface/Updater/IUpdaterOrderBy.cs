@@ -9,8 +9,8 @@ namespace LogicEntity.Interface
 {
     public interface IUpdaterOrderBy : IUpdaterLimit
     {
-        public IUpdaterThenBy OrderBy(Description description);
+        public IUpdaterThenBy OrderBy(IValueExpression valueExpression);
 
-        public IUpdaterThenBy OrderByDescending(Description description);
+        public IUpdaterThenBy OrderByDescending(IValueExpression valueExpression);
     }
 }

@@ -14,6 +14,6 @@ namespace LogicEntity.Interface
         /// </summary>
         /// <param name="condition"></param>
         /// <returns></returns>
-        public IWindow Having(Description condition);
+        public IWindow Having(IValueExpression condition);
     }
 }

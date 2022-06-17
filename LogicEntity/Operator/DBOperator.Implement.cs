@@ -26,12 +26,12 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 节点
         /// </summary>
-        protected List<Description> Nodes { get; } = new();
+        protected List<ISqlExpression> Nodes { get; } = new();
 
         /// <summary>
         /// 缩进
         /// </summary>
-        int IDbOperator.Indent
+        int IDbOperator.__Indent
         {
             set
             {
@@ -48,11 +48,7 @@ namespace LogicEntity.Operator
 
         public IOperate With(bool isRecursive, params CommonTableExpression[] commonTableExpressions)
         {
-            if (commonTableExpressions is null)
-                commonTableExpressions = Array.Empty<CommonTableExpression>();
-
-            Nodes.Add(new Description($"With {(isRecursive ? "Recursive" : string.Empty)}\n  {string.Join(",\n  ", commonTableExpressions.Select((_, i) => "{" + i + "}"))}\n",
-                commonTableExpressions.Select(c => new Description(c)).ToArray()));
+            Nodes.Add(SqlExpression.With(isRecursive, commonTableExpressions));
 
             return this;
         }
@@ -61,14 +57,14 @@ namespace LogicEntity.Operator
 
         public IDistinct Select()
         {
-            Nodes.Add(new Description(nameof(Select)));
+            Nodes.Add(SqlExpression.Select());
 
             return this;
         }
 
         public ISelectColumns Distinct()
         {
-            Nodes.Add(new Description(nameof(Distinct)));
+            Nodes.Add(SqlExpression.Distinct());
 
             return this;
         }
@@ -80,44 +76,47 @@ namespace LogicEntity.Operator
 
             Columns = columns.AsEnumerable();
 
-            Nodes.Add(new Description(string.Join(",\n", columns.Select((column, i) =>
-            {
-                return "  {" + i + "}" + (column.HasAlias ? $" As `{column.Alias}`" : string.Empty);
-            })), columns));
+            Nodes.Add(SqlExpression.__Join(",\n",
+                columns.Select(column => new SqlExpression("  {0}" + (column.HasAlias ? $" As `{column.Alias}`" : string.Empty), column))
+                )
+                );
 
             return this;
         }
 
-        public IWhere From(params TableDescription[] tables)
+        public IWhere From(params TableExpression[] tables)
         {
+            if (tables is null)
+                tables = Array.Empty<TableExpression>();
+
             if (Columns is null || Columns.Any() == false)
                 SetColumns(tables.SelectMany(t => t.Columns).ToArray());
 
-            Nodes.Add(new Description($"From{string.Join(string.Empty, tables.Select((_, i) => "\n  {" + i + "}"))}", tables));
+            Nodes.Add(SqlExpression.From(tables));
 
             return this;
         }
 
-        public IGroupBy Where(Description condition)
+        public IGroupBy Where(IValueExpression condition)
         {
-            Nodes.Add(new Description("Where {0}", condition));
+            Nodes.Add(SqlExpression.Where(condition));
 
             return this;
         }
 
-        public IHaving GroupBy(params Description[] columns)
+        public IHaving GroupBy(params IValueExpression[] columns)
         {
             if (columns is null)
-                columns = Array.Empty<Description>();
+                columns = Array.Empty<IValueExpression>();
 
-            Nodes.Add(new Description($"Group By\n{string.Join(",\n", columns.Select((_, i) => "  {" + i + "}"))}", columns));
+            Nodes.Add(SqlExpression.GroupBy(columns));
 
             return this;
         }
 
-        public IWindow Having(Description condition)
+        public IWindow Having(IValueExpression condition)
         {
-            Nodes.Add(new Description("Having\n  {0}", condition));
+            Nodes.Add(SqlExpression.Having(condition));
 
             return this;
         }
@@ -127,70 +126,70 @@ namespace LogicEntity.Operator
             if (windows is null)
                 windows = Array.Empty<Window>();
 
-            Nodes.Add(new Description($"Window\n{string.Join(",\n", windows.Select((w, i) => "  " + w.Alias.PadLeft(4) + " As ({" + i + "})"))}", windows));
+            Nodes.Add(SqlExpression.Window(windows));
 
             return this;
         }
 
         public IUnion Union(ISelector selector)
         {
-            Nodes.Add(new Description("\nUnion\n\n{0}", selector));
+            Nodes.Add(SqlExpression.Union(selector));
 
             return this;
         }
 
         public IUnion UnionAll(ISelector selector)
         {
-            Nodes.Add(new Description("\nUnion All\n\n{0}", selector));
+            Nodes.Add(SqlExpression.UnionAll(selector));
 
             return this;
         }
 
-        public IThenBy OrderBy(Description description)
+        public IThenBy OrderBy(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Order By\n  {0} Asc", description));
+            Nodes.Add(SqlExpression.OrderBy(valueExpression));
 
             return this;
         }
 
-        public IThenBy OrderByDescending(Description description)
+        public IThenBy OrderByDescending(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Order By\n  {0} Desc", description));
+            Nodes.Add(SqlExpression.OrderByDescending(valueExpression));
 
             return this;
         }
 
-        public IThenBy ThenBy(Description description)
+        public IThenBy ThenBy(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description(", {0} Asc", description));
+            Nodes.Add(SqlExpression.ThenBy(valueExpression));
 
             return this;
         }
 
-        public IThenBy ThenByDescending(Description description)
+        public IThenBy ThenByDescending(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description(", {0} Desc", description));
+            Nodes.Add(SqlExpression.ThenByDescending(valueExpression));
 
             return this;
         }
 
         public IForUpdate Limit(ulong limit)
         {
-            Nodes.Add(new Description($"Limit {limit}"));
+            Nodes.Add(SqlExpression.Limit(limit));
 
             return this;
         }
 
         public IForUpdate Limit(ulong offset, ulong limit)
         {
-            Nodes.Add(new Description($"Limit {offset}, {limit}"));
+            Nodes.Add(SqlExpression.Limit(offset, limit));
 
             return this;
         }
 
         public ISelector ForUpdate()
         {
-            Nodes.Add(new Description(nameof(ForUpdate)));
+            Nodes.Add(SqlExpression.ForUpdate());
 
             return this;
         }
@@ -202,16 +201,16 @@ namespace LogicEntity.Operator
 
         //Update
 
-        public IUpdaterSet Update(JoinedTable table)
+        public IUpdaterSet Update(TableExpression table)
         {
-            Nodes.Add(new Description("Update\n  {0}", table));
+            Nodes.Add(SqlExpression.Update(table));
 
             return this;
         }
 
         public IUpdaterOn ApplyChanges(Table table)
         {
-            Nodes.Add(new Description($"Update\n  {table?.FullName}"));
+            Nodes.Add(new SqlExpression($"Update\n  {(table as TableExpression)?.FullName}"));
 
             return ApplyChanges(new Table[] { table });
         }
@@ -221,66 +220,62 @@ namespace LogicEntity.Operator
             if (tables is null)
                 tables = Array.Empty<Table>();
 
-            int index = 0;
-
-            List<KeyValuePair<string, object>> commands = new();
+            List<SqlExpression> expressions = new();
 
             foreach (Table table in tables.Where(table => table is not null))
             {
-                foreach (Column column in table.Columns.Where(column => column.IsValueSet))
+                foreach (Column column in (table as TableExpression).Columns.Where(column => column.IsValueSet))
                 {
-                    if (column.Writer is not null && column.Value is not Description)
+                    if (column.Writer is not null && column.Value is not ISqlExpression)
                         column.Value = column.Writer(column.Value);
 
-                    commands.Add(KeyValuePair.Create(column.FullName + " = {" + index + "}", column.Value));
-
-                    index++;
+                    expressions.Add(new SqlExpression(column.FullName + " = {0}", column.Value));
                 }
             }
 
-            Nodes.Add(new Description($"Set\n  {string.Join(",\n  ", commands.Select(c => c.Key))}", commands.Select(c => c.Value).ToArray()));
+            Nodes.Add(new SqlExpression("Set\n  {0}", SqlExpression.__Join(",\n  ", expressions)));
 
             return this;
         }
 
-        public IUpdaterOrderBy On(Description condition)
+        public IUpdaterOrderBy On(IValueExpression condition)
         {
-            Nodes.Add(new Description("Where {0}", condition));
+            Nodes.Add(SqlExpression.Where(condition));
 
             return this;
         }
 
-        IUpdaterThenBy IUpdaterOrderBy.OrderBy(Description description)
+        IUpdaterThenBy IUpdaterOrderBy.OrderBy(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Order By {0} Asc", description));
+            Nodes.Add(SqlExpression.OrderBy(valueExpression));
 
             return this;
         }
 
-        IUpdaterThenBy IUpdaterOrderBy.OrderByDescending(Description description)
+        IUpdaterThenBy IUpdaterOrderBy.OrderByDescending(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Order By {0} Desc", description));
+            Nodes.Add(SqlExpression.OrderByDescending(valueExpression));
 
             return this;
         }
 
-        IUpdaterThenBy IUpdaterThenBy.ThenBy(Description description)
+        IUpdaterThenBy IUpdaterThenBy.ThenBy(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description(", {0} Asc", description));
+            Nodes.Add(SqlExpression.ThenBy(valueExpression));
 
             return this;
         }
 
-        IUpdaterThenBy IUpdaterThenBy.ThenByDescending(Description description)
+        IUpdaterThenBy IUpdaterThenBy.ThenByDescending(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description(", {0} Desc", description));
+            Nodes.Add(SqlExpression.ThenByDescending(valueExpression));
 
             return this;
         }
 
         IUpdater IUpdaterLimit.Limit(ulong limit)
         {
-            Nodes.Add(new Description($"Limit {limit}"));
+            Nodes.Add(SqlExpression.Limit(limit));
 
             return this;
         }
@@ -292,63 +287,56 @@ namespace LogicEntity.Operator
             if (tables is null)
                 tables = Array.Empty<Table>();
 
-            Nodes.Add(new Description($"Delete {string.Join(", ", tables.Select(table => table.FullName))}"));
+            Nodes.Add(SqlExpression.Delete(tables));
 
             return this;
         }
 
-        public IDeleterWhere From(Table table)
+        public IDeleterWhere From(TableExpression table)
         {
-            Nodes.Add(new Description($"From\n  {table.FullName}"));
+            Nodes.Add(SqlExpression.From(table));
 
             return this;
         }
 
-        public IDeleterWhere From(JoinedTable table)
+        IDeleterOrderBy IDeleterWhere.Where(IValueExpression condition)
         {
-            Nodes.Add(new Description("From\n  {0}", table));
+            Nodes.Add(SqlExpression.Where(condition));
 
             return this;
         }
 
-        IDeleterOrderBy IDeleterWhere.Where(Description condition)
+        IDeleterThenBy IDeleterOrderBy.OrderBy(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Where {0}", condition));
+            Nodes.Add(SqlExpression.OrderBy(valueExpression));
 
             return this;
         }
 
-        IDeleterThenBy IDeleterOrderBy.OrderBy(Description description)
+        IDeleterThenBy IDeleterOrderBy.OrderByDescending(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Order By {0} Asc", description));
+            Nodes.Add(SqlExpression.OrderByDescending(valueExpression));
 
             return this;
         }
 
-        IDeleterThenBy IDeleterOrderBy.OrderByDescending(Description description)
+        IDeleterThenBy IDeleterThenBy.ThenBy(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description("Order By {0} Desc", description));
+            Nodes.Add(SqlExpression.ThenBy(valueExpression));
 
             return this;
         }
 
-        IDeleterThenBy IDeleterThenBy.ThenBy(Description description)
+        IDeleterThenBy IDeleterThenBy.ThenByDescending(IValueExpression valueExpression)
         {
-            Nodes.Add(new Description(", {0} Asc", description));
-
-            return this;
-        }
-
-        IDeleterThenBy IDeleterThenBy.ThenByDescending(Description description)
-        {
-            Nodes.Add(new Description(", {0} Desc", description));
+            Nodes.Add(SqlExpression.ThenByDescending(valueExpression));
 
             return this;
         }
 
         IDeleter IDeleterLimit.Limit(ulong limit)
         {
-            Nodes.Add(new Description($"Limit {limit}"));
+            Nodes.Add(SqlExpression.Limit(limit));
 
             return this;
         }
@@ -357,35 +345,35 @@ namespace LogicEntity.Operator
 
         public IInsertIgnore Insert()
         {
-            Nodes.Add(new Description(nameof(Insert)));
+            Nodes.Add(SqlExpression.Insert());
 
             return this;
         }
 
         public IInsertInto Replace()
         {
-            Nodes.Add(new Description(nameof(Replace)));
+            Nodes.Add(SqlExpression.Replace());
 
             return this;
         }
 
         public IInsertInto Ignore()
         {
-            Nodes.Add(new Description(nameof(Ignore)));
+            Nodes.Add(SqlExpression.Ignore());
 
             return this;
         }
 
         public IInsertTable Into()
         {
-            Nodes.Add(new Description(nameof(Into)));
+            Nodes.Add(SqlExpression.Into());
 
             return this;
         }
 
         public IInsertorColumns<TTable> Table<TTable>(TTable table) where TTable : Table, new()
         {
-            Nodes.Add(new Description(table.FullName));
+            Nodes.Add(new SqlExpression((table as TableExpression).FullName));
 
             return new DBOperatorImplement<TTable>(Nodes, table);
         }
@@ -422,36 +410,21 @@ namespace LogicEntity.Operator
 
             string indentStr = new(Enumerable.Repeat(' ', _indent).ToArray());
 
-            List<string> lines = new();
+            (var cmd, var ps) = (SqlExpression.__Join("\n", Nodes) as ISqlExpression).Build();
 
-            for (int i = 0; i < Nodes.Count; i++)
-            {
-                Description node = Nodes[i];
+            command.CommandText = indentStr + cmd.Replace("\n", "\n" + indentStr);
 
-                (var cmd, var ps) = node.Build();
-
-                lines.Add(cmd);
-
-                if (ps is not null)
-                    command.Parameters.AddRange(ps);
-            }
-
-            StringBuilder stringBuilder = new();
-
-            stringBuilder.Append(indentStr);
-
-            stringBuilder.AppendJoin("\n", lines);
-
-            command.CommandText = stringBuilder.ToString().Replace("\n", "\n" + indentStr);
+            if (ps is not null)
+                command.Parameters.AddRange(ps);
 
             command.CommandTimeout = _commandTimeout;
 
             return command;
         }
 
-        (string, IEnumerable<KeyValuePair<string, object>>) IValueExpression.Build()
+        (string, IEnumerable<KeyValuePair<string, object>>) ISqlExpression.Build()
         {
-            Command command = ((IDbOperator)this).GetCommandWithUniqueParameterName();
+            Command command = (this as IDbOperator).GetCommandWithUniqueParameterName();
 
             return (command.CommandText, command.Parameters);
         }

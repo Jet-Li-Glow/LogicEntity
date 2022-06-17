@@ -9,8 +9,8 @@ namespace LogicEntity.Interface
 {
     public interface IDeleterOrderBy : IDeleterLimit
     {
-        public IDeleterThenBy OrderBy(Description description);
+        public IDeleterThenBy OrderBy(IValueExpression valueExpression);
 
-        public IDeleterThenBy OrderByDescending(Description description);
+        public IDeleterThenBy OrderByDescending(IValueExpression valueExpression);
     }
 }

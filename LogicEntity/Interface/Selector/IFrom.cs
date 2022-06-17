@@ -10,6 +10,6 @@ namespace LogicEntity.Interface
 {
     public interface IFrom : IGroupBy
     {
-        public IWhere From(params TableDescription[] tables);
+        public IWhere From(params TableExpression[] tables);
     }
 }

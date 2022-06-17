@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Operator
 {
-    public class Window
+    public class Window : ISqlExpression
     {
         /// <summary>
         /// 节点
         /// </summary>
-        List<Description> _nodes = new();
+        List<SqlExpression> _nodes = new();
 
         /// <summary>
         /// 别名
@@ -32,12 +32,12 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="descriptions"></param>
         /// <returns></returns>
-        public Window PartitionBy(params Description[] descriptions)
+        public Window PartitionBy(params IValueExpression[] valueExpressions)
         {
-            if (descriptions is null)
-                descriptions = new Description[0];
+            if (valueExpressions is null)
+                valueExpressions = Array.Empty<IValueExpression>();
 
-            _nodes.Add(new Description($"Partition By {string.Join(", ", descriptions.Select((_, i) => "{" + i + "}"))}", descriptions));
+            _nodes.Add(SqlExpression.PartitionBy(valueExpressions));
 
             return this;
         }
@@ -45,11 +45,11 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public Window OrderBy(Description description)
+        public Window OrderBy(IValueExpression valueExpression)
         {
-            _nodes.Add(new Description("Order By {0} Asc", description));
+            _nodes.Add(SqlExpression.OrderBy(valueExpression));
 
             return this;
         }
@@ -57,11 +57,11 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public Window OrderByDescending(Description description)
+        public Window OrderByDescending(IValueExpression valueExpression)
         {
-            _nodes.Add(new Description("Order By {0} Desc", description));
+            _nodes.Add(SqlExpression.OrderByDescending(valueExpression));
 
             return this;
         }
@@ -69,11 +69,11 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public Window ThenBy(Description description)
+        public Window ThenBy(IValueExpression valueExpression)
         {
-            _nodes.Add(new Description(", {0} Asc", description));
+            _nodes.Add(SqlExpression.ThenBy(valueExpression));
 
             return this;
         }
@@ -81,11 +81,11 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 排序
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public Window ThenByDescending(Description description)
+        public Window ThenByDescending(IValueExpression valueExpression)
         {
-            _nodes.Add(new Description(", {0} Desc", description));
+            _nodes.Add(SqlExpression.ThenByDescending(valueExpression));
 
             return this;
         }
@@ -96,7 +96,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Rows()
         {
-            _nodes.Add(new Description(nameof(Rows)));
+            _nodes.Add(SqlExpression.Rows());
 
             return this;
         }
@@ -107,7 +107,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Range()
         {
-            _nodes.Add(new Description(nameof(Range)));
+            _nodes.Add(SqlExpression.Range());
 
             return this;
         }
@@ -118,7 +118,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Between()
         {
-            _nodes.Add(new Description(nameof(Between)));
+            _nodes.Add(SqlExpression.Between());
 
             return this;
         }
@@ -129,7 +129,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window And()
         {
-            _nodes.Add(new Description(nameof(And)));
+            _nodes.Add(SqlExpression.And());
 
             return this;
         }
@@ -140,7 +140,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window CurrentRow()
         {
-            _nodes.Add(new Description("Current Row"));
+            _nodes.Add(SqlExpression.CurrentRow());
 
             return this;
         }
@@ -151,7 +151,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window UnboundedPreceding()
         {
-            _nodes.Add(new Description("Unbounded Preceding"));
+            _nodes.Add(SqlExpression.UnboundedPreceding());
 
             return this;
         }
@@ -162,7 +162,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window UnboundedFollowing()
         {
-            _nodes.Add(new Description("Unbounded Following"));
+            _nodes.Add(SqlExpression.UnboundedFollowing());
 
             return this;
         }
@@ -170,11 +170,11 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 向前
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public Window Preceding(Description description)
+        public Window Preceding(IValueExpression valueExpression)
         {
-            _nodes.Add(new Description("{0} Preceding", description));
+            _nodes.Add(SqlExpression.Preceding(valueExpression));
 
             return this;
         }
@@ -186,7 +186,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Preceding(int count)
         {
-            _nodes.Add(new Description($"{count} Preceding"));
+            _nodes.Add(SqlExpression.Preceding(count));
 
             return this;
         }
@@ -194,11 +194,11 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 向后
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="valueExpression"></param>
         /// <returns></returns>
-        public Window Following(Description description)
+        public Window Following(IValueExpression valueExpression)
         {
-            _nodes.Add(new Description("{0} Following", description));
+            _nodes.Add(SqlExpression.Following(valueExpression));
 
             return this;
         }
@@ -210,7 +210,7 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public Window Following(int count)
         {
-            _nodes.Add(new Description($"{count} Following"));
+            _nodes.Add(SqlExpression.Following(count));
 
             return this;
         }
@@ -219,9 +219,9 @@ namespace LogicEntity.Operator
         /// 生成
         /// </summary>
         /// <returns></returns>
-        internal (string, IEnumerable<KeyValuePair<string, object>>) Build()
+        (string, IEnumerable<KeyValuePair<string, object>>) ISqlExpression.Build()
         {
-            return new Description(string.Join(" ", _nodes.Select((_, i) => "{" + i + "}")), _nodes.ToArray()).Build();
+            return (SqlExpression.__Join(" ", _nodes) as ISqlExpression).Build();
         }
     }
 }

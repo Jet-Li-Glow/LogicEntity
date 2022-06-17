@@ -12,13 +12,6 @@ namespace Demo.TableModel
 {
     public class Student : Table
     {
-        /// <summary>
-        /// 月表
-        /// </summary>
-        int _year;
-
-        int _month;
-
         public Student()
         {
             AnotherName.ColumnName = "StudentName";

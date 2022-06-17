@@ -11,7 +11,7 @@ namespace LogicEntity.Operator
     /// <summary>
     /// 表描述
     /// </summary>
-    public abstract class TableDescription
+    public abstract class TableExpression : ISqlExpression
     {
         /// <summary>
         /// 全名
@@ -42,9 +42,9 @@ namespace LogicEntity.Operator
         /// 所有的列
         /// </summary>
         /// <returns></returns>
-        public ColumnCollection All()
+        public IEnumerable<Column> All()
         {
-            return new ColumnCollection(Columns);
+            return Columns;
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable Join(TableDescription tableDescription)
+        public JoinedTable Join(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Join", tableDescription);
         }
@@ -62,7 +62,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable InnerJoin(TableDescription tableDescription)
+        public JoinedTable InnerJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Inner Join", tableDescription);
         }
@@ -72,7 +72,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable CrossJoin(TableDescription tableDescription)
+        public JoinedTable CrossJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Cross Join", tableDescription);
         }
@@ -82,7 +82,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable LeftJoin(TableDescription tableDescription)
+        public JoinedTable LeftJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Left Join", tableDescription);
         }
@@ -92,7 +92,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable RightJoin(TableDescription tableDescription)
+        public JoinedTable RightJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Right Join", tableDescription);
         }
@@ -102,7 +102,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable NaturalJoin(TableDescription tableDescription)
+        public JoinedTable NaturalJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Natural Join", tableDescription);
         }
@@ -112,7 +112,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable NaturalInnerJoin(TableDescription tableDescription)
+        public JoinedTable NaturalInnerJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Natural Inner Join", tableDescription);
         }
@@ -122,7 +122,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable NaturalLeftJoin(TableDescription tableDescription)
+        public JoinedTable NaturalLeftJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Natural Left Join", tableDescription);
         }
@@ -132,7 +132,7 @@ namespace LogicEntity.Operator
         /// </summary>
         /// <param name="tableDescription"></param>
         /// <returns></returns>
-        public JoinedTable NaturalRightJoin(TableDescription tableDescription)
+        public JoinedTable NaturalRightJoin(TableExpression tableDescription)
         {
             return new JoinedTable(this, "Natural Right Join", tableDescription);
         }
@@ -141,6 +141,15 @@ namespace LogicEntity.Operator
         /// 生成
         /// </summary>
         /// <returns></returns>
-        internal abstract (string, IEnumerable<KeyValuePair<string, object>>) Build();
+        internal protected abstract (string, IEnumerable<KeyValuePair<string, object>>) Build();
+
+        /// <summary>
+        /// 生成
+        /// </summary>
+        /// <returns></returns>
+        (string, IEnumerable<KeyValuePair<string, object>>) ISqlExpression.Build()
+        {
+            return Build();
+        }
     }
 }

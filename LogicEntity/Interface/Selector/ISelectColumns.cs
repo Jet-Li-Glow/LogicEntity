@@ -10,7 +10,7 @@ namespace LogicEntity.Interface
 {
     public interface ISelectColumns : IFrom
     {
-        public IFrom SetColumns(params ColumnCollection[] columns)
+        public IFrom SetColumns(params IEnumerable<Column>[] columns)
         {
             return SetColumns(columns.SelectMany(c => c).ToArray());
         }

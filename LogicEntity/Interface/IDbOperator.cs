@@ -74,7 +74,7 @@ namespace LogicEntity.Interface
         /// <summary>
         /// 缩进
         /// </summary>
-        internal int Indent { set; }
+        internal int __Indent { set; }
 
         /// <summary>
         /// 获取参数名称唯一的命令
