@@ -1957,7 +1957,7 @@ namespace LogicEntity.Model
             List<object> args = new() { json_doc, path };
 
             if (paths is not null)
-                args.Add(paths);
+                args.AddRange(paths);
 
             return __GetDbFunctionDescription(nameof(Json_Extract), args.ToArray());
         }

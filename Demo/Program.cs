@@ -23,7 +23,8 @@ namespace Demo
 
             //开发计划  1.Debug
             //          2.Entity填充性能优化
-            //          3.Column<int>
+            //          3.valueExpression 使用 stringBuilder
+            //          4.Column<int>
 
             Console.WriteLine("-- Start --");
 
@@ -125,6 +126,7 @@ namespace Demo
                 student.Bool,
                 student.Long.Read(v => (long)v),
                 student.Json,          //可在构造函数中通过 Read 和 Write 设置序列化和反序列化方法 或 显式调用这两个方法
+                student.Json.Json_Extract("$"),
                 nested.Column(nameof(Major.MajorId)).As("nestedMajorIdA"),
                 nested.All(),
                 student.MajorId,
@@ -161,6 +163,8 @@ namespace Demo
             Command command = selector.GetCommand();
 
             students = db.Query<StudentInfo>(selector).ToList();
+
+            var dataTable = db.Query(selector);
 
             //查询 3
             student = new();
