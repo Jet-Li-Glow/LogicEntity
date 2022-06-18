@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Tool;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 using LogicEntity.Model;
 using LogicEntity.Operator;
 

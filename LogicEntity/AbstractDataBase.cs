@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 using LogicEntity.Model;
 using LogicEntity.Operator;
 

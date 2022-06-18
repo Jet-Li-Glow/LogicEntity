@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Tool;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 using LogicEntity.Model;
 
 namespace LogicEntity.Operator

@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 using LogicEntity.Model;
 
 namespace LogicEntity

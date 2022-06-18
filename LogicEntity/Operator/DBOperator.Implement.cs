@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 using LogicEntity.Model;
 using LogicEntity.Tool;
 
@@ -380,7 +380,7 @@ namespace LogicEntity.Operator
 
         //Operator
 
-        public void SetCommandTimeout(int seconds)
+        public void SetTimeout(int seconds)
         {
             _commandTimeout = seconds;
         }

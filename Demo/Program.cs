@@ -8,7 +8,7 @@ using System.Text.Json;
 using Demo.Model;
 using Demo.TableModel;
 using LogicEntity;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 using LogicEntity.Model;
 using LogicEntity.Operator;
 using MySql.Data.MySqlClient;
@@ -22,7 +22,8 @@ namespace Demo
             //Version 0.7.0
 
             //开发计划  1.Debug
-            //          2.Column<int>
+            //          2.Entity填充性能优化
+            //          3.Column<int>
 
             Console.WriteLine("-- Start --");
 
@@ -54,9 +55,11 @@ namespace Demo
 
             Student inStudent = new();
 
-            Student subquerySutdent = new();
+            Student subQuerySutdent = new();
 
             Major major = new();
+
+            Major subQueryMajor = new();
 
             Major nestedMajor = new();
 
@@ -74,7 +77,7 @@ namespace Demo
                 new ValueExpression("student.StudentId").As("Gamma"),
                 student.StudentId > 50,
                 new ValueExpression("student.StudentId > {0}", 100),
-                DBOperator.Select(subquerySutdent.MajorId).From(subquerySutdent).Limit(1) + 1,
+                DBOperator.Select(subQuerySutdent.MajorId).From(subQuerySutdent).Limit(1) + 1,
                 student.StudentName.ReadChars(read =>
                 {
                     List<char> chars = new();
@@ -130,7 +133,11 @@ namespace Demo
                 )
                 .From(student
                 .InnerJoin(studentBeta.As("studentBeta")).On(student.StudentId == studentBeta.StudentId)
-                .LeftJoin(major).On(major.MajorId == student.MajorId)
+                .LeftJoin(major).On(major.MajorId == DBOperator.Select(subQueryMajor.MajorId)
+                                                               .From(subQueryMajor)
+                                                               .Where(subQueryMajor.MajorId == student.MajorId)
+                                                               .OrderBy(subQueryMajor.MajorId)
+                                                               .Limit(1))
                 .LeftJoin(nested).On(nested.Column(nameof(Major.MajorId)) == student.MajorId)
                 )
                 .Where(true & (student.StudentId == 1 | student.StudentName.Like("%小红%") | student.StudentId == null)
@@ -149,7 +156,7 @@ namespace Demo
                 .ThenBy(major.MajorId)
                 .Limit(1000);
 
-            selector.SetCommandTimeout(30);
+            selector.SetTimeout(30);
 
             Command command = selector.GetCommand();
 
@@ -532,11 +539,80 @@ namespace Demo
                 }
             });
 
+            //Test
+            Test();
+
             Console.WriteLine("测试通过");
 
             Console.WriteLine("-- End --");
 
             Console.ReadKey();
+        }
+
+        static void Test()
+        {
+            ISelector selector = DBOperator.Select(new ValueExpression("Sleep(10)"));
+
+            selector.SetTimeout(5);
+
+            try
+            {
+                int v = Database.TestDb.Query<int>(selector).FirstOrDefault();
+            }
+            catch
+            {
+            }
+
+            Guid guid = Guid.NewGuid();
+
+            //插入
+            Monthly data = new(new DateTime(2021, 12, 1));
+
+            data.Guid.Value = guid;
+            data.DateTime.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            data.Description.Value = Path.GetRandomFileName() + " Monthly Test";
+
+            Database.TestDb.ExecuteNonQuery(DBOperator.Save(data));
+
+            Monthly table = new(new DateTime(2021, 12, 1));
+
+            Monthly d = Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == data.Guid.Value)).Single();
+
+            Assert(d.Guid.Value, data.Guid.Value);
+            Assert(d.DateTime.Value, data.DateTime.Value);
+            Assert(d.Description.Value, data.Description.Value);
+
+            //更新
+            data = new(new DateTime(2021, 12, 1));
+
+            data.DateTime.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            data.Description.Value = Path.GetRandomFileName() + " Monthly Test";
+
+            Database.TestDb.ExecuteNonQuery(DBOperator.ApplyChanges(data).On(data.Guid == guid));
+
+            d = Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == guid)).Single();
+
+            Assert(d.Guid.Value, guid);
+            Assert(d.DateTime.Value, data.DateTime.Value);
+            Assert(d.Description.Value, data.Description.Value);
+
+            //删除
+            table = new(new DateTime(2021, 12, 1));
+
+            Database.TestDb.ExecuteNonQuery(DBOperator.DeleteFrom(table).Where(table.Guid == guid));
+
+            Assert(Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == data.Guid.Value)).Count() == 0);
+        }
+
+        static void Assert(object left, object right)
+        {
+            Assert(JsonSerializer.Serialize(left).Equals(JsonSerializer.Serialize(right), StringComparison.OrdinalIgnoreCase));
+        }
+
+        static void Assert(bool val)
+        {
+            if (val == false)
+                throw new Exception(nameof(Assert));
         }
     }
 

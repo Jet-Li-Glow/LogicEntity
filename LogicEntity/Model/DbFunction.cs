@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using LogicEntity.Tool;
 using LogicEntity.Operator;
 using System.Collections;
-using LogicEntity.Interface;
+using LogicEntity.Grammar;
 
 namespace LogicEntity.Model
 {
