@@ -128,10 +128,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression In(this IValueExpression valueExpression, ISelector selector)
         {
-            if (selector is not null)
-                selector.__Indent = 4;
-
-            return new ValueExpression("{0} In {1}", valueExpression, selector);
+            return new ValueExpression("{0} In\n  {1}", valueExpression, selector);
         }
 
         /// <summary>
@@ -166,10 +163,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression NotIn(this IValueExpression valueExpression, ISelector selector)
         {
-            if (selector is not null)
-                selector.__Indent = 4;
-
-            return new ValueExpression("{0} Not In {1}", valueExpression, selector);
+            return new ValueExpression("{0} Not In\n  {1}", valueExpression, selector);
         }
 
         /// <summary>

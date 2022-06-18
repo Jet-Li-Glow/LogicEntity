@@ -348,7 +348,7 @@ namespace LogicEntity
                 return Expression.Lambda<Action<T>>(Expression.Block(variables, body), instance).Compile();
             }
 
-            void _GetValueExpression(IDataReader reader, Type targetType, int i, out List<ParameterExpression> variables, out List<Expression> body, out Expression val)
+            void _GetValueExpression(IDataRecord record, Type targetType, int i, out List<ParameterExpression> variables, out List<Expression> body, out Expression val)
             {
                 variables = new();
 
@@ -358,44 +358,40 @@ namespace LogicEntity
 
                 Type dataType = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
-                Expression isDBNull = Expression.Call(Expression.Constant(reader), _IsDBNull, Expression.Constant(i));
+                Expression isDBNull = Expression.Call(Expression.Constant(record), _IsDBNull, Expression.Constant(i));
 
-                if (clientReaders is not null && clientReaders.TryGetValue(i, out Func<object, object> clientReader))
+                if (clientReaders is not null && clientReaders.TryGetValue(i, out var clientReader) && clientReader is not null)
                 {
-                    ParameterExpression obj = Expression.Parameter(typeof(object));
-
-                    variables.Add(obj);
-
-                    body.Add(Expression.Assign(obj, Expression.Call(Expression.Constant(reader), _GetValue, Expression.Constant(i))));
-
-                    val = Expression.Call(Expression.Constant(clientReader), _ClientReaderInvoke, Expression.Condition(
-                        Expression.TypeIs(obj, typeof(DBNull)),
-                        Expression.Default(typeof(object)),
-                        obj
-                        ));
+                    val = Expression.Call(Expression.Constant(clientReader), _ClientReaderInvoke, Expression.Call(Expression.Constant(record), _GetValue, Expression.Constant(i)));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
                 }
-                else if (clientBytesReaders is not null && clientBytesReaders.TryGetValue(i, out Func<Func<long, byte[], int, int, long>, object> clientBytesReader))
+                else if (clientBytesReaders is not null && clientBytesReaders.TryGetValue(i, out var clientBytesReader) && clientBytesReader is not null)
                 {
                     val = Expression.Call(Expression.Constant(clientBytesReader), _ClientBytesReaderInvoke,
-                        Expression.Constant(new Func<long, byte[], int, int, long>((offset, buffer, bufferOffset, length) => reader.GetBytes(i, offset, buffer, bufferOffset, length))));
+                        Expression.Constant(new Func<long, byte[], int, int, long>((offset, buffer, bufferOffset, length) => record.GetBytes(i, offset, buffer, bufferOffset, length))));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
                 }
-                else if (clientCharsReaders is not null && clientCharsReaders.TryGetValue(i, out Func<Func<long, char[], int, int, long>, object> clientCharsReader))
+                else if (clientCharsReaders is not null && clientCharsReaders.TryGetValue(i, out var clientCharsReader) && clientCharsReader is not null)
                 {
                     val = Expression.Call(Expression.Constant(clientCharsReader), _ClientCharsReaderInvoke,
-                        Expression.Constant(new Func<long, char[], int, int, long>((offset, buffer, bufferOffset, length) => reader.GetChars(i, offset, buffer, bufferOffset, length))));
+                        Expression.Constant(new Func<long, char[], int, int, long>((offset, buffer, bufferOffset, length) => record.GetChars(i, offset, buffer, bufferOffset, length))));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
+
+                    val = Expression.Condition(isDBNull, Expression.Default(targetType), val);
                 }
                 else if (dataType == typeof(bool))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetBoolean, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetBoolean, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -404,7 +400,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(byte))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetByte, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetByte, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -413,7 +409,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(char))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetChar, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetChar, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -422,7 +418,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(DateTime))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetDateTime, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetDateTime, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -431,7 +427,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(decimal))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetDecimal, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetDecimal, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -440,7 +436,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(double))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetDouble, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetDouble, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -449,7 +445,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(float))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetFloat, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetFloat, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -458,7 +454,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(Guid))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetGuid, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetGuid, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -467,7 +463,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(short))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetInt16, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetInt16, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -476,7 +472,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(int))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetInt32, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetInt32, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -485,7 +481,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(long))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetInt64, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetInt64, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -494,7 +490,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(string))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetString, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -503,7 +499,7 @@ namespace LogicEntity
                 }
                 else if (dataType == typeof(object))
                 {
-                    val = Expression.Call(Expression.Constant(reader), _GetValue, Expression.Constant(i));
+                    val = Expression.Call(Expression.Constant(record), _GetValue, Expression.Constant(i));
 
                     if (val.Type != targetType)
                         val = Expression.Convert(val, targetType);
@@ -520,12 +516,12 @@ namespace LogicEntity
 
                     Expression assign = Expression.Assign(
                         enumValue,
-                        Expression.Call(_EnumParse, Expression.Constant(dataType), Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)), Expression.Constant(true))
+                        Expression.Call(_EnumParse, Expression.Constant(dataType), Expression.Call(Expression.Constant(record), _GetString, Expression.Constant(i)), Expression.Constant(true))
                         );
 
                     Expression exceptionInfo = Expression.Call(_StringConcat,
                         Expression.Constant("尝试将【"),
-                        Expression.Call(Expression.Constant(reader), _GetString, Expression.Constant(i)),
+                        Expression.Call(Expression.Constant(record), _GetString, Expression.Constant(i)),
                         Expression.Constant("】转换为 " + dataType.FullName)
                         );
 
@@ -540,7 +536,7 @@ namespace LogicEntity
                 }
                 else
                 {
-                    val = Expression.Call(_ChangeType, Expression.Call(Expression.Constant(reader), _GetValue, Expression.Constant(i)), Expression.Constant(targetType));
+                    val = Expression.Call(_ChangeType, Expression.Call(Expression.Constant(record), _GetValue, Expression.Constant(i)), Expression.Constant(targetType));
 
                     val = Expression.Convert(val, targetType);
 
@@ -925,8 +921,8 @@ namespace LogicEntity
 
             object result = command.ExecuteScalar();
 
-            if (result is DBNull)
-                result = null;
+            if (result is DBNull || result is null)
+                return default(object);
 
             if (clientReader is not null)
                 result = clientReader(result);

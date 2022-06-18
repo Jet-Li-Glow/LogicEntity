@@ -47,10 +47,13 @@ namespace LogicEntity.Operator
                     {
                         if (obj is IValueExpression valueExpression)
                         {
+                            if (valueExpression is IDbOperator dbOperator)
+                                dbOperator.__Indent = 4;
+
                             (var cmd, var ps) = valueExpression.Build();
 
                             if (valueExpression is ISelector)
-                                cmd = $"\n  (\n{cmd}\n  )";
+                                cmd = $"(\n{cmd}\n  )";
 
                             formatArgs.Add(cmd);
 
@@ -138,6 +141,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static ValueExpression operator ==(ValueExpression left, object right)
         {
+            if (right is null)
+                return new ValueExpression("{0} Is " + SqlValue.Null, left);
+
             return new ValueExpression("{0} = {1}", left, right);
         }
 
@@ -149,6 +155,9 @@ namespace LogicEntity.Operator
         /// <returns></returns>
         public static ValueExpression operator !=(ValueExpression left, object right)
         {
+            if (right is null)
+                return new ValueExpression("{0} Is Not " + SqlValue.Null, left);
+
             return new ValueExpression("{0} != {1}", left, right);
         }
 

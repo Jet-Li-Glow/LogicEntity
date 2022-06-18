@@ -18,9 +18,6 @@ namespace Demo.TableModel
 
             Json.Reader = j =>
             {
-                if (j is null || j is DBNull)
-                    return null;
-
                 return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
             };
 

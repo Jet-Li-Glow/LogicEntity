@@ -54,6 +54,8 @@ namespace Demo
 
             Student inStudent = new();
 
+            Student subquerySutdent = new();
+
             Major major = new();
 
             Major nestedMajor = new();
@@ -72,6 +74,7 @@ namespace Demo
                 new ValueExpression("student.StudentId").As("Gamma"),
                 student.StudentId > 50,
                 new ValueExpression("student.StudentId > {0}", 100),
+                DBOperator.Select(subquerySutdent.MajorId).From(subquerySutdent).Limit(1) + 1,
                 student.StudentName.ReadChars(read =>
                 {
                     List<char> chars = new();
