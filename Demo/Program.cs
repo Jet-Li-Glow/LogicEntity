@@ -22,9 +22,7 @@ namespace Demo
             //Version 0.7.0
 
             //开发计划  1.Debug
-            //          2.Entity填充性能优化
-            //          3.valueExpression 使用 stringBuilder
-            //          4.Column<int>
+            //          2.Partition
 
             Console.WriteLine("-- Start --");
 
@@ -606,6 +604,16 @@ namespace Demo
             Database.TestDb.ExecuteNonQuery(DBOperator.DeleteFrom(table).Where(table.Guid == guid));
 
             Assert(Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == data.Guid.Value)).Count() == 0);
+
+            //Json
+            Database.TestDb.Query(
+                DBOperator.Select(new ValueExpression("{0}", JsonSerializer.Serialize(new object[] { new { Id = 1 }, "name", 100 })).Json_Contains_Path(OneOrAll.One, "$[1]")));
+
+            Database.TestDb.Query(
+                DBOperator.Select(new ValueExpression("{0}", JsonSerializer.Serialize(new object[] { new { Id = 1 }, "name", 100 })).Json_Search(OneOrAll.All, "name", null, "$")));
+
+            Database.TestDb.Query(
+                DBOperator.Select(new ValueExpression("{0}", JsonSerializer.Serialize(new object[] { new { Id = 1 }, "name", 100 })).Json_Search(OneOrAll.All, "name", 'a', "$")));
         }
 
         static void Assert(object left, object right)
@@ -625,9 +633,9 @@ namespace Demo
     /// </summary>
     static class MyDbFunction
     {
-        public static IValueExpression MyFunction(this IValueExpression description)
+        public static IValueExpression MyFunction(this IValueExpression valueExpression)
         {
-            return new ValueExpression("MyFunction({0})", description);
+            return new ValueExpression("MyFunction({0})", valueExpression);
         }
     }
 

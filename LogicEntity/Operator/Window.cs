@@ -30,7 +30,7 @@ namespace LogicEntity.Operator
         /// <summary>
         /// 分组
         /// </summary>
-        /// <param name="descriptions"></param>
+        /// <param name="valueExpressions"></param>
         /// <returns></returns>
         public Window PartitionBy(params IValueExpression[] valueExpressions)
         {

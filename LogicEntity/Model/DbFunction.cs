@@ -15,7 +15,7 @@ namespace LogicEntity.Model
     /// </summary>
     public static class DbFunction
     {
-        static IValueExpression __GetDbFunctionDescription(string methodName, params object[] args)
+        static IValueExpression __GetDbFunctionValueExpression(string methodName, params object[] args)
         {
             List<string> strs = new();
 
@@ -205,7 +205,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Values(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Values), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Values), valueExpression);
         }
 
         /// <summary>
@@ -243,7 +243,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression ASCII(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(ASCII), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(ASCII), valueExpression);
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Char_Length(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Char_Length), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Char_Length), valueExpression);
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Character_Length(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Character_Length), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Character_Length), valueExpression);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Concat(params object[] values)
         {
-            return __GetDbFunctionDescription(nameof(Concat), values);
+            return __GetDbFunctionValueExpression(nameof(Concat), values);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Concat_Ws(params object[] values)
         {
-            return __GetDbFunctionDescription(nameof(Concat_Ws), values);
+            return __GetDbFunctionValueExpression(nameof(Concat_Ws), values);
         }
 
         /// <summary>
@@ -293,7 +293,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Group_Concat(object value)
         {
-            return __GetDbFunctionDescription(nameof(Group_Concat), value);
+            return __GetDbFunctionValueExpression(nameof(Group_Concat), value);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Field(params object[] values)
         {
-            return __GetDbFunctionDescription(nameof(Field), values);
+            return __GetDbFunctionValueExpression(nameof(Field), values);
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Find_In_Set(this IValueExpression valueExpression, object strList)
         {
-            return __GetDbFunctionDescription(nameof(Find_In_Set), valueExpression, strList);
+            return __GetDbFunctionValueExpression(nameof(Find_In_Set), valueExpression, strList);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Format(this IValueExpression valueExpression, int digits)
         {
-            return __GetDbFunctionDescription(nameof(Format), valueExpression, digits);
+            return __GetDbFunctionValueExpression(nameof(Format), valueExpression, digits);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Insert(this IValueExpression valueExpression, int start, int length, object replace)
         {
-            return __GetDbFunctionDescription(nameof(Insert), valueExpression, start, length, replace);
+            return __GetDbFunctionValueExpression(nameof(Insert), valueExpression, start, length, replace);
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Locate(this IValueExpression valueExpression, object str)
         {
-            return __GetDbFunctionDescription(nameof(Locate), valueExpression, str);
+            return __GetDbFunctionValueExpression(nameof(Locate), valueExpression, str);
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Lcase(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Lcase), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Lcase), valueExpression);
         }
 
         /// <summary>
@@ -369,7 +369,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Ucase(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ucase), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Ucase), valueExpression);
         }
 
         /// <summary>
@@ -379,7 +379,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Lower(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Lower), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Lower), valueExpression);
         }
 
         /// <summary>
@@ -389,7 +389,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Upper(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Upper), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Upper), valueExpression);
         }
 
         /// <summary>
@@ -400,7 +400,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Left(this IValueExpression valueExpression, int length)
         {
-            return __GetDbFunctionDescription(nameof(Left), valueExpression, length);
+            return __GetDbFunctionValueExpression(nameof(Left), valueExpression, length);
         }
 
         /// <summary>
@@ -411,7 +411,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Right(this IValueExpression valueExpression, int length)
         {
-            return __GetDbFunctionDescription(nameof(Right), valueExpression, length);
+            return __GetDbFunctionValueExpression(nameof(Right), valueExpression, length);
         }
 
         /// <summary>
@@ -423,7 +423,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression LPad(this IValueExpression valueExpression, int length, object str)
         {
-            return __GetDbFunctionDescription(nameof(LPad), valueExpression, length, str);
+            return __GetDbFunctionValueExpression(nameof(LPad), valueExpression, length, str);
         }
 
         /// <summary>
@@ -435,7 +435,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression RPad(this IValueExpression valueExpression, int length, object str)
         {
-            return __GetDbFunctionDescription(nameof(RPad), valueExpression, length, str);
+            return __GetDbFunctionValueExpression(nameof(RPad), valueExpression, length, str);
         }
 
         /// <summary>
@@ -445,7 +445,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression LTrim(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(LTrim), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(LTrim), valueExpression);
         }
 
         /// <summary>
@@ -455,7 +455,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression RTrim(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(RTrim), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(RTrim), valueExpression);
         }
 
         /// <summary>
@@ -465,7 +465,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Trim(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Trim), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Trim), valueExpression);
         }
 
         /// <summary>
@@ -477,7 +477,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Mid(this IValueExpression valueExpression, int start, int length)
         {
-            return __GetDbFunctionDescription(nameof(Mid), valueExpression, start, length);
+            return __GetDbFunctionValueExpression(nameof(Mid), valueExpression, start, length);
         }
 
         /// <summary>
@@ -489,7 +489,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression SubStr(this IValueExpression valueExpression, int start, int length)
         {
-            return __GetDbFunctionDescription(nameof(SubStr), valueExpression, start, length);
+            return __GetDbFunctionValueExpression(nameof(SubStr), valueExpression, start, length);
         }
 
         /// <summary>
@@ -501,7 +501,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression SubString(this IValueExpression valueExpression, int start, int length)
         {
-            return __GetDbFunctionDescription(nameof(SubString), valueExpression, start, length);
+            return __GetDbFunctionValueExpression(nameof(SubString), valueExpression, start, length);
         }
 
         /// <summary>
@@ -513,7 +513,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression SubString_Index(this IValueExpression valueExpression, object separator, int num)
         {
-            return __GetDbFunctionDescription(nameof(SubString_Index), valueExpression, separator, num);
+            return __GetDbFunctionValueExpression(nameof(SubString_Index), valueExpression, separator, num);
         }
 
         /// <summary>
@@ -524,7 +524,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Position(this IValueExpression valueExpression, object str)
         {
-            return __GetDbFunctionDescription(nameof(Position), valueExpression, new ValueExpression(" In {0} ", str));
+            return __GetDbFunctionValueExpression(nameof(Position), valueExpression, new ValueExpression(" In {0} ", str));
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Repeat(this IValueExpression valueExpression, int times)
         {
-            return __GetDbFunctionDescription(nameof(Repeat), valueExpression, times);
+            return __GetDbFunctionValueExpression(nameof(Repeat), valueExpression, times);
         }
 
         /// <summary>
@@ -547,7 +547,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Replace(this IValueExpression valueExpression, object original, object replace)
         {
-            return __GetDbFunctionDescription(nameof(Replace), valueExpression, original, replace);
+            return __GetDbFunctionValueExpression(nameof(Replace), valueExpression, original, replace);
         }
 
         /// <summary>
@@ -557,7 +557,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Reverse(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Reverse), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Reverse), valueExpression);
         }
 
         /// <summary>
@@ -567,7 +567,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Space(int count)
         {
-            return __GetDbFunctionDescription(nameof(Space), count);
+            return __GetDbFunctionValueExpression(nameof(Space), count);
         }
 
         /// <summary>
@@ -578,7 +578,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Strcmp(this IValueExpression left, IValueExpression right)
         {
-            return __GetDbFunctionDescription(nameof(Strcmp), left, right);
+            return __GetDbFunctionValueExpression(nameof(Strcmp), left, right);
         }
 
         /// <summary>
@@ -588,7 +588,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Abs(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Abs), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Abs), valueExpression);
         }
 
         /// <summary>
@@ -598,7 +598,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Sin(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sin), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Sin), valueExpression);
         }
 
         /// <summary>
@@ -608,7 +608,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Cos(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Cos), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Cos), valueExpression);
         }
 
         /// <summary>
@@ -618,7 +618,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Tan(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Tan), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Tan), valueExpression);
         }
 
         /// <summary>
@@ -628,7 +628,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Cot(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Cot), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Cot), valueExpression);
         }
 
         /// <summary>
@@ -638,7 +638,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Asin(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Asin), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Asin), valueExpression);
         }
 
         /// <summary>
@@ -648,7 +648,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Acos(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Acos), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Acos), valueExpression);
         }
 
         /// <summary>
@@ -658,7 +658,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Atan(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Atan), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Atan), valueExpression);
         }
 
         /// <summary>
@@ -669,7 +669,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Atan2(object x, object y)
         {
-            return __GetDbFunctionDescription(nameof(Atan2), x, y);
+            return __GetDbFunctionValueExpression(nameof(Atan2), x, y);
         }
 
         /// <summary>
@@ -679,7 +679,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Avg(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Avg), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Avg), valueExpression);
         }
 
         /// <summary>
@@ -689,7 +689,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Ceil(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ceil), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Ceil), valueExpression);
         }
 
         /// <summary>
@@ -699,7 +699,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Ceiling(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ceiling), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Ceiling), valueExpression);
         }
 
         /// <summary>
@@ -709,7 +709,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Floor(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Floor), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Floor), valueExpression);
         }
 
         /// <summary>
@@ -728,7 +728,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Count(int i)
         {
-            return __GetDbFunctionDescription(nameof(Count), i);
+            return __GetDbFunctionValueExpression(nameof(Count), i);
         }
 
         /// <summary>
@@ -738,7 +738,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Count(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Count), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Count), valueExpression);
         }
 
         /// <summary>
@@ -748,7 +748,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Degrees(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Degrees), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Degrees), valueExpression);
         }
 
         /// <summary>
@@ -758,7 +758,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Radians(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Radians), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Radians), valueExpression);
         }
 
         /// <summary>
@@ -780,7 +780,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Mod(this IValueExpression divided, object divider)
         {
-            return __GetDbFunctionDescription(nameof(Mod), divided, divider);
+            return __GetDbFunctionValueExpression(nameof(Mod), divided, divider);
         }
 
         /// <summary>
@@ -790,7 +790,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Exp(object index)
         {
-            return __GetDbFunctionDescription(nameof(Exp), index);
+            return __GetDbFunctionValueExpression(nameof(Exp), index);
         }
 
         /// <summary>
@@ -801,7 +801,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Greatest(this IValueExpression valueExpression, params object[] more)
         {
-            return __GetDbFunctionDescription(nameof(Greatest), more);
+            return __GetDbFunctionValueExpression(nameof(Greatest), more);
         }
 
         /// <summary>
@@ -812,7 +812,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Least(this IValueExpression valueExpression, params object[] more)
         {
-            return __GetDbFunctionDescription(nameof(Least), more);
+            return __GetDbFunctionValueExpression(nameof(Least), more);
         }
 
         /// <summary>
@@ -822,7 +822,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Ln(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Ln), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Ln), valueExpression);
         }
 
         /// <summary>
@@ -833,7 +833,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Log(IValueExpression baseNum, object power)
         {
-            return __GetDbFunctionDescription(nameof(Log), baseNum, power);
+            return __GetDbFunctionValueExpression(nameof(Log), baseNum, power);
         }
 
         /// <summary>
@@ -843,7 +843,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Log10(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Log10), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Log10), valueExpression);
         }
 
         /// <summary>
@@ -853,7 +853,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Log2(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Log2), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Log2), valueExpression);
         }
 
         /// <summary>
@@ -863,7 +863,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Max(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Max), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Max), valueExpression);
         }
 
         /// <summary>
@@ -873,7 +873,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Min(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Min), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Min), valueExpression);
         }
 
         /// <summary>
@@ -893,7 +893,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Pow(this IValueExpression x, object y)
         {
-            return __GetDbFunctionDescription(nameof(Pow), x, y);
+            return __GetDbFunctionValueExpression(nameof(Pow), x, y);
         }
 
         /// <summary>
@@ -912,7 +912,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Round(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Round), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Round), valueExpression);
         }
 
         /// <summary>
@@ -922,7 +922,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Sign(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sign), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Sign), valueExpression);
         }
 
         /// <summary>
@@ -932,7 +932,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Sqrt(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sqrt), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Sqrt), valueExpression);
         }
 
         /// <summary>
@@ -942,7 +942,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Sum(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Sum), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Sum), valueExpression);
         }
 
         /// <summary>
@@ -953,7 +953,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Truncate(this IValueExpression valueExpression, int digits)
         {
-            return __GetDbFunctionDescription(nameof(Truncate), valueExpression, digits);
+            return __GetDbFunctionValueExpression(nameof(Truncate), valueExpression, digits);
         }
 
         /// <summary>
@@ -1030,7 +1030,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression AddTime(this IValueExpression valueExpression, object time)
         {
-            return __GetDbFunctionDescription(nameof(AddTime), valueExpression, time);
+            return __GetDbFunctionValueExpression(nameof(AddTime), valueExpression, time);
         }
 
         /// <summary>
@@ -1039,7 +1039,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression CurDate()
         {
-            return __GetDbFunctionDescription(nameof(CurDate));
+            return __GetDbFunctionValueExpression(nameof(CurDate));
         }
 
         /// <summary>
@@ -1048,7 +1048,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Current_Date()
         {
-            return __GetDbFunctionDescription(nameof(Current_Date));
+            return __GetDbFunctionValueExpression(nameof(Current_Date));
         }
 
         /// <summary>
@@ -1057,7 +1057,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression CurTime()
         {
-            return __GetDbFunctionDescription(nameof(CurTime));
+            return __GetDbFunctionValueExpression(nameof(CurTime));
         }
 
         /// <summary>
@@ -1066,7 +1066,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Current_Time()
         {
-            return __GetDbFunctionDescription(nameof(Current_Time));
+            return __GetDbFunctionValueExpression(nameof(Current_Time));
         }
 
         /// <summary>
@@ -1075,7 +1075,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Current_TimeStamp()
         {
-            return __GetDbFunctionDescription(nameof(Current_TimeStamp));
+            return __GetDbFunctionValueExpression(nameof(Current_TimeStamp));
         }
 
         /// <summary>
@@ -1084,7 +1084,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression LocalTime()
         {
-            return __GetDbFunctionDescription(nameof(LocalTime));
+            return __GetDbFunctionValueExpression(nameof(LocalTime));
         }
 
         /// <summary>
@@ -1093,7 +1093,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression LocalTimeStamp()
         {
-            return __GetDbFunctionDescription(nameof(LocalTimeStamp));
+            return __GetDbFunctionValueExpression(nameof(LocalTimeStamp));
         }
 
         /// <summary>
@@ -1102,7 +1102,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Now()
         {
-            return __GetDbFunctionDescription(nameof(Now));
+            return __GetDbFunctionValueExpression(nameof(Now));
         }
 
         /// <summary>
@@ -1111,7 +1111,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression SysDate()
         {
-            return __GetDbFunctionDescription(nameof(SysDate));
+            return __GetDbFunctionValueExpression(nameof(SysDate));
         }
 
         /// <summary>
@@ -1121,7 +1121,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Date(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Date), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Date), valueExpression);
         }
 
         /// <summary>
@@ -1131,7 +1131,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Time(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Time), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Time), valueExpression);
         }
 
         /// <summary>
@@ -1141,7 +1141,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Year(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Year), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Year), valueExpression);
         }
 
         /// <summary>
@@ -1151,7 +1151,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Month(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Month), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Month), valueExpression);
         }
 
         /// <summary>
@@ -1161,7 +1161,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Day(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Day), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Day), valueExpression);
         }
 
         /// <summary>
@@ -1171,7 +1171,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Hour(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Hour), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Hour), valueExpression);
         }
 
         /// <summary>
@@ -1181,7 +1181,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Minute(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Minute), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Minute), valueExpression);
         }
 
         /// <summary>
@@ -1191,7 +1191,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Second(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Second), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Second), valueExpression);
         }
 
         /// <summary>
@@ -1201,7 +1201,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression MicroSecond(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(MicroSecond), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(MicroSecond), valueExpression);
         }
 
         /// <summary>
@@ -1211,7 +1211,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Last_Day(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Last_Day), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Last_Day), valueExpression);
         }
 
         /// <summary>
@@ -1221,7 +1221,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression WeekDay(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(WeekDay), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(WeekDay), valueExpression);
         }
 
         /// <summary>
@@ -1231,7 +1231,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression DayName(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayName), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(DayName), valueExpression);
         }
 
         /// <summary>
@@ -1241,7 +1241,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression MonthName(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(MonthName), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(MonthName), valueExpression);
         }
 
         /// <summary>
@@ -1251,7 +1251,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Quarter(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Quarter), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Quarter), valueExpression);
         }
 
         /// <summary>
@@ -1261,7 +1261,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression DayOfYear(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayOfYear), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(DayOfYear), valueExpression);
         }
 
         /// <summary>
@@ -1271,7 +1271,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression DayOfMonth(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayOfMonth), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(DayOfMonth), valueExpression);
         }
 
         /// <summary>
@@ -1281,7 +1281,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression DayOfWeek(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(DayOfWeek), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(DayOfWeek), valueExpression);
         }
 
         /// <summary>
@@ -1291,7 +1291,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Week(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Week), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Week), valueExpression);
         }
 
         /// <summary>
@@ -1301,7 +1301,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression WeekOfYear(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(WeekOfYear), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(WeekOfYear), valueExpression);
         }
 
         /// <summary>
@@ -1311,7 +1311,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression From_Days(object valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(From_Days), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(From_Days), valueExpression);
         }
 
         /// <summary>
@@ -1321,7 +1321,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression To_Days(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(To_Days), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(To_Days), valueExpression);
         }
 
         /// <summary>
@@ -1332,7 +1332,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression MakeDate(object year, object day)
         {
-            return __GetDbFunctionDescription(nameof(MakeDate), year, day);
+            return __GetDbFunctionValueExpression(nameof(MakeDate), year, day);
         }
 
         /// <summary>
@@ -1344,7 +1344,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression MakeTime(object hour, object minute, object second)
         {
-            return __GetDbFunctionDescription(nameof(MakeTime), hour, minute, second);
+            return __GetDbFunctionValueExpression(nameof(MakeTime), hour, minute, second);
         }
 
         /// <summary>
@@ -1355,7 +1355,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression DateDiff(this IValueExpression date1, object date2)
         {
-            return __GetDbFunctionDescription(nameof(DateDiff), date1, date2);
+            return __GetDbFunctionValueExpression(nameof(DateDiff), date1, date2);
         }
 
         /// <summary>
@@ -1366,7 +1366,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Date_Format(this IValueExpression date, object format)
         {
-            return __GetDbFunctionDescription(nameof(Date_Format), date, format);
+            return __GetDbFunctionValueExpression(nameof(Date_Format), date, format);
         }
 
         /// <summary>
@@ -1377,7 +1377,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Time_Format(this IValueExpression time, object format)
         {
-            return __GetDbFunctionDescription(nameof(Time_Format), time, format);
+            return __GetDbFunctionValueExpression(nameof(Time_Format), time, format);
         }
 
         /// <summary>
@@ -1387,7 +1387,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Sec_To_Time(this IValueExpression seconds)
         {
-            return __GetDbFunctionDescription(nameof(Sec_To_Time), seconds);
+            return __GetDbFunctionValueExpression(nameof(Sec_To_Time), seconds);
         }
 
         /// <summary>
@@ -1397,7 +1397,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Time_To_Sec(this IValueExpression time)
         {
-            return __GetDbFunctionDescription(nameof(Time_To_Sec), time);
+            return __GetDbFunctionValueExpression(nameof(Time_To_Sec), time);
         }
 
         /// <summary>
@@ -1408,7 +1408,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression TimeDiff(this IValueExpression time1, object time2)
         {
-            return __GetDbFunctionDescription(nameof(TimeDiff), time1, time2);
+            return __GetDbFunctionValueExpression(nameof(TimeDiff), time1, time2);
         }
 
         /// <summary>
@@ -1418,7 +1418,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Bin(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Bin), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Bin), valueExpression);
         }
 
         /// <summary>
@@ -1428,7 +1428,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Binary(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Binary), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Binary), valueExpression);
         }
 
         /// <summary>
@@ -1513,7 +1513,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Coalesce(params object[] values)
         {
-            return __GetDbFunctionDescription(nameof(Coalesce), values);
+            return __GetDbFunctionValueExpression(nameof(Coalesce), values);
         }
 
         /// <summary>
@@ -1525,7 +1525,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Conv(this IValueExpression valueExpression, int src, int des)
         {
-            return __GetDbFunctionDescription(nameof(Conv), valueExpression, src, des);
+            return __GetDbFunctionValueExpression(nameof(Conv), valueExpression, src, des);
         }
 
         /// <summary>
@@ -1537,7 +1537,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression IF(object condition, object trueResult, object falseResult)
         {
-            return __GetDbFunctionDescription(nameof(IF), condition, trueResult, falseResult);
+            return __GetDbFunctionValueExpression(nameof(IF), condition, trueResult, falseResult);
         }
 
         /// <summary>
@@ -1548,7 +1548,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression IFNull(this IValueExpression valueExpression, object replace)
         {
-            return __GetDbFunctionDescription(nameof(IFNull), valueExpression, replace);
+            return __GetDbFunctionValueExpression(nameof(IFNull), valueExpression, replace);
         }
 
         /// <summary>
@@ -1558,7 +1558,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression IsNull(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(IsNull), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(IsNull), valueExpression);
         }
 
         /// <summary>
@@ -1569,7 +1569,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression NullIF(this IValueExpression valueExpression, object compare)
         {
-            return __GetDbFunctionDescription(nameof(NullIF), valueExpression, compare);
+            return __GetDbFunctionValueExpression(nameof(NullIF), valueExpression, compare);
         }
 
         /// <summary>
@@ -1578,7 +1578,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Version()
         {
-            return __GetDbFunctionDescription(nameof(Version));
+            return __GetDbFunctionValueExpression(nameof(Version));
         }
 
         /// <summary>
@@ -1587,7 +1587,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Connection_Id()
         {
-            return __GetDbFunctionDescription(nameof(Connection_Id));
+            return __GetDbFunctionValueExpression(nameof(Connection_Id));
         }
 
         /// <summary>
@@ -1596,7 +1596,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Current_User()
         {
-            return __GetDbFunctionDescription(nameof(Current_User));
+            return __GetDbFunctionValueExpression(nameof(Current_User));
         }
 
         /// <summary>
@@ -1605,7 +1605,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Session_User()
         {
-            return __GetDbFunctionDescription(nameof(Session_User));
+            return __GetDbFunctionValueExpression(nameof(Session_User));
         }
 
         /// <summary>
@@ -1614,7 +1614,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression System_User()
         {
-            return __GetDbFunctionDescription(nameof(System_User));
+            return __GetDbFunctionValueExpression(nameof(System_User));
         }
 
         /// <summary>
@@ -1623,7 +1623,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression User()
         {
-            return __GetDbFunctionDescription(nameof(User));
+            return __GetDbFunctionValueExpression(nameof(User));
         }
 
         /// <summary>
@@ -1632,7 +1632,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Database()
         {
-            return __GetDbFunctionDescription(nameof(Database));
+            return __GetDbFunctionValueExpression(nameof(Database));
         }
 
         /// <summary>
@@ -1641,7 +1641,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Last_Insert_Id()
         {
-            return __GetDbFunctionDescription(nameof(Last_Insert_Id));
+            return __GetDbFunctionValueExpression(nameof(Last_Insert_Id));
         }
 
 
@@ -1746,7 +1746,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Cume_Dist()
         {
-            return __GetDbFunctionDescription(nameof(Cume_Dist));
+            return __GetDbFunctionValueExpression(nameof(Cume_Dist));
         }
 
         /// <summary>
@@ -1755,7 +1755,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Dense_Rank()
         {
-            return __GetDbFunctionDescription(nameof(Dense_Rank));
+            return __GetDbFunctionValueExpression(nameof(Dense_Rank));
         }
 
         /// <summary>
@@ -1765,7 +1765,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression First_Value(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(First_Value), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(First_Value), valueExpression);
         }
 
         /// <summary>
@@ -1787,7 +1787,7 @@ namespace LogicEntity.Model
             if (defaultValue is not null)
                 args.Add(defaultValue);
 
-            return __GetDbFunctionDescription(nameof(Lag), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Lag), args.ToArray());
         }
 
         /// <summary>
@@ -1797,7 +1797,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Last_Value(this IValueExpression valueExpression)
         {
-            return __GetDbFunctionDescription(nameof(Last_Value), valueExpression);
+            return __GetDbFunctionValueExpression(nameof(Last_Value), valueExpression);
         }
 
         /// <summary>
@@ -1819,7 +1819,7 @@ namespace LogicEntity.Model
             if (defaultValue is not null)
                 args.Add(defaultValue);
 
-            return __GetDbFunctionDescription(nameof(Lead), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Lead), args.ToArray());
         }
 
         /// <summary>
@@ -1830,7 +1830,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Nth_Value(IValueExpression valueExpression, ulong n)
         {
-            return __GetDbFunctionDescription(nameof(Nth_Value), n);
+            return __GetDbFunctionValueExpression(nameof(Nth_Value), n);
         }
 
         /// <summary>
@@ -1840,7 +1840,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Ntile(ulong n)
         {
-            return __GetDbFunctionDescription(nameof(Ntile), n);
+            return __GetDbFunctionValueExpression(nameof(Ntile), n);
         }
 
         /// <summary>
@@ -1849,7 +1849,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Percent_Rank()
         {
-            return __GetDbFunctionDescription(nameof(Percent_Rank));
+            return __GetDbFunctionValueExpression(nameof(Percent_Rank));
         }
 
         /// <summary>
@@ -1858,7 +1858,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Rank()
         {
-            return __GetDbFunctionDescription(nameof(Rank));
+            return __GetDbFunctionValueExpression(nameof(Rank));
         }
 
         /// <summary>
@@ -1867,7 +1867,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Row_Number()
         {
-            return __GetDbFunctionDescription(nameof(Row_Number));
+            return __GetDbFunctionValueExpression(nameof(Row_Number));
         }
 
         //Json Function
@@ -1879,7 +1879,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Array(params object[] values)
         {
-            return __GetDbFunctionDescription(nameof(Json_Array), values);
+            return __GetDbFunctionValueExpression(nameof(Json_Array), values);
         }
 
         /// <summary>
@@ -1889,7 +1889,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Object(params object[] values)
         {
-            return __GetDbFunctionDescription(nameof(Json_Object), values);
+            return __GetDbFunctionValueExpression(nameof(Json_Object), values);
         }
 
         /// <summary>
@@ -1899,7 +1899,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Quote(this IValueExpression str)
         {
-            return __GetDbFunctionDescription(nameof(Json_Quote), str);
+            return __GetDbFunctionValueExpression(nameof(Json_Quote), str);
         }
 
         /// <summary>
@@ -1916,7 +1916,7 @@ namespace LogicEntity.Model
             if (path is not null)
                 args.Add(path);
 
-            return __GetDbFunctionDescription(nameof(Json_Contains), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Contains), args.ToArray());
         }
 
         /// <summary>
@@ -1926,23 +1926,20 @@ namespace LogicEntity.Model
         /// <param name="one_or_all"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static IValueExpression Json_Contains_Path(this IValueExpression json_doc, string one_or_all, params object[] paths)
+        public static IValueExpression Json_Contains_Path(this IValueExpression json_doc, OneOrAll one_or_all, params object[] paths)
         {
-            if (one_or_all.Equals("one", StringComparison.OrdinalIgnoreCase) == false && one_or_all.Equals("all", StringComparison.OrdinalIgnoreCase) == false)
-                one_or_all = "Null";
-
             List<string> strs = new();
 
             List<object> args = new() { json_doc };
 
             if (paths is not null)
             {
-                strs.AddRange(paths.Select((_, i) => ",{" + (i + args.Count) + "}"));
+                strs.AddRange(paths.Select((_, i) => ", {" + (i + args.Count) + "}"));
 
                 args.AddRange(paths);
             }
 
-            return new ValueExpression("Json_Contains_Path({0}, '" + one_or_all + "' " + string.Join(string.Empty, strs) + ")", args.ToArray());
+            return new ValueExpression("Json_Contains_Path({0}, '" + one_or_all + "'" + string.Join(string.Empty, strs) + ")", args.ToArray());
         }
 
         /// <summary>
@@ -1959,7 +1956,7 @@ namespace LogicEntity.Model
             if (paths is not null)
                 args.AddRange(paths);
 
-            return __GetDbFunctionDescription(nameof(Json_Extract), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Extract), args.ToArray());
         }
 
         /// <summary>
@@ -1975,7 +1972,7 @@ namespace LogicEntity.Model
             if (paths is not null)
                 args.AddRange(paths);
 
-            return __GetDbFunctionDescription(nameof(Json_Keys), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Keys), args.ToArray());
         }
 
         /// <summary>
@@ -1986,7 +1983,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Overlaps(this IValueExpression json_doc1, object json_doc2)
         {
-            return __GetDbFunctionDescription(nameof(Json_Overlaps), json_doc1, json_doc2);
+            return __GetDbFunctionValueExpression(nameof(Json_Overlaps), json_doc1, json_doc2);
         }
 
         /// <summary>
@@ -1998,23 +1995,25 @@ namespace LogicEntity.Model
         /// <param name="escape_char"></param>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static IValueExpression Json_Search(this IValueExpression json_doc, string one_or_all, object search_str, object escape_char = null, params object[] paths)
+        public static IValueExpression Json_Search(this IValueExpression json_doc, OneOrAll one_or_all, object search_str, char? escape_char = null, params object[] paths)
         {
-            if (one_or_all.Equals("one", StringComparison.OrdinalIgnoreCase) == false && one_or_all.Equals("all", StringComparison.OrdinalIgnoreCase) == false)
-                one_or_all = "Null";
-
             List<string> strs = new();
 
             List<object> args = new() { json_doc, search_str };
 
             if (paths is not null)
             {
-                strs.AddRange(paths.Select((_, i) => ",{" + (i + args.Count) + "}"));
+                strs.AddRange(paths.Select((_, i) => ", {" + (i + args.Count) + "}"));
 
                 args.AddRange(paths);
             }
 
-            return new ValueExpression("Json_Search({0}, '" + one_or_all + "', {1} " + string.Join(string.Empty, strs) + ")", args.ToArray());
+            string escapeStr = SqlValue.Null.ToString();
+
+            if (escape_char.HasValue)
+                escapeStr = $"'{escape_char.Value}'";
+
+            return new ValueExpression("Json_Search({0}, '" + one_or_all + "', {1}, " + escapeStr + string.Join(string.Empty, strs) + ")", args.ToArray());
         }
 
         /// <summary>
@@ -2043,7 +2042,7 @@ namespace LogicEntity.Model
             if (more is not null)
                 args.AddRange(more);
 
-            return __GetDbFunctionDescription(nameof(Json_Array_Append), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Array_Append), args.ToArray());
         }
 
         /// <summary>
@@ -2058,7 +2057,7 @@ namespace LogicEntity.Model
             if (more is not null)
                 args.AddRange(more);
 
-            return __GetDbFunctionDescription(nameof(Json_Array_Insert), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Array_Insert), args.ToArray());
         }
 
         /// <summary>
@@ -2076,7 +2075,7 @@ namespace LogicEntity.Model
             if (more is not null)
                 args.AddRange(more);
 
-            return __GetDbFunctionDescription(nameof(Json_Insert), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Insert), args.ToArray());
         }
 
         /// <summary>
@@ -2093,7 +2092,7 @@ namespace LogicEntity.Model
             if (json_docs is not null)
                 args.AddRange(json_docs);
 
-            return __GetDbFunctionDescription(nameof(Json_Merge), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Merge), args.ToArray());
         }
 
         /// <summary>
@@ -2110,7 +2109,7 @@ namespace LogicEntity.Model
             if (json_docs is not null)
                 args.AddRange(json_docs);
 
-            return __GetDbFunctionDescription(nameof(Json_Merge_Patch), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Merge_Patch), args.ToArray());
         }
 
         /// <summary>
@@ -2127,7 +2126,7 @@ namespace LogicEntity.Model
             if (json_docs is not null)
                 args.AddRange(json_docs);
 
-            return __GetDbFunctionDescription(nameof(Json_Merge_Preserve), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Merge_Preserve), args.ToArray());
         }
 
         /// <summary>
@@ -2144,7 +2143,7 @@ namespace LogicEntity.Model
             if (paths is not null)
                 args.AddRange(paths);
 
-            return __GetDbFunctionDescription(nameof(Json_Remove), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Remove), args.ToArray());
         }
 
         /// <summary>
@@ -2162,7 +2161,7 @@ namespace LogicEntity.Model
             if (more is not null)
                 args.AddRange(more);
 
-            return __GetDbFunctionDescription(nameof(Json_Replace), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Replace), args.ToArray());
         }
 
         /// <summary>
@@ -2180,7 +2179,7 @@ namespace LogicEntity.Model
             if (more is not null)
                 args.AddRange(more);
 
-            return __GetDbFunctionDescription(nameof(Json_Set), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Set), args.ToArray());
         }
 
         /// <summary>
@@ -2190,7 +2189,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Unquote(this IValueExpression json_val)
         {
-            return __GetDbFunctionDescription(nameof(Json_Unquote), json_val);
+            return __GetDbFunctionValueExpression(nameof(Json_Unquote), json_val);
         }
 
         /// <summary>
@@ -2200,7 +2199,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Depth(this IValueExpression json_doc)
         {
-            return __GetDbFunctionDescription(nameof(Json_Depth), json_doc);
+            return __GetDbFunctionValueExpression(nameof(Json_Depth), json_doc);
         }
 
         /// <summary>
@@ -2216,7 +2215,7 @@ namespace LogicEntity.Model
             if (paths is not null)
                 args.AddRange(paths);
 
-            return __GetDbFunctionDescription(nameof(Json_Length), args.ToArray());
+            return __GetDbFunctionValueExpression(nameof(Json_Length), args.ToArray());
         }
 
         /// <summary>
@@ -2226,7 +2225,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Type(this IValueExpression json_val)
         {
-            return __GetDbFunctionDescription(nameof(Json_Type), json_val);
+            return __GetDbFunctionValueExpression(nameof(Json_Type), json_val);
         }
 
         /// <summary>
@@ -2236,7 +2235,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Valid(this IValueExpression val)
         {
-            return __GetDbFunctionDescription(nameof(Json_Valid), val);
+            return __GetDbFunctionValueExpression(nameof(Json_Valid), val);
         }
 
         /// <summary>
@@ -2247,7 +2246,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Schema_Valid(this IValueExpression schema, object document)
         {
-            return __GetDbFunctionDescription(nameof(Json_Schema_Valid), schema, document);
+            return __GetDbFunctionValueExpression(nameof(Json_Schema_Valid), schema, document);
         }
 
         /// <summary>
@@ -2258,7 +2257,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Schema_Validation_Report(this IValueExpression schema, object document)
         {
-            return __GetDbFunctionDescription(nameof(Json_Schema_Validation_Report), schema, document);
+            return __GetDbFunctionValueExpression(nameof(Json_Schema_Validation_Report), schema, document);
         }
 
         /// <summary>
@@ -2268,7 +2267,7 @@ namespace LogicEntity.Model
         /// <returns></returns>
         public static IValueExpression Json_Pretty(this IValueExpression json_val)
         {
-            return __GetDbFunctionDescription(nameof(Json_Pretty), json_val);
+            return __GetDbFunctionValueExpression(nameof(Json_Pretty), json_val);
         }
     }
 }
