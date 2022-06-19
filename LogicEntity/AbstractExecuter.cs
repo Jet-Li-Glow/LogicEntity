@@ -622,11 +622,16 @@ namespace LogicEntity
 
             if (clientReaders is not null)
             {
-                foreach (KeyValuePair<int, Func<object, object>> clientReader in clientReaders)
+                foreach (KeyValuePair<int, Func<object, object>> clientReader in clientReaders.Where(reader => reader.Value is not null))
                 {
                     foreach (DataRow row in result.Rows)
                     {
-                        row[clientReader.Key] = clientReader.Value(row[clientReader.Key]);
+                        object obj = row[clientReader.Key];
+
+                        if (obj is DBNull || obj is null)
+                            continue;
+
+                        row[clientReader.Key] = clientReader.Value(obj);
                     }
                 }
             }
