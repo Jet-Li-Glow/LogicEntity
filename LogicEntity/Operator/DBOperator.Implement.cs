@@ -226,7 +226,7 @@ namespace LogicEntity.Operator
             {
                 foreach (Column column in (table as TableExpression).Columns.Where(column => column.IsValueSet))
                 {
-                    if (column.Writer is not null && column.Value is not ISqlExpression)
+                    if (column.Writer is not null && column.Value is not ISqlExpression && column.Value is not null)
                         column.Value = column.Writer(column.Value);
 
                     expressions.Add(new SqlExpression(column.FullName + " = {0}", column.Value));

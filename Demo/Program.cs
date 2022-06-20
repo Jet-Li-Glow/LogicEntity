@@ -257,6 +257,8 @@ namespace Demo
             ulong Id = db.InsertNext(data);
 
             //插入 2
+            data.Json.Value = null;
+
             insertor = DBOperator.Insert(data);
 
             commandText = insertor.GetCommand().CommandText;
@@ -410,6 +412,7 @@ namespace Demo
             student = new();
 
             student.StudentName.Value = "ApplyChanges Name";
+            student.Json.Value = null;
 
             updater = DBOperator.ApplyChanges(student)
                 .On(student.StudentId == Id & student.MajorId > 0)

@@ -79,7 +79,7 @@ namespace LogicEntity.Operator
                         v = column.Value;
                     }
 
-                    if (property.Writer is not null)
+                    if (property.Writer is not null && v is not ISqlExpression && v is not null)
                         v = property.Writer(v);
 
                     ps.Add(KeyValuePair.Create("{" + i + "}", v));

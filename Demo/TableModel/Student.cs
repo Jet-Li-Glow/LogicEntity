@@ -23,7 +23,7 @@ namespace Demo.TableModel
 
             Json.Writer = j =>
             {
-                if (j is null || j is string)
+                if (j is string)
                     return j;
 
                 return JsonSerializer.Serialize(j);
