@@ -544,6 +544,9 @@ namespace Demo
                 }
             });
 
+            //事务3
+            success = db.ExecuteTransaction(Service.Remove(), Service.Add());
+
             //Test
             Test();
 
@@ -639,6 +642,26 @@ namespace Demo
         public static IValueExpression MyFunction(this IValueExpression valueExpression)
         {
             return new ValueExpression("MyFunction({0})", valueExpression);
+        }
+    }
+
+    static class Service
+    {
+        public static IDbOperator Add()
+        {
+            Student student = new();
+
+            student.StudentName.Value = Path.GetRandomFileName();
+            student.Json.Value = null;
+
+            return DBOperator.Insert(student);
+        }
+
+        public static IDbOperator Remove()
+        {
+            Student student = new();
+
+            return DBOperator.DeleteFrom(student).OrderByDescending(student.StudentId).Limit(1);
         }
     }
 

@@ -217,8 +217,6 @@ namespace LogicEntity
                             command.Parameters.Add(parameter);
                         }
 
-                        command.CommandTimeout = 30;
-
                         if (cmd.CommandTimeout.HasValue)
                             command.CommandTimeout = cmd.CommandTimeout.Value;
 
