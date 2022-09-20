@@ -1,65 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Demo.Model;
-using LogicEntity.Model;
+using LogicEntity;
+using LogicEntity.Json;
 
 namespace Demo.TableModel
 {
-    public class Student : Table
+    [Table("Student", Schema = "testdb")]
+    public class Student
     {
-        public Student()
+        [Column("StudentId")]
+        public Value<int> Id { get; init; }
+
+        [Column("StudentName")]
+        public Value<string> Name { get; init; }
+
+        [Column("StudentName")]
+        public Value<string> AnotherName { get; init; }
+
+        public Value<DateTime> Birthday { get; init; }
+
+        public Value<Gender> Gender { get; init; }
+
+        public Value<int> MajorId { get; init; }
+
+        public Value<Guid> Guid { get; init; }
+
+        public Value<byte[]> Bytes { get; set; }
+
+        public Value<float> Float { get; set; }
+
+        public Value<double> Double { get; set; }
+
+        public Value<decimal> Decimal { get; set; }
+
+        public Value<bool> Bool { get; set; }
+
+        public Value<long> Long { get; set; }
+
+        public Value<JsonObject> Json { get; set; }
+
+        [Column("Json")]
+        [JsonPath("$.Array")]
+        public int[] JsonArray { get; set; }
+
+        public class JsonObject
         {
-            AnotherName.ColumnName = "StudentName";
+            public PropertyObject Object { get; set; }
 
-            Json.Reader = j =>
+            public int[] Array { get; set; }
+
+            public Dictionary<string, object> Dictionary { get; set; }
+
+            public class PropertyObject
             {
-                return JsonSerializer.Deserialize<Dictionary<string, object>>(j.ToString());
-            };
-
-            Json.Writer = j =>
-            {
-                if (j is string)
-                    return j;
-
-                return JsonSerializer.Serialize(j);
-            };
+                public string Property { get; set; }
+            }
         }
-
-        public override string __SchemaName => "testdb";
-
-        public override string __TableName => "Student";
-
-        public Column StudentId { get; init; }
-
-        public Column StudentName { get; init; }
-
-        public Column AnotherName { get; init; }
-
-        public Column Birthday { get; init; }
-
-        public Column Gender { get; init; }
-
-        public Column MajorId { get; init; }
-
-        public Column Guid { get; init; }
-
-        public Column Bytes { get; set; }
-
-        public Column Float { get; set; }
-
-        public Column Double { get; set; }
-
-        public Column Decimal { get; set; }
-
-        public Column Bool { get; set; }
-
-        public Column Long { get; set; }
-
-        public Column Json { get; set; }
     }
 }

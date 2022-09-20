@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Model;
+using LogicEntity;
 
 namespace Demo.TableModel
 {
     /// <summary>
     /// 月表
     /// </summary>
-    public class Monthly : Table
+    public class Monthly
     {
         string _tableName;
 
@@ -24,21 +24,19 @@ namespace Demo.TableModel
             _tableName = nameof(Monthly) + dateTime.ToString("_yyyy_MM");
         }
 
-        public override string __TableName => _tableName;
-
         /// <summary>
         /// Guid
         /// </summary>
-        public Column Guid { get; init; }
+        public Value<Guid> Guid { get; init; }
 
         /// <summary>
         /// 时间
         /// </summary>
-        public Column DateTime { get; init; }
+        public Value<DateTime> DateTime { get; init; }
 
         /// <summary>
         /// 描述
         /// </summary>
-        public Column Description { get; init; }
+        public Value<string> Description { get; init; }
     }
 }

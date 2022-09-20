@@ -9,7 +9,17 @@ namespace Demo.Model
 {
     public class StudentInfo
     {
-        public int StudentId { get; set; }
+        public StudentInfo(int Id)
+        {
+            StudentId = Id;
+        }
+
+        public StudentInfo(object parameterObject)
+        {
+            ParameterObject = parameterObject;
+        }
+
+        public int StudentId { get; }
 
         public string StudentName { get; set; }
 
@@ -40,5 +50,9 @@ namespace Demo.Model
         public long Long { get; set; }
 
         public Dictionary<string, object> Json { get; set; }
+
+        public object ParameterObject { get; set; }
+
+        public object JsonObject { get; set; }
     }
 }

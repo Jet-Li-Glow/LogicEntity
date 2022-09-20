@@ -1,76 +1,77 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using LogicEntity.Default.MySql;
 using LogicEntity.Linq.Expressions;
 
 namespace LogicEntity
 {
     /// <summary>
-    /// 数据库抽象模型
+    /// 事务
     /// </summary>
-    public abstract class AbstractDataBase
+    public class DbTransaction : IDisposable
     {
-        internal ConcurrentDictionary<Thread, DbTransaction> Transactions { get; } = new();
+        AbstractDataBase _db;
 
-        /// <summary>
-        /// 阻止程序集外部使用
-        /// </summary>
-        internal ILinqConvertProvider LinqConvertProvider { get; private set; }
+        IDbConnection _connection;
 
-        /// <summary>
-        /// 构造
-        /// </summary>
-        public AbstractDataBase()
+        IDbTransaction _transaction;
+
+        Thread _thread;
+
+        public DbTransaction(AbstractDataBase db, IsolationLevel? il)
         {
-            LinqConvertProvider = GetLinqConvertProvider();
+            _db = db;
 
-            foreach (PropertyInfo property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(t => t.PropertyType.IsGenericType && t.PropertyType.GetGenericTypeDefinition() == typeof(ITable<>)))
-            {
-                if (property.CanWrite == false)
-                    continue;
+            _connection = _db.CreateDbConnection();
 
-                Type entityType = property.PropertyType.GetGenericArguments()[0];
+            _connection.Open();
 
-                TableAttribute tableAttribute = entityType.GetCustomAttribute<TableAttribute>(true);
+            _transaction = il.HasValue ? _connection.BeginTransaction(il.Value) : _connection.BeginTransaction();
 
-                Type type = typeof(DataTableImpl<>).MakeGenericType(new Type[] { entityType });
+            _thread = Thread.CurrentThread;
 
-                object table = type.GetConstructor(new Type[] { typeof(AbstractDataBase), typeof(TableExpression) })
-                    .Invoke(new object[] { this, new OriginalTableExpression(tableAttribute?.Schema, tableAttribute?.Name ?? property.Name, entityType) });
-
-                property.SetValue(this, table);
-            }
+            if (db.Transactions.TryAdd(_thread, this) == false)
+                throw new Exception("Nested transactions are not supported");
         }
 
         /// <summary>
-        /// 获取Linq提供程序
+        /// 隔离级别
         /// </summary>
-        /// <returns></returns>
-        protected abstract ILinqConvertProvider GetLinqConvertProvider();
+        IsolationLevel IsolationLevel => _transaction.IsolationLevel;
 
         /// <summary>
-        /// 创建数据库连接
+        /// 提交
         /// </summary>
-        /// <returns></returns>
-        internal protected abstract IDbConnection CreateDbConnection();
+        public void Commit()
+        {
+            _transaction.Commit();
+        }
+
+        /// <summary>
+        /// 回滚
+        /// </summary>
+        public void Rollback()
+        {
+            _transaction.Rollback();
+        }
 
         //--------------------------------- Query ------------------------------------------------
 
         /// <summary>
-        /// 使用 Expression 查询，并返回 Object 的集合
+        /// 使用SQL语句查询，并返回 Object 的集合
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
         public IEnumerable<object> Query(Expression expression)
         {
-            foreach (IEnumerable<object> result in Query(LinqConvertProvider.Convert(expression)))
+            foreach (IEnumerable<object> result in Query(_db.LinqConvertProvider.Convert(expression)))
             {
                 foreach (object obj in result)
                 {
@@ -141,34 +142,10 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<IEnumerable<object>> Query(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
-            {
-                foreach (IEnumerable<object> result in transaction.Query(command))
-                    yield return result;
-
-                yield break;
-            }
-
-            using (IDbConnection connection = CreateDbConnection())
-            {
-                connection.Open();
-
-                foreach (IEnumerable<object> result in connection.Query(null, command))
-                    yield return result;
-            }
+            return _connection.Query(_transaction, command);
         }
 
         //--------------------------------- QueryDataTable ---------------------------------------
-
-        /// <summary>
-        /// 使用 Expression 查询，并返回 DataTable
-        /// </summary>
-        /// <param name="expression"></param>
-        /// <returns></returns>
-        public System.Data.DataTable QueryDataTable(Expression expression)
-        {
-            return QueryDataTable(LinqConvertProvider.Convert(expression)).First();
-        }
 
         /// <summary>
         /// 使用SQL语句查询，并返回 DataTable
@@ -211,21 +188,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<System.Data.DataTable> QueryDataTable(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
-            {
-                foreach (System.Data.DataTable result in transaction.QueryDataTable(command))
-                    yield return result;
-
-                yield break;
-            }
-
-            using (IDbConnection connection = CreateDbConnection())
-            {
-                connection.Open();
-
-                foreach (System.Data.DataTable result in connection.QueryDataTable(null, command))
-                    yield return result;
-            }
+            return _connection.QueryDataTable(_transaction, command);
         }
 
         //--------------------------------- ExecuteNonQuery --------------------------------------
@@ -237,7 +200,7 @@ namespace LogicEntity
         /// <returns></returns>
         public int ExecuteNonQuery(Expression expression)
         {
-            return ExecuteNonQuery(LinqConvertProvider.Convert(expression));
+            return ExecuteNonQuery(_db.LinqConvertProvider.Convert(expression));
         }
 
         /// <summary>
@@ -281,15 +244,7 @@ namespace LogicEntity
         /// <returns></returns>
         public int ExecuteNonQuery(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
-                return transaction.ExecuteNonQuery(command);
-
-            using (IDbConnection connection = CreateDbConnection())
-            {
-                connection.Open();
-
-                return connection.ExecuteNonQuery(null, command);
-            }
+            return _connection.ExecuteNonQuery(_transaction, command);
         }
 
         //--------------------------------- ExecuteScalar ----------------------------------------
@@ -301,7 +256,7 @@ namespace LogicEntity
         /// <returns></returns>
         public object ExecuteScalar(Expression expression)
         {
-            return ExecuteScalar(LinqConvertProvider.Convert(expression));
+            return ExecuteScalar(_db.LinqConvertProvider.Convert(expression));
         }
 
         /// <summary>
@@ -348,126 +303,17 @@ namespace LogicEntity
         /// <returns></returns>
         public object ExecuteScalar(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
-                return transaction.ExecuteScalar(command);
-
-            using (IDbConnection connection = CreateDbConnection())
-            {
-                connection.Open();
-
-                return connection.ExecuteScalar(null, command);
-            }
-        }
-
-        //--------------------------------- Transaction ------------------------------------------
-
-        /// <summary>
-        /// 执行事务
-        /// </summary>
-        /// <param name="commands">命令</param>
-        /// <returns></returns>
-        public bool TryExecuteTransaction(params Command[] commands)
-        {
-            if (commands is null)
-                throw new ArgumentNullException(nameof(commands));
-
-            return TryExecuteTransaction(commands, out int _, out Exception _);
+            return _connection.ExecuteScalar(_transaction, command);
         }
 
         /// <summary>
-        /// 执行事务
+        /// 释放连接
         /// </summary>
-        /// <param name="commands">命令</param>
-        /// <param name="affected">受影响的行数</param>
-        /// <param name="exception">事务执行失败时的异常</param>
-        /// <returns>事务是否执行成功</returns>
-        public bool TryExecuteTransaction(IEnumerable<Command> commands, out int affected, out Exception exception)
+        public void Dispose()
         {
-            if (commands is null)
-                throw new ArgumentNullException(nameof(commands));
+            _db.Transactions.TryRemove(_thread, out var _);
 
-            bool success = false;
-
-            int transactionAffected = 0;
-
-            TryExecuteTransaction(() =>
-            {
-                foreach (Command command in commands)
-                {
-                    transactionAffected += ExecuteNonQuery(command);
-                }
-            }, out exception);
-
-
-            affected = transactionAffected;
-
-            return success;
-        }
-
-        public bool TryExecuteTransaction(Action action)
-        {
-            return TryExecuteTransaction(action, out Exception _);
-        }
-
-        /// <summary>
-        /// 执行事务
-        /// </summary>
-        /// <param name="changes">更改</param>
-        /// <returns></returns>
-        public bool TryExecuteTransaction(Action action, out Exception exception)
-        {
-            if (action is null)
-                throw new ArgumentNullException(nameof(action));
-
-            bool success = false;
-
-            Exception transactionException = null;
-
-            ExecuteTransaction(transaction =>
-            {
-                try
-                {
-                    action();
-
-                    transaction.Commit();
-
-                    success = true;
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        transaction.Rollback();
-                    }
-                    catch
-                    {
-                    }
-
-                    transactionException = ex;
-
-                    success = false;
-                }
-            });
-
-            exception = transactionException;
-
-            return success;
-        }
-
-        /// <summary>
-        /// 执行事务
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="il"></param>
-        public void ExecuteTransaction(Action<DbTransaction> action, IsolationLevel? il = null)
-        {
-            if (action is null)
-                return;
-
-            using (DbTransaction transaction = new DbTransaction(this, il))
-            {
-                action(transaction);
-            }
+            _connection.Dispose();
         }
     }
 }

@@ -1,35 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using LogicEntity.Model;
+using LogicEntity;
+using MySqlX.XDevAPI;
 
 namespace Demo.TableModel
 {
     /// <summary>
     /// 专业
     /// </summary>
-    public class Major : Table
+    [Table(nameof(Major), Schema = "testdb")]
+    public class Major
     {
-        public Major()
-        {
-            MajorId.Read(s => s);
-        }
-
         /// <summary>
         /// 专业Id
         /// </summary>
-        public Column MajorId { get; init; }
+        public Value<int> MajorId { get; init; }
 
         /// <summary>
         /// 专业名称
         /// </summary>
-        public Column MajorName { get; init; }
+        public Value<string> MajorName { get; init; }
 
         /// <summary>
         /// 专业类型
         /// </summary>
-        public Column MajorType { get; init; }
+        public Value<int> MajorType { get; init; }
     }
 }
