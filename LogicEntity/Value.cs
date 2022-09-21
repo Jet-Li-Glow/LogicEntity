@@ -40,6 +40,11 @@ namespace LogicEntity
 
         public object Object => ValueType == ValueType.Value ? _value : _expression;
 
+        public override string ToString()
+        {
+            return Object?.ToString();
+        }
+
         public static implicit operator Value<T>(T vlaue)
         {
             return new(vlaue);

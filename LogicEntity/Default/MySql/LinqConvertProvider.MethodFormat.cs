@@ -2,6 +2,7 @@
 using LogicEntity.Method;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -154,11 +155,14 @@ namespace LogicEntity.Default.MySql
             { typeof(Tuple).GetMethods().Single(m => m.Name == nameof(Tuple.Create) && m.GetGenericArguments().Length == 5), "({1}, {2}, {3}, {4}, {5})"},
             { typeof(Tuple).GetMethods().Single(m => m.Name == nameof(Tuple.Create) && m.GetGenericArguments().Length == 6), "({1}, {2}, {3}, {4}, {5}, {6})"},
             { typeof(Tuple).GetMethods().Single(m => m.Name == nameof(Tuple.Create) && m.GetGenericArguments().Length == 7), "({1}, {2}, {3}, {4}, {5}, {6}, {7})"},
+
+            //DbFunction
+            { typeof(DbFunction).GetMethod(nameof(DbFunction.As)), "{1} As {2}" },
         };
 
         void InitDbFunctionMethodFormat()
         {
-            MemberFormat[typeof(DbFunction).GetMethod(nameof(DbFunction.As))] = (object)FormatAs;
+
         }
 
         bool TryGetMemberFormat(MemberInfo member, out object format)
@@ -168,6 +172,11 @@ namespace LogicEntity.Default.MySql
             if (format is not null)
                 return true;
 
+            return MemberFormat.TryGetValue(GetGenericDefinition(member), out format);
+        }
+
+        MemberInfo GetGenericDefinition(MemberInfo member)
+        {
             if (member.DeclaringType.IsGenericType)
             {
                 member = member.DeclaringType.GetGenericTypeDefinition().GetMemberWithSameMetadataDefinitionAs(member);
@@ -177,23 +186,7 @@ namespace LogicEntity.Default.MySql
                 member = method.GetGenericMethodDefinition();
             }
 
-            return MemberFormat.TryGetValue(member, out format);
-        }
-
-        SqlValue FormatAs(MethodCallExpression methodCallExpression, SqlContext context)
-        {
-            var command = GetValueExpression(methodCallExpression.Arguments[0], context);
-
-            var aliasCommand = GetValueExpression(methodCallExpression.Arguments[1], context);
-
-            if (aliasCommand.IsConstant == false)
-                throw new UnsupportedExpressionException(methodCallExpression.Arguments[1]);
-
-            return new()
-            {
-                CommantText = command.CommantText?.ToString().AsColumn((string)aliasCommand.ConstantValue),
-                Parameters = command.Parameters
-            };
+            return member;
         }
     }
 }

@@ -12,6 +12,10 @@ using System.Collections;
 using LogicEntity.Linq.Expressions;
 using LogicEntity.Json;
 using LogicEntity.Default.MySql.ValueConversion;
+using LogicEntity.Collections.Generic;
+using LogicEntity.Collections;
+using LogicEntity.Method;
+using System.Data.SqlTypes;
 
 namespace LogicEntity.Default.MySql
 {
@@ -79,7 +83,7 @@ namespace LogicEntity.Default.MySql
                     if (format.Value is null)
                         throw new ArgumentNullException($"The format of the {format.Key} is empty");
 
-                    MemberFormat[format.Key] = format.Value;
+                    MemberFormat[GetGenericDefinition(format.Key)] = format.Value;
                 }
             }
 
@@ -215,12 +219,7 @@ namespace LogicEntity.Default.MySql
                         {
                             if (value.ValueType == ValueType.Value)
                             {
-                                object obj = value.Object;
-
-                                if (entityProperty.Value.Writer is not null)
-                                    obj = entityProperty.Value.Writer(obj);
-
-                                var p = SqlNode.Parameter(obj);
+                                var p = SqlNode.Parameter(entityProperty.Value.Writer(value.Object));
 
                                 columnCmds.Add(p.Key);
 
@@ -499,7 +498,7 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is SelectedTableExpression columnFilteredTableExpression)
             {
-                var sql = GetDataManipulationSql(columnFilteredTableExpression.Source);
+                var sql = columnFilteredTableExpression.Source is null ? new() : GetDataManipulationSql(columnFilteredTableExpression.Source);
 
                 if (sql.CanAdd(SelectNodeType.Select) == false)
                 {
@@ -1886,6 +1885,21 @@ namespace LogicEntity.Default.MySql
                     else
                     {
                         var argCmd = GetValueExpression(arg, context);
+
+                        if (parameterInfos[i].IsDefined(typeof(ConstantParameterAttribute), true))
+                        {
+                            if (argCmd.IsConstant is false)
+                                throw new UnsupportedExpressionException(arg, $"The parameter {parameterInfos[i].Name} of method {method.Name} must be a constant");
+
+                            string str = argCmd.ConstantValue?.ToString();
+
+                            args.Add(new()
+                            {
+                                CommantText = str is null ? SqlNode.Null : SqlNode.SqlString(str)
+                            });
+
+                            continue;
+                        }
 
                         args.Add(new()
                         {

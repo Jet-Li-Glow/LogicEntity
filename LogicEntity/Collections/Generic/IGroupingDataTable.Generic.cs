@@ -3,15 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static LogicEntity.Command;
 
-namespace LogicEntity
+namespace LogicEntity.Collections.Generic
 {
-    public interface IGroupingDataTable
-    {
-
-    }
-
     public interface IGroupingDataTable<TKey> : IGroupingDataTable
     {
         TKey Key { get; }

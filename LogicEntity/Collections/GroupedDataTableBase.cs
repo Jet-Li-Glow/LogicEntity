@@ -1,16 +1,16 @@
-﻿using LogicEntity.Linq.Expressions;
+﻿using LogicEntity.Collections.Generic;
+using LogicEntity.Linq.Expressions;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity
+namespace LogicEntity.Collections
 {
-    public abstract class DataTableImplBase : IDataTable
+    public class GroupedDataTableBase : IGroupedDataTable
     {
-        public DataTableImplBase(AbstractDataBase db, TableExpression expression)
+        public GroupedDataTableBase(AbstractDataBase db, TableExpression expression)
         {
             Db = db;
 

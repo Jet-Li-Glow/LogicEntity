@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity
+namespace LogicEntity.Collections
 {
-    public interface IOrderedDataTable<T> : IDataTable<T>
+    public interface IGroupingDataTable
     {
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using LogicEntity.Method;
+﻿using LogicEntity.Collections.Generic;
+using LogicEntity.Method;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace LogicEntity.Default.MySql
 {
     public static class DbFunction
     {
-        public static T As<T>(this T t, string alias)
+        public static T As<T>(this T t, [ConstantParameter] string alias)
         {
             return default;
         }

@@ -6,15 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Linq.Expressions;
 
-namespace LogicEntity
+namespace LogicEntity.Collections.Generic
 {
-    public interface IDataTable
-    {
-        AbstractDataBase Db { get; }
-
-        TableExpression Expression { get; }
-    }
-
     public interface IDataTable<T> : IDataTable, IEnumerable<T>
     {
         IEnumerable<T> AsEnumerable()

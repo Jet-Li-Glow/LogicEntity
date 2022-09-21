@@ -9,8 +9,9 @@ using System.Text.Json;
 using System.Threading;
 using System.Xml;
 using Demo.Model;
-using Demo.TableModel;
+using Demo.Tables;
 using LogicEntity;
+using LogicEntity.Collections.Generic;
 using LogicEntity.Default.MySql;
 using LogicEntity.Method;
 using MySql.Data.MySqlClient;
@@ -46,7 +47,7 @@ namespace Demo
 
             data = db.Students.Join(db.Majors, (s, m) => s.MajorId == m.MajorId).Select((s, m) => new { s.Id, s.Name, m.MajorName }).ToList();
 
-            data = db.Students.GroupBy(s => s.Id).Select(s => new { Key = s.Key, Name = s.Element.Name, Count = s.Count(), Sum = s.Sum(a => a.Id) }).Where(s => s.Key > 0);
+            data = db.Students.GroupBy(s => s.Id).Select(s => new { Key = s.Key, Name = s.Element.Name, GroupConcat = MyDbFunction.Group_Concat(s.Element.Name, "--"), Count = s.Count(), Sum = s.Sum(a => a.Id) }).Where(s => s.Key > 0).ToList();
 
             data = db.Students.Select((s, i) => new { s.Id, Index = i }).ToList();
 
@@ -125,71 +126,6 @@ namespace Demo
 
             Console.ReadKey();
         }
-
-        //static void Test()
-        //{
-        //    ISelector selector = DBOperator.Select(new ValueExpression("Sleep(10)"));
-
-        //    selector.SetTimeout(5);
-
-        //    try
-        //    {
-        //        int v = Database.TestDb.Query<int>(selector).FirstOrDefault();
-        //    }
-        //    catch
-        //    {
-        //    }
-
-        //    Guid guid = Guid.NewGuid();
-
-        //    //插入
-        //    Monthly data = new(new DateTime(2021, 12, 1));
-
-        //    data.Guid.Value = guid;
-        //    data.DateTime.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-        //    data.Description.Value = Path.GetRandomFileName() + " Monthly Test";
-
-        //    Database.TestDb.ExecuteNonQuery(DBOperator.Save(data));
-
-        //    Monthly table = new(new DateTime(2021, 12, 1));
-
-        //    Monthly d = Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == data.Guid.Value)).Single();
-
-        //    Assert(d.Guid.Value, data.Guid.Value);
-        //    Assert(d.DateTime.Value, data.DateTime.Value);
-        //    Assert(d.Description.Value, data.Description.Value);
-
-        //    //更新
-        //    data = new(new DateTime(2021, 12, 1));
-
-        //    data.DateTime.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-        //    data.Description.Value = Path.GetRandomFileName() + " Monthly Test";
-
-        //    Database.TestDb.ExecuteNonQuery(DBOperator.ApplyChanges(data).On(data.Guid == guid));
-
-        //    d = Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == guid)).Single();
-
-        //    Assert(d.Guid.Value, guid);
-        //    Assert(d.DateTime.Value, data.DateTime.Value);
-        //    Assert(d.Description.Value, data.Description.Value);
-
-        //    //删除
-        //    table = new(new DateTime(2021, 12, 1));
-
-        //    Database.TestDb.ExecuteNonQuery(DBOperator.DeleteFrom(table).Where(table.Guid == guid));
-
-        //    Assert(Database.TestDb.Query<Monthly>(DBOperator.Select().From(table).Where(table.Guid == data.Guid.Value)).Count() == 0);
-
-        //    //Json
-        //    Database.TestDb.Query(
-        //        DBOperator.Select(new ValueExpression("{0}", JsonSerializer.Serialize(new object[] { new { Id = 1 }, "name", 100 })).Json_Contains_Path(OneOrAll.One, "$[1]")));
-
-        //    Database.TestDb.Query(
-        //        DBOperator.Select(new ValueExpression("{0}", JsonSerializer.Serialize(new object[] { new { Id = 1 }, "name", 100 })).Json_Search(OneOrAll.All, "name", null, "$")));
-
-        //    Database.TestDb.Query(
-        //        DBOperator.Select(new ValueExpression("{0}", JsonSerializer.Serialize(new object[] { new { Id = 1 }, "name", 100 })).Json_Search(OneOrAll.All, "name", 'a', "$")));
-        //}
     }
 
     static class MyConvert
@@ -207,6 +143,12 @@ namespace Demo
     {
         [MethodFormat("({1} + 1)")]
         public static object MyFunction(this Value<int> valueExpression)
+        {
+            return default;
+        }
+
+        [MethodFormat("Group_Concat({1} Separator {2})")]
+        public static string Group_Concat(string val, [ConstantParameter] string separator)
         {
             return default;
         }
@@ -254,6 +196,8 @@ namespace Demo
         {
             LinqConvertOptions options = new();
 
+            options.MemberFormat[typeof(object).GetMethod(nameof(object.ToString))] = "Cast({0} As Char)";
+
             options.PropertyConverters.Set<Student.JsonObject, string>(typeof(Student).GetProperty(nameof(Student.Json)), s => JsonSerializer.Deserialize<Student.JsonObject>(s), s => JsonSerializer.Serialize(s));
             options.PropertyConverters.Set<int[], string>(typeof(Student).GetProperty(nameof(Student.JsonArray)), s => JsonSerializer.Deserialize<int[]>(s), s => JsonSerializer.Serialize(s));
 
@@ -263,6 +207,8 @@ namespace Demo
         public ITable<Student> Students { get; init; }
 
         public ITable<Major> Majors { get; init; }
+
+        public ITable<Monthly> Monthly { get; init; }
     }
 
     static class Database

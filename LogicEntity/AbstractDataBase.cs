@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using LogicEntity.Collections.Generic;
 using LogicEntity.Linq.Expressions;
 
 namespace LogicEntity

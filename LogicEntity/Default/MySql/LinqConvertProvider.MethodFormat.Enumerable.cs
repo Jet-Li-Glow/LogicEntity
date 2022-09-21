@@ -1,4 +1,6 @@
-﻿using LogicEntity.Linq.Expressions;
+﻿using LogicEntity.Collections;
+using LogicEntity.Collections.Generic;
+using LogicEntity.Linq.Expressions;
 using System;
 using System.Collections;
 using System.Collections.Generic;

@@ -1,6 +1,7 @@
 ﻿using Demo.Model;
-using Demo.TableModel;
+using Demo.Tables;
 using LogicEntity;
+using LogicEntity.Collections;
 using LogicEntity.Default.MySql;
 using System;
 using System.Collections;
@@ -177,6 +178,16 @@ namespace Demo
                 {
                     Id = s.Key + 1,
                     Name = s.Element.Name,
+                    s.Element.Birthday,
+                    s.Element.Gender,
+                    s.Element.MajorId,
+                    s.Element.Guid,
+                    s.Element.Bytes,
+                    s.Element.Float,
+                    s.Element.Double,
+                    s.Element.Decimal,
+                    s.Element.Bool,
+                    s.Element.Long,
                     Avg = db.Students.Average(b => b.Id ==
                         (
                         s.Element.Id
@@ -254,29 +265,39 @@ namespace Demo
                 );
 
             //Select - 7
-            object result = null;
+            data = db.Students.Average(s => s.Id + s.Id);
+            data = db.Students.Count();
+            data = db.Students.LongCount();
+            data = db.Students.Max(s => s.Id + s.Id);
+            data = db.Students.Min(s => s.Id + s.Id);
+            data = db.Students.Take(1).Sum(s => s.Id + s.Id);
 
-            result = db.Students.Average(s => s.Id + s.Id);
-            result = db.Students.Count();
-            result = db.Students.LongCount();
-            result = db.Students.Max(s => s.Id + s.Id);
-            result = db.Students.Min(s => s.Id + s.Id);
-            result = db.Students.Take(1).Sum(s => s.Id + s.Id);
+            data = db.Students.Any(a => a.Name == "小明");
+            data = db.Students.All(a => a.Name == "小明");
 
-            result = db.Students.Any(a => a.Name == "小明");
-            result = db.Students.All(a => a.Name == "小明");
+            //Select - 8
+            data = db.Value(() => db.Students.Max(s => s.Id) + 1).ToList();
+
+            //Select - 9
+            data = db.Students.Select(s => new MyClass(s.Id + 1) { Name = s.Name + " - " }).Take(1).ToList();
 
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
             {
                 Name = new(() => db.Students.Select(s => s.Name + "Add Operate").First()),
-                MajorId = 3,
-                Gender = Gender.Male,
                 Birthday = DateTime.Now,
-                Decimal = 2,
+                Gender = Gender.Male,
+                MajorId = 3,
+                Guid = Guid.NewGuid(),
+                Bytes = Encoding.UTF8.GetBytes("123"),
+                Float = 4f,
+                Double = 5d,
+                Decimal = 6m,
+                Bool = true,
+                Long = 7L,
                 Json = new Student.JsonObject()
                 {
-                    Array = new[] { 5, 6, 7 },
+                    Array = new[] { 8, 9, 10 },
                     Object = new()
                     {
                         Property = "Insert Property Value"
@@ -329,6 +350,20 @@ namespace Demo
                 .Where((s, m) => m.MajorId == db.Majors.Max(m => m.MajorId))
                 .Remove((s, m) => s);
 
+            //Monthly
+            data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();
+
+            rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).Add(new Monthly()
+            {
+                Guid = Guid.NewGuid(),
+                DateTime = DateTime.Now,
+                Description = "Description Value"
+            });
+
+            rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).OrderByDescending(s => s.DateTime).Take(1).Set(s => s.Description.Assign(s.Description + " - Update"));
+
+            rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).OrderByDescending(s => s.DateTime).Take(1).Remove();
+
             Console.WriteLine("测试通过");
         }
 
@@ -348,6 +383,18 @@ namespace Demo
         {
             if (val == false)
                 throw new Exception(nameof(Assert));
+        }
+
+        class MyClass
+        {
+            public MyClass(int Id)
+            {
+                this.Id = Id;
+            }
+
+            public int Id { get; set; }
+
+            public string Name { get; set; }
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using LogicEntity;
 using MySqlX.XDevAPI;
 
-namespace Demo.TableModel
+namespace Demo.Tables
 {
     /// <summary>
     /// 专业

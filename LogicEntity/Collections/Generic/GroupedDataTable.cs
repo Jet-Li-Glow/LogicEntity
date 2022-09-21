@@ -1,11 +1,12 @@
-﻿using LogicEntity.Linq.Expressions;
+﻿using LogicEntity.Collections;
+using LogicEntity.Linq.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LogicEntity
+namespace LogicEntity.Collections.Generic
 {
     public class GroupedDataTable<TKey, TElement> : GroupedDataTableBase, IGroupedDataTable<TKey, TElement>
     {

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Demo.TableModel
+namespace LogicEntity.Collections.Generic
 {
-    public class Teacher
+    public interface ITable<T> : IDataTable<T>
     {
+
     }
 }

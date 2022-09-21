@@ -124,7 +124,7 @@ namespace LogicEntity.Default.MySql
 
         public static string Wrap(string src, char border, char? escape = null)
         {
-            if (escape.HasValue)
+            if (src is not null && escape.HasValue)
             {
                 src = src.Replace(new string(new char[] { escape.Value }), new string(new char[] { escape.Value, escape.Value }))
                     .Replace(new string(new char[] { border }), new string(new char[] { escape.Value, border }));

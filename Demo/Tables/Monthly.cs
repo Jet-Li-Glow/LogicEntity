@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LogicEntity;
 
-namespace Demo.TableModel
+namespace Demo.Tables
 {
     /// <summary>
     /// 月表

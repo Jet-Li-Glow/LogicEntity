@@ -10,7 +10,7 @@ using Demo.Model;
 using LogicEntity;
 using LogicEntity.Json;
 
-namespace Demo.TableModel
+namespace Demo.Tables
 {
     [Table("Student", Schema = "testdb")]
     public class Student

@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Collections.Generic;
 using LogicEntity.Linq.Expressions;
 
 namespace LogicEntity.Default.MySql
 {
     public static class MySqlEnumerable
     {
+        public static IDataTable<T> Value<T>(this AbstractDataBase db, System.Linq.Expressions.Expression<Func<T>> valueExpression)
+        {
+            return new DataTableImpl<T>(db, new SelectedTableExpression(null, valueExpression, typeof(T)));
+        }
+
         public static IDataTable<TOuter, TInner> InnerJoin<TOuter, TInner>(this IDataTable<TOuter> outer, IDataTable<TInner> inner, System.Linq.Expressions.Expression<Func<TOuter, TInner, bool>> predicate)
         {
             if (outer is null)

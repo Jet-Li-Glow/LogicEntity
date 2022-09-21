@@ -5,9 +5,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Collections;
 using LogicEntity.Linq.Expressions;
 
-namespace LogicEntity
+namespace LogicEntity.Collections.Generic
 {
     public class DataTableImpl<T> : DataTableImplBase, ITable<T>, IOrderedDataTable<T>
     {
