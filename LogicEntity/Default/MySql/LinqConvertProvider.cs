@@ -16,6 +16,7 @@ using LogicEntity.Collections.Generic;
 using LogicEntity.Collections;
 using LogicEntity.Method;
 using System.Data.SqlTypes;
+using LogicEntity.Default.MySql.Linq.Expressions;
 
 namespace LogicEntity.Default.MySql
 {
@@ -96,7 +97,7 @@ namespace LogicEntity.Default.MySql
             }
         }
 
-        public Command Convert(Linq.Expressions.Expression expression)
+        public Command Convert(LogicEntity.Linq.Expressions.Expression expression)
         {
             Command command = null;
 
@@ -149,7 +150,7 @@ namespace LogicEntity.Default.MySql
             return Build(GetDataManipulationSql(tableExpression), new(), 0);
         }
 
-        Command GetOperateCommand(Linq.Expressions.Expression operateExpression)
+        Command GetOperateCommand(LogicEntity.Linq.Expressions.Expression operateExpression)
         {
             if (operateExpression is AddOperateExpression addOperateExpression)
             {
@@ -292,7 +293,7 @@ namespace LogicEntity.Default.MySql
             throw new UnsupportedExpressionException(operateExpression);
         }
 
-        DataManipulationSql GetDataManipulationSql(Linq.Expressions.Expression expression)
+        DataManipulationSql GetDataManipulationSql(LogicEntity.Linq.Expressions.Expression expression)
         {
             if (expression is OriginalTableExpression)
             {
@@ -388,7 +389,14 @@ namespace LogicEntity.Default.MySql
                     sql = new() { From = sql };
                 }
 
-                sql.Union = unionedTableExpression.Right;
+                if (unionedTableExpression.Right is RecursiveUnionedTableExpression)
+                {
+                    sql.Union = unionedTableExpression.Right;
+                }
+                else
+                {
+                    sql.Union = GetDataManipulationSql(unionedTableExpression.Right);
+                }
 
                 sql.UnionDistinct = unionedTableExpression.Distinct;
 
@@ -661,6 +669,23 @@ namespace LogicEntity.Default.MySql
                     Type = typeof(bool)
                 };
             }
+            else if (expression is RecursiveUnionedTableExpression recursiveUnionedTableExpression)
+            {
+                var sql = GetDataManipulationSql(recursiveUnionedTableExpression.Left);
+
+                if (sql.CanAdd(SelectNodeType.Union) == false)
+                {
+                    sql = new() { From = sql };
+                }
+
+                sql.Union = recursiveUnionedTableExpression.RightFactory;
+
+                sql.UnionDistinct = recursiveUnionedTableExpression.Distinct;
+
+                sql.Type = expression.Type;
+
+                return sql;
+            }
             else if (expression is RemoveOperateExpression removeOperateExpression)
             {
                 var sql = GetDataManipulationSql(removeOperateExpression.Source);
@@ -676,7 +701,7 @@ namespace LogicEntity.Default.MySql
                         if (lambdaExpression.Body is not ParameterExpression parameterExpression)
                             throw new UnsupportedExpressionException(lambdaExpression.Body);
 
-                        return SqlNode.GetTableAlias(lambdaExpression.Parameters.IndexOf(parameterExpression));
+                        return SqlNode.GetTableAlias(lambdaExpression.Parameters.IndexOf(parameterExpression), 0);
                     }).ToList();
                 }
 
@@ -710,6 +735,9 @@ namespace LogicEntity.Default.MySql
 
             command.Results.Add(result);
 
+            //With
+            List<CTEInfo> ctes = new();
+
             //From
             string from = string.Empty;
 
@@ -721,16 +749,7 @@ namespace LogicEntity.Default.MySql
 
                 List<string> tableTexts = new();
 
-                if (sql.From is OriginalTableExpression)
-                {
-                    tables.Add(new()
-                    {
-                        Join = null,
-                        Table = sql.From,
-                        LambdaExpression = null
-                    });
-                }
-                else if (sql.From is JoinedTableExpression joinedTableExpression)
+                if (sql.From is JoinedTableExpression joinedTableExpression)
                 {
                     TableExpression current = joinedTableExpression;
 
@@ -755,7 +774,7 @@ namespace LogicEntity.Default.MySql
 
                     tables.Reverse();
                 }
-                else if (sql.From is DataManipulationSql)
+                else
                 {
                     tables.Add(new()
                     {
@@ -769,38 +788,62 @@ namespace LogicEntity.Default.MySql
                 {
                     var table = tables[i];
 
-                    tableInfos.Add(new()
-                    {
-                        CommandText = SqlNode.GetTableAlias(i, level),
-                        TableType = table.Table is OriginalTableExpression ? TableType.OriginalTable : TableType.SubQuery
-                    });
+                    string alias = string.Empty;
 
                     string text = string.Empty;
 
                     if (table.Table is OriginalTableExpression originalTable)
                     {
-                        text = FullName(originalTable).AsTable(SqlNode.GetTableAlias(i, level));
+                        alias = SqlNode.GetTableAlias(i, level);
+
+                        text = FullName(originalTable).As(alias);
+                    }
+                    else if (table.Table is RecursiveUnionedTableExpression recursiveUnionedTableExpression)
+                    {
+                        var cteCommand = Build(GetDataManipulationSql(recursiveUnionedTableExpression), new(), 0);
+
+                        command.Parameters.AddRange(cteCommand.Parameters);
+
+                        alias = SqlNode.GetCTEAlias(ctes.Count, level);
+
+                        ctes.Add(new()
+                        {
+                            Alias = alias,
+                            Sql = cteCommand.CommandText
+                        });
+
+                        text = alias;
                     }
                     else if (table.Table is TableExpression tableExpression)
                     {
                         var subQueryCommand = Build(GetDataManipulationSql(tableExpression), new(), 0);
 
-                        text = SqlNode.SubQuery(subQueryCommand.CommandText).AsTable(SqlNode.GetTableAlias(i));
-
                         command.Parameters.AddRange(subQueryCommand.Parameters);
+
+                        alias = SqlNode.GetTableAlias(i, level);
+
+                        text = SqlNode.SubQuery(subQueryCommand.CommandText).As(alias);
                     }
                     else if (table.Table is DataManipulationSql subQuery)
                     {
                         var subQueryCommand = Build(subQuery, new(), 0);
 
-                        text = SqlNode.SubQuery(subQueryCommand.CommandText).AsTable(SqlNode.GetTableAlias(i));
-
                         command.Parameters.AddRange(subQueryCommand.Parameters);
+
+                        alias = SqlNode.GetTableAlias(i, level);
+
+                        text = SqlNode.SubQuery(subQueryCommand.CommandText).As(alias);
                     }
                     else
                     {
-                        text = null;
+                        throw new Exception();
                     }
+
+                    tableInfos.Add(new()
+                    {
+                        CommandText = alias,
+                        TableType = table.Table is OriginalTableExpression ? TableType.OriginalTable : TableType.SubQuery
+                    });
 
                     if (table.LambdaExpression is not null)
                     {
@@ -1170,16 +1213,55 @@ namespace LogicEntity.Default.MySql
 
             if (sql.Union is not null)
             {
-                var unionSql = GetDataManipulationSql(sql.Union);
+                string unionedTable = string.Empty;
 
-                if (unionSql.Max >= (int)SelectNodeType.Union)
-                    unionSql = new DataManipulationSql() { Type = unionSql.Type, From = unionSql };
+                if (sql.Union is DataManipulationSql unionSql)
+                {
+                    var unionCommand = Build(unionSql, new(), 0);
 
-                var unionCommand = Build(unionSql, new(), 0);
+                    unionedTable = unionCommand.CommandText;
 
-                union = "\nUnion " + (sql.UnionDistinct ? string.Empty : "All") + "\n" + unionCommand.CommandText.Indent(2);
+                    if (unionSql.Max >= (int)SelectNodeType.Union)
+                        unionedTable = SqlNode.Bracket(unionedTable);
 
-                command.Parameters.AddRange(unionCommand.Parameters);
+                    command.Parameters.AddRange(unionCommand.Parameters);
+                }
+                else if (sql.Union is RecursiveUnionedTableExpression recursiveUnionedTableExpression)
+                {
+                    var unionCommand = Build(GetDataManipulationSql(recursiveUnionedTableExpression), new(), 0);
+
+                    string alias = SqlNode.GetCTEAlias(ctes.Count, level);
+
+                    ctes.Add(new()
+                    {
+                        Alias = alias,
+                        Sql = unionCommand.CommandText
+                    });
+
+                    unionedTable = "Select * From " + alias;
+
+                    command.Parameters.AddRange(unionCommand.Parameters);
+                }
+                else if (sql.Union is LambdaExpression lambdaExpression) //cte
+                {
+                    var sqlValue = GetValueExpression(lambdaExpression.Body, new(level)
+                    {
+                        Parameters = parameters.Concat(
+                            lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.Table(new TableInfo()
+                            {
+                                CommandText = "",
+                                TableType = TableType.SubQuery
+                            })))
+                            ).ToDictionary(s => s.Key, s => s.Value)
+                    });
+
+                    unionedTable = sqlValue.CommantText?.ToString();
+
+                    if (sqlValue.Parameters is not null)
+                        command.Parameters.AddRange(sqlValue.Parameters);
+                }
+
+                union = "\nUnion" + (sql.UnionDistinct ? string.Empty : " All") + "\n" + unionedTable.Indent(2);
             }
 
             //Order By
@@ -1222,7 +1304,15 @@ namespace LogicEntity.Default.MySql
                 limit = "\nLimit\n  " + count;
             }
 
-            command.CommandText = manipulation + from + set + where + groupBy + having + union + orderBy + limit;
+            //with
+            string with = string.Empty;
+
+            if (ctes.Any())
+            {
+                with = "With Recursive\n" + string.Join(",\n", ctes.Select(s => SqlNode.As(s.Alias, s.Sql))).Indent(2) + "\n";
+            }
+
+            command.CommandText = with + manipulation + from + set + where + groupBy + having + union + orderBy + limit;
 
             return command;
         }
@@ -2059,6 +2149,13 @@ namespace LogicEntity.Default.MySql
         string ColumnName(MemberInfo member)
         {
             return member.GetCustomAttribute<ColumnAttribute>()?.Name ?? member.Name;
+        }
+
+        class CTEInfo
+        {
+            public string Alias { get; set; }
+
+            public string Sql { get; set; }
         }
 
         class SqlColumnInfo

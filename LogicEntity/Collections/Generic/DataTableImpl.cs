@@ -19,12 +19,14 @@ namespace LogicEntity.Collections.Generic
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return Db.Query(Expression).GetEnumerator();
+            foreach (object obj in Db.Query(Expression))
+                yield return obj;
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
         {
-            return Db.Query(Expression).Cast<T>().GetEnumerator();
+            foreach (object obj in Db.Query(Expression))
+                yield return (T)obj;
         }
     }
 

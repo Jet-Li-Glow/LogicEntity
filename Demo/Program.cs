@@ -75,6 +75,8 @@ namespace Demo
 
             DataTable dataTable = db.Students.Take(1).Select(s => s.Id, s => s.Name);
 
+            //data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns.Where(s => s.n < 20).Select(s => new { n = s.n + 1 }).Take(20)).ToList();
+
             //Insert
 
             rowsAffected = db.Students.Add(new Student()
@@ -90,13 +92,40 @@ namespace Demo
                 }
             });
 
+            var autoIncrementId = db.Students.AddNext(new()
+            {
+                MajorId = 3,
+                Name = "Auto Increment"
+            });
+
+            rowsAffected = db.Students.AddOrUpdate(new Student()
+            {
+                Id = new(() => db.Students.Max(s => s.Id)),
+                Name = "Add or Update",
+                MajorId = new(() => db.Majors.Max(m => m.MajorId))
+            });
+
             //Update
 
-            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => s.Float.Assign(5.5f));
+            rowsAffected = db.Students.Where(s => s.Id == 1)
+                .Set(
+                s => s.Float.Assign(5.5f),
+                s => ((Student.JsonObject)s.Json).Array[0].Assign(-5)
+                );
+
+            rowsAffected = db.Students
+                .Join(db.Majors, (s, m) => s.MajorId == m.MajorId)
+                .Where((s, m) => m.MajorId == 3)
+                .Set((s, m) => s.Name.Assign("Joined Set" + m.MajorName));
 
             //Delete
 
             rowsAffected = db.Students.OrderByDescending(s => s.Id).Take(1).Remove();
+
+            rowsAffected = db.Students
+                .Join(db.Majors, (s, m) => s.MajorId == m.MajorId)
+                .Where((s, m) => m.MajorId == db.Majors.Max(m => m.MajorId))
+                .Remove((s, m) => s);
 
             //Transaction
 

@@ -2292,16 +2292,7 @@ namespace LogicEntity
 
         public static int Add<TSource>(this ITable<TSource> source, params TSource[] elements)
         {
-            if (source is null)
-                throw new ArgumentNullException(nameof(source));
-
-            if (elements is null)
-                throw new ArgumentNullException(nameof(elements));
-
-            if (elements.Any() is false)
-                throw new InvalidOperationException("No elements");
-
-            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements.Cast<object>(), false));
+            return source.AddRange(elements);
         }
 
         public static int AddRange<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
@@ -2331,16 +2322,7 @@ namespace LogicEntity
 
         public static int AddOrUpdate<TSource>(this ITable<TSource> source, params TSource[] elements)
         {
-            if (source is null)
-                throw new ArgumentNullException(nameof(source));
-
-            if (elements is null)
-                throw new ArgumentNullException(nameof(elements));
-
-            if (elements.Any() is false)
-                throw new InvalidOperationException("No elements");
-
-            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements.Cast<object>(), true));
+            return source.AddRangeOrUpdate(elements);
         }
 
         public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)

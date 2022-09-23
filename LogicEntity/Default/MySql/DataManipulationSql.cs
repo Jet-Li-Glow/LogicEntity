@@ -117,9 +117,9 @@ namespace LogicEntity.Default.MySql
             }
         }
 
-        TableExpression _union;
+        object _union;
 
-        public TableExpression Union
+        public object Union
         {
             get
             {

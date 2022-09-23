@@ -313,43 +313,6 @@ namespace Demo
                 Double = 1
             });
 
-            //Insert - 2
-            var autoIncrementId = db.Students.AddNext(new()
-            {
-                MajorId = 3,
-                Name = "Auto Increment"
-            });
-
-            //Insert - 3
-            rowsAffected = db.Students.AddOrUpdate(new Student()
-            {
-                Id = new(() => db.Students.Max(s => s.Id)),
-                Name = "Add or Update",
-                MajorId = new(() => db.Majors.Max(m => m.MajorId))
-            });
-
-            //Update - 1
-            rowsAffected = db.Students.OrderByDescending(s => s.Id)
-                .Take(1)
-                .Set(
-                s => s.Name.Assign<Value<string>>(s.Name + " Last"),
-                s => s.Decimal.Assign(0m),
-                s => ((Student.JsonObject)s.Json).Array[0].Assign(-5)
-                );
-
-            //Update - 2
-            rowsAffected = db.Students.Join(db.Majors, (s, m) => s.MajorId == m.MajorId)
-                .Where((s, m) => m.MajorId == 3)
-                .Set((s, m) => s.Name.Assign("Joined Set"));
-
-            //Delete - 1
-            rowsAffected = db.Students.OrderByDescending(s => s.Id).Take(1).Remove();
-
-            //Delete - 2
-            rowsAffected = db.Students.Join(db.Majors, (s, m) => s.MajorId == m.MajorId)
-                .Where((s, m) => m.MajorId == db.Majors.Max(m => m.MajorId))
-                .Remove((s, m) => s);
-
             //Monthly
             data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();
 

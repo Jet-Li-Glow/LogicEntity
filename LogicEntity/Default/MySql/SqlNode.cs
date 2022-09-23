@@ -92,7 +92,7 @@ namespace LogicEntity.Default.MySql
             return result;
         }
 
-        public static string AsTable(this string src, string alias)
+        public static string As(this string src, string alias)
         {
             return src + " As " + alias;
         }
@@ -102,9 +102,19 @@ namespace LogicEntity.Default.MySql
             return src + " As " + SqlString(alias);
         }
 
-        public static string GetTableAlias(int index, int level = 0)
+        public static string GetTableAlias(int index, int level)
         {
             string alias = "t" + index.ToString();
+
+            if (level > 0)
+                return "s" + level.ToString() + "_" + alias;
+
+            return alias;
+        }
+
+        public static string GetCTEAlias(int index, int level)
+        {
+            string alias = "cte" + index.ToString();
 
             if (level > 0)
                 return "s" + level.ToString() + "_" + alias;

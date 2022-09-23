@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LogicEntity.Collections.Generic;
+using LogicEntity.Default.MySql.Linq.Expressions;
 using LogicEntity.Linq.Expressions;
 
 namespace LogicEntity.Default.MySql
@@ -1513,6 +1514,28 @@ namespace LogicEntity.Default.MySql
                 throw new ArgumentNullException(nameof(inner));
 
             return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(outer.Db, new JoinedTableExpression(outer.Expression, "Natural Right Join", inner.Expression, null));
+        }
+
+        public static IDataTable<TSource> RecursiveConcat<TSource>(this IDataTable<TSource> first, System.Linq.Expressions.Expression<Func<IDataTable<TSource>, IDataTable<TSource>>> secondFactory)
+        {
+            if (first is null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (secondFactory is null)
+                throw new ArgumentNullException(nameof(secondFactory));
+
+            return new DataTableImpl<TSource>(first.Db, new RecursiveUnionedTableExpression(first.Expression, secondFactory, false));
+        }
+
+        public static IDataTable<TSource> RecursiveUnion<TSource>(this IDataTable<TSource> first, System.Linq.Expressions.Expression<Func<IDataTable<TSource>, IDataTable<TSource>>> secondFactory)
+        {
+            if (first is null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (secondFactory is null)
+                throw new ArgumentNullException(nameof(secondFactory));
+
+            return new DataTableImpl<TSource>(first.Db, new RecursiveUnionedTableExpression(first.Expression, secondFactory, true));
         }
     }
 }
