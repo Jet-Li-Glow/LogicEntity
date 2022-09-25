@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using LogicEntity.Linq.Expressions;
 
 namespace LogicEntity.Default.MySql
 {
@@ -12,22 +13,22 @@ namespace LogicEntity.Default.MySql
     /// </summary>
     internal record LambdaParameterInfo
     {
-        public static LambdaParameterInfo Table(TableType tableType)
+        public static LambdaParameterInfo Entity(EntitySource entitySource)
         {
             return new()
             {
-                ParameterType = LambdaParameterType.Table,
-                TableType = tableType
+                ParameterType = LambdaParameterType.Entity,
+                EntitySource = entitySource
             };
         }
 
-        public static LambdaParameterInfo Table(TableInfo tableInfo)
+        public static LambdaParameterInfo Entity(EntityInfo entityInfo)
         {
             return new()
             {
-                ParameterType = LambdaParameterType.Table,
-                CommandText = tableInfo.CommandText,
-                TableType = tableInfo.TableType
+                ParameterType = LambdaParameterType.Entity,
+                CommandText = entityInfo.CommandText,
+                EntitySource = entityInfo.EntitySource
             };
         }
 
@@ -43,7 +44,7 @@ namespace LogicEntity.Default.MySql
             CommandText = SqlNode.IndexColumnName
         };
 
-        public static LambdaParameterInfo GroupingDataTable(Dictionary<MemberInfo, string> groupKeys, List<TableInfo> fromTables)
+        public static LambdaParameterInfo GroupingDataTable(Dictionary<MemberInfo, string> groupKeys, List<EntityInfo> fromTables)
         {
             return new()
             {
@@ -53,14 +54,25 @@ namespace LogicEntity.Default.MySql
             };
         }
 
-        public LambdaParameterType ParameterType { get; private set; }
+        public static LambdaParameterInfo DataTable(TableExpression tableExpression)
+        {
+            return new()
+            {
+                ParameterType = LambdaParameterType.DataTable,
+                TableExpression = tableExpression
+            };
+        }
 
-        public string CommandText { get; private set; }
+        public LambdaParameterType ParameterType { get; init; }
 
-        public TableType? TableType { get; private set; }
+        public string CommandText { get; init; }
 
-        public Dictionary<MemberInfo, string> GroupKeys { get; private set; }
+        public EntitySource? EntitySource { get; init; }
 
-        public List<TableInfo> FromTables { get; private set; }
+        public Dictionary<MemberInfo, string> GroupKeys { get; init; }
+
+        public List<EntityInfo> FromTables { get; init; }
+
+        public TableExpression TableExpression { get; init; }
     }
 }

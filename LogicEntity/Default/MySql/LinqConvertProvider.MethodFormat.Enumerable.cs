@@ -259,7 +259,7 @@ namespace LogicEntity.Default.MySql
 
             return GetValueExpression(expression.Body, new(context.Level)
             {
-                Parameters = expression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(objectCmd.LambdaParameterInfo.FromTables[i])))
+                Parameters = expression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(objectCmd.LambdaParameterInfo.FromTables[i])))
                         .ToDictionary(s => s.Key, s => s.Value)
             });
         }
@@ -397,7 +397,7 @@ namespace LogicEntity.Default.MySql
             {
                 var cmd = GetValueExpression(selector.Body, new(context.Level)
                 {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(sourceCmd.LambdaParameterInfo.FromTables[i])))
+                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
                         .ToDictionary(s => s.Key, s => s.Value)
                 });
 
@@ -562,7 +562,7 @@ namespace LogicEntity.Default.MySql
             {
                 var cmd = GetValueExpression(selector.Body, new(context.Level)
                 {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(sourceCmd.LambdaParameterInfo.FromTables[i])))
+                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
                         .ToDictionary(s => s.Key, s => s.Value)
                 });
 
@@ -603,7 +603,7 @@ namespace LogicEntity.Default.MySql
             {
                 var cmd = GetValueExpression(selector.Body, new(context.Level)
                 {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(sourceCmd.LambdaParameterInfo.FromTables[i])))
+                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
                         .ToDictionary(s => s.Key, s => s.Value)
                 });
 
@@ -644,7 +644,7 @@ namespace LogicEntity.Default.MySql
             {
                 var cmd = GetValueExpression(selector.Body, new(context.Level)
                 {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(sourceCmd.LambdaParameterInfo.FromTables[i])))
+                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
                         .ToDictionary(s => s.Key, s => s.Value)
                 });
 

@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql
 {
-    internal class TableInfo
+    internal class EntityInfo
     {
         public string CommandText { get; init; }
 
-        public TableType TableType { get; init; }
+        public EntitySource EntitySource { get; init; }
     }
 }

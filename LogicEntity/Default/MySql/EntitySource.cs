@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql
 {
-    internal enum TableType
+    internal enum EntitySource
     {
         OriginalTable,
         SubQuery

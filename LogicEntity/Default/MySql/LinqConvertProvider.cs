@@ -741,7 +741,7 @@ namespace LogicEntity.Default.MySql
             //From
             string from = string.Empty;
 
-            List<TableInfo> tableInfos = new();
+            List<EntityInfo> entityInfos = new();
 
             if (sql.From is not null)
             {
@@ -839,10 +839,10 @@ namespace LogicEntity.Default.MySql
                         throw new Exception();
                     }
 
-                    tableInfos.Add(new()
+                    entityInfos.Add(new()
                     {
                         CommandText = alias,
-                        TableType = table.Table is OriginalTableExpression ? TableType.OriginalTable : TableType.SubQuery
+                        EntitySource = table.Table is OriginalTableExpression ? EntitySource.OriginalTable : EntitySource.SubQuery
                     });
 
                     if (table.LambdaExpression is not null)
@@ -850,7 +850,7 @@ namespace LogicEntity.Default.MySql
                         var predicateValue = GetValueExpression(table.LambdaExpression.Body, new SqlContext(level)
                         {
                             Parameters = parameters.Concat(
-                                table.LambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(tableInfos[i])))
+                                table.LambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
                                 ).ToDictionary(s => s.Key, s => s.Value)
                         });
 
@@ -902,7 +902,7 @@ namespace LogicEntity.Default.MySql
                     var keyCmd = GetValueExpression(groupKey.Expression, new SqlContext(level)
                     {
                         Parameters = parameters.Concat(
-                            sql.GroupBy.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(tableInfos[i])))
+                            sql.GroupBy.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
                             ).ToDictionary(s => s.Key, s => s.Value)
                     });
 
@@ -957,7 +957,7 @@ namespace LogicEntity.Default.MySql
                             SqlContext = new SqlContext(level)
                             {
                                 Parameters = parameters.Concat(
-                                s.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(tableInfos[i])))
+                                s.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
                                 ).ToDictionary(s => s.Key, s => s.Value)
                             },
                             Expression = expression
@@ -984,17 +984,17 @@ namespace LogicEntity.Default.MySql
                         {
                             LambdaParameterInfo lambdaParameterInfo = null;
 
-                            if (i >= tableInfos.Count)
+                            if (i >= entityInfos.Count)
                             {
                                 lambdaParameterInfo = LambdaParameterInfo.ColumnIndexValue;
                             }
                             else if (p.Type.IsAssignableTo(typeof(IGroupingDataTable)))
                             {
-                                lambdaParameterInfo = LambdaParameterInfo.GroupingDataTable(groupKeys, tableInfos);
+                                lambdaParameterInfo = LambdaParameterInfo.GroupingDataTable(groupKeys, entityInfos);
                             }
                             else
                             {
-                                lambdaParameterInfo = LambdaParameterInfo.Table(tableInfos[i]);
+                                lambdaParameterInfo = LambdaParameterInfo.Entity(entityInfos[i]);
                             }
 
                             return KeyValuePair.Create(p, lambdaParameterInfo);
@@ -1108,7 +1108,7 @@ namespace LogicEntity.Default.MySql
 
                     SqlContext sqlContext = new(level)
                     {
-                        Parameters = assignment.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(tableInfos[i])))
+                        Parameters = assignment.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
                             .ToDictionary(s => s.Key, s => s.Value)
                     };
 
@@ -1153,13 +1153,13 @@ namespace LogicEntity.Default.MySql
                         {
                             LambdaParameterInfo lambdaParameterInfo = null;
 
-                            if (i >= tableInfos.Count)
+                            if (i >= entityInfos.Count)
                             {
                                 lambdaParameterInfo = LambdaParameterInfo.IndexColumnName;
                             }
                             else
                             {
-                                lambdaParameterInfo = LambdaParameterInfo.Table(tableInfos[i]);
+                                lambdaParameterInfo = LambdaParameterInfo.Entity(entityInfos[i]);
                             }
 
                             return KeyValuePair.Create(p, lambdaParameterInfo);
@@ -1192,7 +1192,7 @@ namespace LogicEntity.Default.MySql
                     var valueCmd = GetValueExpression(predicateExpression.Body, new SqlContext(level)
                     {
                         Parameters = parameters.Concat(
-                            predicateExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(tableInfos[i].TableType)))
+                            predicateExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i].EntitySource)))
                             ).ToDictionary(s => s.Key, s => s.Value)
                     }, i == 0);
 
@@ -1247,10 +1247,10 @@ namespace LogicEntity.Default.MySql
                     var sqlValue = GetValueExpression(lambdaExpression.Body, new(level)
                     {
                         Parameters = parameters.Concat(
-                            lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.Table(new TableInfo()
+                            lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(new EntityInfo()
                             {
                                 CommandText = "",
-                                TableType = TableType.SubQuery
+                                EntitySource = EntitySource.SubQuery
                             })))
                             ).ToDictionary(s => s.Key, s => s.Value)
                     });
@@ -1278,7 +1278,7 @@ namespace LogicEntity.Default.MySql
                     var keyCmd = GetValueExpression(lambdaExpression.Body, new SqlContext(level)
                     {
                         Parameters = parameters.Concat(
-                            lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Table(tableInfos[i].TableType)))
+                            lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i].EntitySource)))
                             ).ToDictionary(s => s.Key, s => s.Value)
                     });
 
@@ -1620,7 +1620,7 @@ namespace LogicEntity.Default.MySql
                         return new()
                         {
                             CommantText = instanceCmd.LambdaParameterInfo.FromTables[0].CommandText,
-                            LambdaParameterInfo = LambdaParameterInfo.Table(instanceCmd.LambdaParameterInfo.FromTables[0]),
+                            LambdaParameterInfo = LambdaParameterInfo.Entity(instanceCmd.LambdaParameterInfo.FromTables[0]),
                             ValueType = SqlValueValueType.GroupElement
                         };
                     }
@@ -1634,9 +1634,9 @@ namespace LogicEntity.Default.MySql
                         };
                     }
                 }
-                else if (lambdaParameterType == LambdaParameterType.Table)
+                else if (lambdaParameterType == LambdaParameterType.Entity)
                 {
-                    if (instanceCmd.LambdaParameterInfo.TableType == TableType.OriginalTable)
+                    if (instanceCmd.LambdaParameterInfo.EntitySource == EntitySource.OriginalTable)
                     {
                         var text = new JsonAccess(SqlNode.Member(instanceCmd.CommantText?.ToString(), SqlNode.SqlName(ColumnName(member))));
 
@@ -1651,7 +1651,7 @@ namespace LogicEntity.Default.MySql
                             Parameters = instanceCmd.Parameters
                         };
                     }
-                    else if (instanceCmd.LambdaParameterInfo.TableType == TableType.SubQuery)
+                    else if (instanceCmd.LambdaParameterInfo.EntitySource == EntitySource.SubQuery)
                     {
                         return new()
                         {

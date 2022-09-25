@@ -8,9 +8,10 @@ namespace LogicEntity.Default.MySql
 {
     internal enum LambdaParameterType
     {
-        Table,
+        Entity,
         ColumnIndexValue,
         IndexColumnName,
-        GroupingDataTable
+        GroupingDataTable,
+        DataTable
     }
 }

@@ -66,6 +66,6 @@ namespace LogicEntity.Default.MySql
 
         public Dictionary<MemberInfo, string> GroupKeys { get; set; }
 
-        public List<TableInfo> FromTables { get; set; }
+        public List<EntityInfo> FromTables { get; set; }
     }
 }
