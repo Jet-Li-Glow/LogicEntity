@@ -36,7 +36,7 @@ namespace Demo
             int rowsAffected;
 
             //Select
-
+            
             data = db.Students.ToList();
 
             data = db.Students.Where(s => s.Id == 1).ToList();
@@ -52,6 +52,8 @@ namespace Demo
             data = db.Students.Select((s, i) => new { s.Id, Index = i }).ToList();
 
             data = db.Students.Select(s => new { SubQuery = db.Majors.Where(m => m.MajorId == s.MajorId).Select(m => m.MajorName).First() }).ToList();
+
+            data = db.Students.Select(s => new { Id = s.Id + 1, Name = s.Name }).Take(10).Union(db.Students.Select(s => new { Id = s.Id + 2, Name = s.Name }).Take(10)).ToList();
 
             data = db.Students.OrderBy(s => s.Id).Skip(10).Take(10);
 
@@ -75,7 +77,7 @@ namespace Demo
 
             DataTable dataTable = db.Students.Take(1).Select(s => s.Id, s => s.Name);
 
-            //data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns.Where(s => s.n < 20).Select(s => new { n = s.n + 1 }).Take(20)).ToList();
+            data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns.Where(s => s.n < 20).Select(s => new { n = s.n + 1 })).Take(20).ToList();
 
             //Insert
 

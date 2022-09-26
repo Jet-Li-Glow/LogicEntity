@@ -33,6 +33,12 @@ namespace LogicEntity.Default.MySql
 
         //-----------------------------------------------------------------------------------
 
+        [MethodFormat("*")]
+        internal static object AllColumns()
+        {
+            return default;
+        }
+
         [MethodFormat("Any{1}")]
         public static T Any<T>(IDataTable<T> source)
         {

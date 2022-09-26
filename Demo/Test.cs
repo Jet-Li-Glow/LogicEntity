@@ -281,6 +281,18 @@ namespace Demo
             //Select - 9
             data = db.Students.Select(s => new MyClass(s.Id + 1) { Name = s.Name + " - " }).Take(1).ToList();
 
+            //Select - 10
+            var nsdata = db.Value(() => new { n = 1 }).RecursiveConcat(ns =>
+                db.Students.Join(ns, (a, b) => a.Id == b.n)
+                .Select((a, b) => new { n = b.n + 1 })
+                ).Take(20);
+
+            data = nsdata.ToList();
+
+            data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns).Take(20).ToList();
+
+            data = db.Students.Join(nsdata, (a, b) => a.Id == b.n).Select((a, b) => new { b.n }).Union(nsdata).ToList();
+
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
             {

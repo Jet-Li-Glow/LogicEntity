@@ -20,9 +20,7 @@ namespace LogicEntity.Default.MySql
 
         public Type Type { get; set; }
 
-        //public bool IsWithRecursive { get; set; }
-
-        //public List<string> With { get; } = new();
+        public bool IsCTE { get; set; } = false;
 
         object _select;
 
@@ -47,9 +45,9 @@ namespace LogicEntity.Default.MySql
 
         public List<string> Delete { get; set; }
 
-        object _from;
+        List<DataManipulationSqlJoinedInfo> _from;
 
-        public object From
+        public List<DataManipulationSqlJoinedInfo> From
         {
             get
             {
@@ -181,6 +179,17 @@ namespace LogicEntity.Default.MySql
                 return false;
 
             return (int)nodeType > Max;
+        }
+
+        public static implicit operator List<DataManipulationSqlJoinedInfo>(DataManipulationSql sql)
+        {
+            return new()
+            {
+                new()
+                {
+                    Table = sql
+                }
+            };
         }
     }
 }
