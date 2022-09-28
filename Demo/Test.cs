@@ -203,6 +203,8 @@ namespace Demo
 
             //Select - 3
             dataTable = db.Students
+                .Where(s => s.Id > 0)
+                .Where(s => s.Id > 0)
                 .Where((s, i) => s.Id > 0 && i > -1)
                 .Select((s, i) => new
                 {

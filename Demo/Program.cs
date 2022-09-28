@@ -79,6 +79,8 @@ namespace Demo
 
             data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns.Where(s => s.n < 20).Select(s => new { n = s.n + 1 })).Take(20).ToList();
 
+            data = db.Query<Student>("Select studentId + {0} As Id From Student Limit 10", 1).ToList();
+
             //Insert
 
             rowsAffected = db.Students.Add(new Student()
