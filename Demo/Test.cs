@@ -165,6 +165,7 @@ namespace Demo
                 .Skip(10)
                 .Take(1)
                 .Distinct()
+                .Timeout(10)
                 ;
 
             command = linqConvertProvider.Convert(dataTable.Expression);
@@ -294,6 +295,17 @@ namespace Demo
             data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns).Take(20).ToList();
 
             data = db.Students.Join(nsdata, (a, b) => a.Id == b.n).Select((a, b) => new { b.n }).Union(nsdata).ToList();
+
+            //Select - 11
+            //try
+            //{
+            //    db.Value(() => MyDbFunction.Sleep(10)).Timeout(5).First();
+
+            //    throw new Exception();
+            //}
+            //catch
+            //{ 
+            //}
 
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()

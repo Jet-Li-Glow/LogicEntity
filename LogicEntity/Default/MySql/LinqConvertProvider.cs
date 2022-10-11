@@ -102,10 +102,21 @@ namespace LogicEntity.Default.MySql
         {
             Command command = null;
 
+            int? timeout = null;
+
+            if (expression is ITimeoutExpression timeoutExpression)
+            {
+                expression = timeoutExpression.Source;
+
+                timeout = timeoutExpression.Timeout;
+            }
+
             if (expression is TableExpression tableExpression && expression is not AddNextTableExpression)
                 command = GetSelectCommand(tableExpression);
             else
                 command = GetOperateCommand(expression);
+
+            command.CommandTimeout = timeout;
 
             List<KeyValuePair<string, object>> parameters = new();
 
@@ -264,12 +275,54 @@ namespace LogicEntity.Default.MySql
 
                 if (addOperateExpression.Update)
                 {
-                    onDuplicateKeyUpdate = "\nOn Duplicate Key Update\n" + string.Join(",\n", validProperties.Select(p =>
-                    {
-                        string columnName = SqlNode.SqlName(ColumnName(p.Key));
+                    onDuplicateKeyUpdate = "\nOn Duplicate Key Update\n";
 
-                        return SqlNode.Assign(columnName, SqlNode.Call("Values", columnName));
-                    })).Indent(2);
+                    List<KeyValuePair<string, string>> columnAndValues;
+
+                    if (addOperateExpression is AddOrUpdateOperateExpression addOrUpdateOperateExpression)
+                    {
+                        MemberInitExpression memberInitExpression = addOrUpdateOperateExpression.UpdateFactory.Body as MemberInitExpression;
+
+                        if (memberInitExpression is null)
+                            throw new UnsupportedExpressionException(addOrUpdateOperateExpression.UpdateFactory.Body);
+
+                        BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
+
+                        SqlContext sqlContext = new(0)
+                        {
+                            Parameters = new()
+                            {
+                                { addOrUpdateOperateExpression.UpdateFactory.Parameters[0], LambdaParameterInfo.Entity(EntitySource.OriginalTable) },
+                                { addOrUpdateOperateExpression.UpdateFactory.Parameters[1], LambdaParameterInfo.Entity(EntitySource.OriginalTable) }
+                            }
+                        };
+
+                        columnAndValues = blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(memberInit =>
+                        {
+                            BinaryExpression assign = (BinaryExpression)memberInit;
+
+                            string columnName = SqlNode.SqlName(ColumnName((PropertyInfo)((MemberExpression)assign.Left).Member));
+
+                            var updateValue = GetValueExpression(assign.Right, sqlContext);
+
+                            if (updateValue.Parameters is not null)
+                                parameters.AddRange(updateValue.Parameters);
+
+                            return KeyValuePair.Create(columnName, updateValue.CommantText?.ToString());
+                        }).ToList();
+
+                    }
+                    else
+                    {
+                        columnAndValues = validProperties.Select(p =>
+                        {
+                            string columnName = SqlNode.SqlName(ColumnName(p.Key));
+
+                            return KeyValuePair.Create(columnName, SqlNode.Call("Values", columnName));
+                        }).ToList();
+                    }
+
+                    onDuplicateKeyUpdate += string.Join(",\n", columnAndValues.Select(s => SqlNode.Assign(s.Key, s.Value))).Indent(2);
                 }
 
                 Command command = new();

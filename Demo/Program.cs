@@ -24,7 +24,8 @@ namespace Demo
         {
             //Version 1.0.0
 
-            //开发计划  1.Develop
+            //开发计划  1.Timeout
+            //          2.AddOrUpdateFactory - 两种形式的sql
 
             Console.WriteLine("-- Start --");
 
@@ -38,6 +39,10 @@ namespace Demo
             //Select
             
             data = db.Students.ToList();
+
+            data = db.Students.Select(s => new Student() { Id = s.Id }).ToList();
+
+            data = db.Students.FirstOrDefault();
 
             data = db.Students.Where(s => s.Id == 1).ToList();
 
@@ -75,7 +80,11 @@ namespace Demo
 
             data = db.Students.Select(s => ((Student.JsonObject)s.Json).Dictionary["Key - \" - \\ -"]).Take(1).ToList();
 
+            data = db.Students.Take(1).Timeout(10).ToList();  //IDbCommand.CommandTimeout
+
             DataTable dataTable = db.Students.Take(1).Select(s => s.Id, s => s.Name);
+
+            dataTable = db.Students.Take(1).Select(10, s => s.Id, s => s.Name);  //IDbCommand.CommandTimeout
 
             data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns.Where(s => s.n < 20).Select(s => new { n = s.n + 1 })).Take(20).ToList();
 
@@ -108,6 +117,15 @@ namespace Demo
                 Name = "Add or Update",
                 MajorId = new(() => db.Majors.Max(m => m.MajorId))
             });
+
+            rowsAffected = db.Students.AddOrUpdate(
+                (oldValue, newValue) => new Student() { Name = oldValue.Name + " - " + newValue.Name + " - Update Factory" },
+                new Student()
+                {
+                    Id = (int)autoIncrementId,
+                    Name = "Add or Update",
+                    MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                });
 
             //Update
 
@@ -185,6 +203,11 @@ namespace Demo
         {
             return default;
         }
+
+        public static int Sleep(int seconds)
+        {
+            return default;
+        }
     }
 
     static class Service
@@ -229,7 +252,7 @@ namespace Demo
         {
             LinqConvertOptions options = new();
 
-            options.MemberFormat[typeof(object).GetMethod(nameof(object.ToString))] = "Cast({0} As Char)";
+            options.MemberFormat[typeof(object).GetMethod(nameof(object.ToString))] = "Cast({0} As Char)";  //Default implementation (can be omitted)
 
             options.PropertyConverters.Set<Student.JsonObject, string>(typeof(Student).GetProperty(nameof(Student.Json)), s => JsonSerializer.Deserialize<Student.JsonObject>(s), s => JsonSerializer.Serialize(s));
             options.PropertyConverters.Set<int[], string>(typeof(Student).GetProperty(nameof(Student.JsonArray)), s => JsonSerializer.Deserialize<int[]>(s), s => JsonSerializer.Serialize(s));
