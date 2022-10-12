@@ -687,17 +687,24 @@ namespace LogicEntity
             if (value.GetType() == type)
                 return value;
 
-            type = Nullable.GetUnderlyingType(type) ?? type;
+            Type baseType = GetBaseType(type);
 
-            if (type.IsSubclassOf(typeof(Enum)))
+            Type underlyingType = Nullable.GetUnderlyingType(baseType) ?? baseType;
+
+            if (underlyingType.IsSubclassOf(typeof(Enum)))
             {
-                value = Enum.Parse(type, value.ToString(), true);
+                value = Enum.Parse(underlyingType, value.ToString(), true);
 
-                if (Enum.IsDefined(type, value) == false)
-                    throw new InvalidCastException($"{value} is not defined in {type.FullName}");
+                if (Enum.IsDefined(underlyingType, value) == false)
+                    throw new InvalidCastException($"{value} is not defined in {underlyingType.FullName}");
             }
 
-            return Convert.ChangeType(value, type);
+            value = Convert.ChangeType(Convert.ChangeType(value, underlyingType), baseType);
+
+            if (baseType != type)
+                value = GetValueImplicitMethod(baseType).Invoke(null, new object[] { value });
+
+            return value;
         }
     }
 }

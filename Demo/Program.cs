@@ -24,7 +24,7 @@ namespace Demo
         {
             //Version 1.0.0
 
-            //开发计划  1.AddOrUpdateFactory - 两种形式的sql
+            //开发计划  1.Add Ignore
 
             Console.WriteLine("-- Start --");
 
@@ -44,6 +44,8 @@ namespace Demo
             data = db.Students.Select(s => new { Object = new { Nested = new { Id = s.Id } }, Array = new int[] { s.Id, s.Id + 1 } }).Take(1).ToList();
 
             data = db.Students.FirstOrDefault();
+
+            data = db.Students.Max(s => s.Id);
 
             data = db.Students.Where(s => s.Id == 1).ToList();
 
@@ -271,10 +273,10 @@ namespace Demo
 
     static class Database
     {
-        static string connectionStr = File.ReadAllText("ConnectionString.txt");
+        public static string ConnectionStr = File.ReadAllText("ConnectionString.txt");
 
-        public readonly static TestDb TestDb = new(connectionStr);
+        public readonly static TestDb TestDb = new(ConnectionStr);
 
-        public readonly static TestDb TestReadOnlyDb = new(connectionStr);
+        public readonly static TestDb TestReadOnlyDb = new(ConnectionStr);
     }
 }

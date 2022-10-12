@@ -43,6 +43,7 @@ namespace LogicEntity.Default.MySql
         public const string ColumnIndexValue = "(Row_Number() Over() - 1)";
         public const string IndexColumnName = "__Index";
         public const string Default = "Default";
+        public const string NewRowAlias = "newRow";
 
         /// <summary>
         /// 唯一名称

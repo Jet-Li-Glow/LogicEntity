@@ -2,10 +2,13 @@
 using Demo.Tables;
 using LogicEntity;
 using LogicEntity.Collections;
+using LogicEntity.Collections.Generic;
 using LogicEntity.Default.MySql;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -275,7 +278,7 @@ namespace Demo
             data = db.Students.LongCount();
             data = db.Students.Max(s => s.Id + s.Id);
             data = db.Students.Min(s => s.Id + s.Id);
-            data = db.Students.Take(1).Sum(s => s.Id + s.Id);
+            data = db.Students.Take(10).Sum(s => s.Id + s.Id);
 
             data = db.Students.Any(a => a.Name == "小明");
             data = db.Students.All(a => a.Name == "小明");
@@ -344,6 +347,28 @@ namespace Demo
             //Insert - 2
             rowsAffected = db.Students.Add(5, new Student() { Name = "Add Timeout", MajorId = 1 });
 
+            //Insert - 3
+            int maxId = db.Students.Max(s => s.Id);
+
+            rowsAffected = new TestDb80(Database.ConnectionStr).Students.AddOrUpdate(5,
+                (oldValue, newValue) => new Student() { Name = oldValue.Name + " - " + newValue.Name + " - Update Factory 80" },
+                new Student()
+                {
+                    Id = maxId,
+                    Name = "New Value 80",
+                    Birthday = DateTime.Now,
+                    MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                },
+                new Student()
+                {
+                    Id = maxId - 1,
+                    Name = "New Value 80",
+                    Birthday = DateTime.Now,
+                    MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                });
+
+            rowsAffected = db.Students.Where(s => s.Id == maxId || s.Id == maxId - 1).Remove();
+
             //Monthly
             data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();
 
@@ -389,6 +414,32 @@ namespace Demo
             public int Id { get; set; }
 
             public string Name { get; set; }
+        }
+
+        class TestDb80 : AbstractDataBase
+        {
+            string _connectionStr;
+
+            public TestDb80(string connectionStr)
+            {
+                _connectionStr = connectionStr;
+            }
+
+            protected override IDbConnection CreateDbConnection()
+            {
+                return new MySqlConnection(_connectionStr);
+            }
+
+            protected override ILinqConvertProvider GetLinqConvertProvider()
+            {
+                LinqConvertOptions options = new();
+
+                options.UpdateFactoryVersion = UpdateFactoryVersion.V8_0;
+
+                return new LogicEntity.Default.MySql.LinqConvertProvider(options);
+            }
+
+            public ITable<Student> Students { get; init; }
         }
     }
 }

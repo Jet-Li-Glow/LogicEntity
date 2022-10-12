@@ -19,5 +19,10 @@ namespace LogicEntity.Default.MySql
         /// 属性值转换
         /// </summary>
         public ValueConverterCollection PropertyConverters { get; } = new();
+
+        /// <summary>
+        /// UpdateFactory版本
+        /// </summary>
+        public UpdateFactoryVersion UpdateFactoryVersion { get; set; } = UpdateFactoryVersion.V5_7;
     }
 }

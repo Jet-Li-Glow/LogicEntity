@@ -65,6 +65,8 @@ namespace LogicEntity.Default.MySql
 
         readonly Dictionary<PropertyInfo, ValueConverter> PropertyConvert = new();
 
+        readonly UpdateFactoryVersion _updateFactoryVersion = UpdateFactoryVersion.V5_7;
+
         public LinqConvertProvider()
         {
             InitEnumerableMethodFormat();
@@ -97,6 +99,8 @@ namespace LogicEntity.Default.MySql
                     PropertyConvert[converter.Key] = converter.Value;
                 }
             }
+
+            _updateFactoryVersion = linqConvertOptions.UpdateFactoryVersion;
         }
 
         public Command Convert(LogicEntity.Linq.Expressions.Expression expression)
@@ -267,6 +271,9 @@ namespace LogicEntity.Default.MySql
                 {
                     onDuplicateKeyUpdate = "\nOn Duplicate Key Update\n";
 
+                    if (_updateFactoryVersion == UpdateFactoryVersion.V8_0)
+                        onDuplicateKeyUpdate = $"\nAs {SqlNode.NewRowAlias}" + onDuplicateKeyUpdate;
+
                     List<KeyValuePair<string, string>> columnAndValues;
 
                     if (addOperateExpression is AddOrUpdateOperateExpression addOrUpdateOperateExpression)
@@ -282,8 +289,22 @@ namespace LogicEntity.Default.MySql
                         {
                             Parameters = new()
                             {
-                                { addOrUpdateOperateExpression.UpdateFactory.Parameters[0], LambdaParameterInfo.Entity(EntitySource.OriginalTable) },
-                                { addOrUpdateOperateExpression.UpdateFactory.Parameters[1], LambdaParameterInfo.Entity(EntitySource.OriginalTable) }
+                                {
+                                    addOrUpdateOperateExpression.UpdateFactory.Parameters[0],
+                                    LambdaParameterInfo.Entity(new EntityInfo()
+                                    {
+                                        CommandText = _updateFactoryVersion == UpdateFactoryVersion.V8_0 ? FullName(table) : null,
+                                        EntitySource = EntitySource.OriginalTable
+                                    } )
+                                },
+                                {
+                                    addOrUpdateOperateExpression.UpdateFactory.Parameters[1],
+                                    LambdaParameterInfo.Entity(new EntityInfo()
+                                    {
+                                        CommandText = _updateFactoryVersion == UpdateFactoryVersion.V8_0 ? SqlNode.NewRowAlias : null,
+                                        EntitySource = EntitySource.OriginalTable
+                                    })
+                                }
                             }
                         };
 
@@ -295,7 +316,12 @@ namespace LogicEntity.Default.MySql
 
                             string columnName = SqlNode.SqlName(ColumnName((PropertyInfo)((MemberExpression)assign.Left).Member));
 
-                            var updateValue = GetValueExpression(columnVisitor.Visit(assign.Right), sqlContext);
+                            System.Linq.Expressions.Expression right = assign.Right;
+
+                            if (_updateFactoryVersion == UpdateFactoryVersion.V5_7)
+                                right = columnVisitor.Visit(right);
+
+                            var updateValue = GetValueExpression(right, sqlContext);
 
                             if (updateValue.Parameters is not null)
                                 parameters.AddRange(updateValue.Parameters);
@@ -309,7 +335,7 @@ namespace LogicEntity.Default.MySql
                         {
                             string columnName = SqlNode.SqlName(ColumnName(p.Key));
 
-                            return KeyValuePair.Create(columnName, SqlNode.Call("Values", columnName));
+                            return KeyValuePair.Create(columnName, SqlNode.Call(nameof(DbFunction.Values), columnName));
                         }).ToList();
                     }
 
@@ -332,7 +358,7 @@ namespace LogicEntity.Default.MySql
             {
                 Command command = GetOperateCommand(new AddOperateExpression(addNextTableExpression.Source, new object[] { addNextTableExpression.Element }, false));
 
-                command.CommandText += ";\nSELECT LAST_INSERT_ID();";
+                command.CommandText += ";\nSelect Last_Insert_Id();";
 
                 return command;
             }
@@ -1039,7 +1065,7 @@ namespace LogicEntity.Default.MySql
                             SqlContext = new SqlContext(level)
                             {
                                 Parameters = parameters.Concat(
-                                s.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
+                                    s.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
                                 ).ToDictionary(s => s.Key, s => s.Value)
                             },
                             Expression = expression
