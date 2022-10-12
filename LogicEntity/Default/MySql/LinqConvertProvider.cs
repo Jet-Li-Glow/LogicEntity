@@ -102,21 +102,10 @@ namespace LogicEntity.Default.MySql
         {
             Command command = null;
 
-            int? timeout = null;
-
-            if (expression is ITimeoutExpression timeoutExpression)
-            {
-                expression = timeoutExpression.Source;
-
-                timeout = timeoutExpression.Timeout;
-            }
-
             if (expression is TableExpression tableExpression && expression is not AddNextTableExpression)
                 command = GetSelectCommand(tableExpression);
             else
                 command = GetOperateCommand(expression);
-
-            command.CommandTimeout = timeout;
 
             List<KeyValuePair<string, object>> parameters = new();
 
@@ -354,6 +343,15 @@ namespace LogicEntity.Default.MySql
             if (operateExpression is SetOperateExpression setOperateExpression)
             {
                 return Build(GetDataManipulationSql(setOperateExpression), null, 0);
+            }
+
+            if (operateExpression is TimeoutOperateExpression timeoutOperateExpression)
+            {
+                var command = GetOperateCommand(timeoutOperateExpression.Source);
+
+                command.CommandTimeout = timeoutOperateExpression.Timeout;
+
+                return command;
             }
 
             throw new UnsupportedExpressionException(operateExpression);
@@ -831,6 +829,14 @@ namespace LogicEntity.Default.MySql
 
                 return sql;
             }
+            else if (expression is TimeoutTableExpression timeoutTableExpression)
+            {
+                var sql = GetDataManipulationSql(timeoutTableExpression.Source);
+
+                sql.Timeout = timeoutTableExpression.Timeout;
+
+                return sql;
+            }
 
             throw new UnsupportedExpressionException(expression);
         }
@@ -841,6 +847,8 @@ namespace LogicEntity.Default.MySql
                 parameters = new();
 
             Command command = new();
+
+            command.CommandTimeout = sql.Timeout;
 
             Command.Result result = new();
 

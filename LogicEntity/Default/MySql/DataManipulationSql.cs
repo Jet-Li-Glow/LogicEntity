@@ -22,6 +22,8 @@ namespace LogicEntity.Default.MySql
 
         public bool IsCTE { get; set; } = false;
 
+        public int? Timeout { get; set; }
+
         object _select;
 
         public object Select

@@ -1722,6 +1722,25 @@ namespace LogicEntity.Default.MySql
 
         //Operate
 
+        public static int Add<TSource>(this ITable<TSource> source, int timeout, params TSource[] elements)
+        {
+            return source.AddRange(timeout, elements);
+        }
+
+        public static int AddRange<TSource>(this ITable<TSource> source, int timeout, IEnumerable<TSource> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (elements.Any() is false)
+                throw new InvalidOperationException("No elements");
+
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOperateExpression(source.Expression, elements.Cast<object>(), false), timeout));
+        }
+
         public static int AddOrUpdate<TSource>(this ITable<TSource> source, int timeout, params TSource[] elements)
         {
             return source.AddRangeOrUpdate(elements, timeout, null);

@@ -24,8 +24,7 @@ namespace Demo
         {
             //Version 1.0.0
 
-            //开发计划  1.Timeout
-            //          2.AddOrUpdateFactory - 两种形式的sql
+            //开发计划  1.AddOrUpdateFactory - 两种形式的sql
 
             Console.WriteLine("-- Start --");
 
@@ -41,6 +40,8 @@ namespace Demo
             data = db.Students.ToList();
 
             data = db.Students.Select(s => new Student() { Id = s.Id }).ToList();
+
+            data = db.Students.Select(s => new { Object = new { Nested = new { Id = s.Id } }, Array = new int[] { s.Id, s.Id + 1 } }).Take(1).ToList();
 
             data = db.Students.FirstOrDefault();
 
@@ -123,7 +124,7 @@ namespace Demo
                 new Student()
                 {
                     Id = (int)autoIncrementId,
-                    Name = "Add or Update",
+                    Name = "Add or Update New Value",
                     MajorId = new(() => db.Majors.Max(m => m.MajorId))
                 });
 
@@ -204,6 +205,7 @@ namespace Demo
             return default;
         }
 
+        [MethodFormat("Sleep({1})")]
         public static int Sleep(int seconds)
         {
             return default;

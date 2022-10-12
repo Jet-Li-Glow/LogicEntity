@@ -140,6 +140,8 @@ namespace Demo
                         }
                     },
 
+                    Array = new int[] { g.Key.Id, g.Element((a, b) => a.Id) },
+
                     Json = g.Element((a, b) => a.Json),
                     JsonValue = ((Student.JsonObject)g.Element((a, b) => a.Json)).Object.Property
                         + ((Student.JsonObject)g.Element((a, b) => a.Json)).Array[0]
@@ -297,15 +299,15 @@ namespace Demo
             data = db.Students.Join(nsdata, (a, b) => a.Id == b.n).Select((a, b) => new { b.n }).Union(nsdata).ToList();
 
             //Select - 11
-            //try
-            //{
-            //    db.Value(() => MyDbFunction.Sleep(10)).Timeout(5).First();
+            try
+            {
+                db.Value(() => MyDbFunction.Sleep(10)).Timeout(5).First();
 
-            //    throw new Exception();
-            //}
-            //catch
-            //{ 
-            //}
+                throw new Exception();
+            }
+            catch (MySql.Data.MySqlClient.MySqlException)
+            {
+            }
 
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
@@ -338,6 +340,9 @@ namespace Demo
                 Float = 0,
                 Double = 1
             });
+
+            //Insert - 2
+            rowsAffected = db.Students.Add(5, new Student() { Name = "Add Timeout", MajorId = 1 });
 
             //Monthly
             data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();

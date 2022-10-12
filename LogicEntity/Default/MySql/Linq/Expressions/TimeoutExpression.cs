@@ -8,14 +8,7 @@ using LogicEntity.Linq.Expressions;
 
 namespace LogicEntity.Default.MySql.Linq.Expressions
 {
-    internal interface ITimeoutExpression
-    {
-        public Expression Source { get; }
-
-        public int Timeout { get; }
-    }
-
-    internal class TimeoutTableExpression : TableExpression, ITimeoutExpression
+    internal class TimeoutTableExpression : TableExpression
     {
         public TimeoutTableExpression(TableExpression source, int timeout)
         {
@@ -26,14 +19,12 @@ namespace LogicEntity.Default.MySql.Linq.Expressions
 
         public override Type Type => Source.Type;
 
-        public TableExpression Source { get; set; }
+        public TableExpression Source { get; private set; }
 
-        Expression ITimeoutExpression.Source => Source;
-
-        public int Timeout { get; set; }
+        public int Timeout { get; private set; }
     }
 
-    internal class TimeoutOperateExpression : OperateExpression, ITimeoutExpression
+    internal class TimeoutOperateExpression : OperateExpression
     {
         public TimeoutOperateExpression(OperateExpression source, int timeout)
         {
@@ -44,10 +35,8 @@ namespace LogicEntity.Default.MySql.Linq.Expressions
 
         public override Type Type => Source.Type;
 
-        public OperateExpression Source { get; set; }
+        public OperateExpression Source { get; private set; }
 
-        Expression ITimeoutExpression.Source => Source;
-
-        public int Timeout { get; set; }
+        public int Timeout { get; private set; }
     }
 }
