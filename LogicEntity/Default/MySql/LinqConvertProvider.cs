@@ -17,6 +17,7 @@ using LogicEntity.Collections;
 using LogicEntity.Method;
 using System.Data.SqlTypes;
 using LogicEntity.Default.MySql.Linq.Expressions;
+using LogicEntity.Default.MySql.ExpressionVisit;
 
 namespace LogicEntity.Default.MySql
 {
@@ -286,20 +287,21 @@ namespace LogicEntity.Default.MySql
                             }
                         };
 
+                        ColumnVisitor columnVisitor = new ColumnVisitor(addOrUpdateOperateExpression.UpdateFactory.Parameters[1]);
+
                         columnAndValues = blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(memberInit =>
                         {
                             BinaryExpression assign = (BinaryExpression)memberInit;
 
                             string columnName = SqlNode.SqlName(ColumnName((PropertyInfo)((MemberExpression)assign.Left).Member));
 
-                            var updateValue = GetValueExpression(assign.Right, sqlContext);
+                            var updateValue = GetValueExpression(columnVisitor.Visit(assign.Right), sqlContext);
 
                             if (updateValue.Parameters is not null)
                                 parameters.AddRange(updateValue.Parameters);
 
                             return KeyValuePair.Create(columnName, updateValue.CommantText?.ToString());
                         }).ToList();
-
                     }
                     else
                     {

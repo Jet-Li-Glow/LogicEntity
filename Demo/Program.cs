@@ -36,7 +36,7 @@ namespace Demo
             int rowsAffected;
 
             //Select
-            
+
             data = db.Students.ToList();
 
             data = db.Students.Select(s => new Student() { Id = s.Id }).ToList();
@@ -124,7 +124,7 @@ namespace Demo
                 new Student()
                 {
                     Id = (int)autoIncrementId,
-                    Name = "Add or Update New Value",
+                    Name = "New Value",
                     MajorId = new(() => db.Majors.Max(m => m.MajorId))
                 });
 

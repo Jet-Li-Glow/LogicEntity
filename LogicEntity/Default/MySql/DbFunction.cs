@@ -80,5 +80,11 @@ namespace LogicEntity.Default.MySql
         {
             return default;
         }
+
+        [MethodFormat("Values({1})")]
+        internal static T Values<T>(T t)
+        {
+            return default;
+        }
     }
 }
