@@ -11,6 +11,7 @@ namespace LogicEntity.Default.MySql
 {
     public static class DbFunction
     {
+        [MethodFormat("{1} As {2}")]
         public static T As<T>(this T t, [ConstantParameter] string alias)
         {
             return default;

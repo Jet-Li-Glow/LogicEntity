@@ -442,6 +442,9 @@ namespace LogicEntity.Default.MySql
 
             if (source.IsConstant)
             {
+                if (source.ConstantValue is null)
+                    throw new ArgumentNullException(nameof(System.Linq.Enumerable.Contains));
+
                 List<string> keys = new();
 
                 foreach (object obj in (IEnumerable)source.ConstantValue)
@@ -451,6 +454,14 @@ namespace LogicEntity.Default.MySql
                     keys.Add(p.Key);
 
                     ps.Add(p);
+                }
+
+                if (keys.Any() == false)
+                {
+                    return new()
+                    {
+                        CommantText = SqlNode.False
+                    };
                 }
 
                 text = SqlNode.Bracket(string.Join(", ", keys));

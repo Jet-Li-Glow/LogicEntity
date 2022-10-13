@@ -155,9 +155,6 @@ namespace LogicEntity.Default.MySql
             { typeof(Tuple).GetMethods().Single(m => m.Name == nameof(Tuple.Create) && m.GetGenericArguments().Length == 5), "({1}, {2}, {3}, {4}, {5})"},
             { typeof(Tuple).GetMethods().Single(m => m.Name == nameof(Tuple.Create) && m.GetGenericArguments().Length == 6), "({1}, {2}, {3}, {4}, {5}, {6})"},
             { typeof(Tuple).GetMethods().Single(m => m.Name == nameof(Tuple.Create) && m.GetGenericArguments().Length == 7), "({1}, {2}, {3}, {4}, {5}, {6}, {7})"},
-
-            //DbFunction
-            { typeof(DbFunction).GetMethod(nameof(DbFunction.As)), "{1} As {2}" },
         };
 
         void InitDbFunctionMethodFormat()

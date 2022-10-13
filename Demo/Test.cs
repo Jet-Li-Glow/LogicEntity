@@ -312,6 +312,11 @@ namespace Demo
             {
             }
 
+            //Select - 12
+            List<int> ids = new();
+
+            data = db.Students.Where(s => ids.Contains(s.Id)).ToList();
+
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
             {
