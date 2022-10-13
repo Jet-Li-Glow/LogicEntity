@@ -16,21 +16,21 @@ namespace Demo.Tables
     public class Student
     {
         [Column("StudentId")]
-        public Value<int> Id { get; init; }
+        public Value<int> Id { get; set; }
 
         [Column("StudentName")]
-        public Value<string> Name { get; init; }
+        public Value<string> Name { get; set; }
 
         [Column("StudentName")]
-        public Value<string> AnotherName { get; init; }
+        public Value<string> AnotherName { get; set; }
 
-        public Value<DateTime> Birthday { get; init; }
+        public Value<DateTime?> Birthday { get; set; }
 
-        public Value<Gender> Gender { get; init; }
+        public Value<Gender> Gender { get; set; }
 
-        public Value<int> MajorId { get; init; }
+        public Value<int> MajorId { get; set; }
 
-        public Value<Guid> Guid { get; init; }
+        public Value<Guid?> Guid { get; set; }
 
         public Value<byte[]> Bytes { get; set; }
 

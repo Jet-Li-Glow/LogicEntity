@@ -130,6 +130,20 @@ namespace Demo
                     MajorId = new(() => db.Majors.Max(m => m.MajorId))
                 });
 
+            rowsAffected = db.Students.AddIgnore(new Student()
+            {
+                Id = (int)autoIncrementId,
+                Name = "Insert Ignore",
+                MajorId = new(() => db.Majors.Max(m => m.MajorId))
+            });
+
+            rowsAffected = db.Students.Replace(new Student()
+            {
+                Id = (int)autoIncrementId,
+                Name = "Replaced Value",
+                MajorId = new(() => db.Majors.Max(m => m.MajorId))
+            });
+
             //Update
 
             rowsAffected = db.Students.Where(s => s.Id == 1)

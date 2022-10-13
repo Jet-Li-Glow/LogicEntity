@@ -344,7 +344,14 @@ namespace LogicEntity.Default.MySql
 
                 Command command = new();
 
-                command.CommandText = $"Insert Into {FullName(table)}"
+                string addOperate = "Insert Into";
+
+                if (addOperateExpression is AddIgnoreOperateExpression)
+                    addOperate = "Insert Ignore";
+                else if (addOperateExpression is ReplaceOperateExpression)
+                    addOperate = "Replace Into";
+
+                command.CommandText = $"{addOperate} {FullName(table)}"
                     + $"\n(\n{string.Join(",\n", validProperties.Select(p => SqlNode.SqlName(ColumnName(p.Key)))).Indent(2)}\n)"
                     + $"\nValues\n{string.Join(",\n", rowCmds).Indent(2)}"
                     + $"{onDuplicateKeyUpdate}";
@@ -1912,8 +1919,23 @@ namespace LogicEntity.Default.MySql
             {
                 if (binaryExpression.Method is not null && MemberFormat.ContainsKey(binaryExpression.Method))
                 {
-                    return GetValueExpression(System.Linq.Expressions.Expression.Call(null, binaryExpression.Method, binaryExpression.Left, binaryExpression.Right),
-                        context);
+                    ParameterInfo[] parameterInfos = binaryExpression.Method.GetParameters();
+
+                    System.Linq.Expressions.Expression methodArg1 = binaryExpression.Left;
+
+                    Type parameterType1 = parameterInfos[0].ParameterType;
+
+                    if (methodArg1.Type != parameterType1)
+                        methodArg1 = System.Linq.Expressions.Expression.Convert(methodArg1, parameterType1);
+
+                    System.Linq.Expressions.Expression methodArg2 = binaryExpression.Right;
+
+                    Type parameterType2 = parameterInfos[1].ParameterType;
+
+                    if (methodArg2.Type != parameterType2)
+                        methodArg2 = System.Linq.Expressions.Expression.Convert(methodArg2, parameterType2);
+
+                    return GetValueExpression(System.Linq.Expressions.Expression.Call(null, binaryExpression.Method, methodArg1, methodArg2), context);
                 }
 
                 var left = GetValueExpression(binaryExpression.Left, context, isRoot);

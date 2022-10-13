@@ -27,16 +27,16 @@ namespace Demo.Tables
         /// <summary>
         /// Guid
         /// </summary>
-        public Value<Guid> Guid { get; init; }
+        public Value<Guid> Guid { get; set; }
 
         /// <summary>
         /// 时间
         /// </summary>
-        public Value<DateTime> DateTime { get; init; }
+        public Value<DateTime> DateTime { get; set; }
 
         /// <summary>
         /// 描述
         /// </summary>
-        public Value<string> Description { get; init; }
+        public Value<string> Description { get; set; }
     }
 }

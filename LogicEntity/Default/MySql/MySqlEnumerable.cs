@@ -1784,5 +1784,73 @@ namespace LogicEntity.Default.MySql
 
             return source.Db.ExecuteNonQuery(operateExpression);
         }
+
+        public static int AddIgnore<TSource>(this ITable<TSource> source, params TSource[] elements)
+        {
+            return source.AddRangeIgnore(elements);
+        }
+
+        public static int AddIgnore<TSource>(this ITable<TSource> source, int timeout, params TSource[] elements)
+        {
+            return source.AddRangeIgnore(timeout, elements);
+        }
+
+        public static int AddRangeIgnore<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
+        {
+            return source.AddRangeIgnore(null, elements);
+        }
+
+        public static int AddRangeIgnore<TSource>(this ITable<TSource> source, int? timeout, IEnumerable<TSource> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (elements.Any() is false)
+                throw new InvalidOperationException("No elements");
+
+            OperateExpression operateExpression = new AddIgnoreOperateExpression(source.Expression, elements.Cast<object>());
+
+            if (timeout.HasValue)
+                operateExpression = new TimeoutOperateExpression(operateExpression, timeout.Value);
+
+            return source.Db.ExecuteNonQuery(operateExpression);
+        }
+
+        public static int Replace<TSource>(this ITable<TSource> source, params TSource[] elements)
+        {
+            return source.ReplaceRange(elements);
+        }
+
+        public static int Replace<TSource>(this ITable<TSource> source, int timeout, params TSource[] elements)
+        {
+            return source.ReplaceRange(timeout, elements);
+        }
+
+        public static int ReplaceRange<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
+        {
+            return source.ReplaceRange(null, elements);
+        }
+
+        public static int ReplaceRange<TSource>(this ITable<TSource> source, int? timeout, IEnumerable<TSource> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (elements.Any() is false)
+                throw new InvalidOperationException("No elements");
+
+            OperateExpression operateExpression = new ReplaceOperateExpression(source.Expression, elements.Cast<object>());
+
+            if (timeout.HasValue)
+                operateExpression = new TimeoutOperateExpression(operateExpression, timeout.Value);
+
+            return source.Db.ExecuteNonQuery(operateExpression);
+        }
     }
 }

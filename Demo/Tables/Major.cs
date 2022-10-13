@@ -18,16 +18,16 @@ namespace Demo.Tables
         /// <summary>
         /// 专业Id
         /// </summary>
-        public Value<int> MajorId { get; init; }
+        public Value<int> MajorId { get; set; }
 
         /// <summary>
         /// 专业名称
         /// </summary>
-        public Value<string> MajorName { get; init; }
+        public Value<string> MajorName { get; set; }
 
         /// <summary>
         /// 专业类型
         /// </summary>
-        public Value<int> MajorType { get; init; }
+        public Value<int> MajorType { get; set; }
     }
 }
