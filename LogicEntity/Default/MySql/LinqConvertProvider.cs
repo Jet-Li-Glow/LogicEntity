@@ -1021,12 +1021,14 @@ namespace LogicEntity.Default.MySql
                             ).ToDictionary(s => s.Key, s => s.Value)
                     });
 
-                    groupColumns.Add(keyCmd.CommantText?.ToString());
+                    string keyText = keyCmd.CommantText?.ToString();
+
+                    groupColumns.Add(keyText);
 
                     if (keyCmd.Parameters is not null)
                         command.Parameters.AddRange(keyCmd.Parameters);
 
-                    groupKeys[groupKey.Member] = keyCmd.CommantText?.ToString();
+                    groupKeys[groupKey.Member] = keyText;
                 }
 
                 groupBy = "\nGroup By\n  " + string.Join(", ", groupColumns);
@@ -1036,6 +1038,8 @@ namespace LogicEntity.Default.MySql
             string manipulation = string.Empty;
 
             //Select
+            EntityInfo resultEntityInfo = entityInfos.FirstOrDefault();
+
             if (sql.DataManipulationType == DataManipulationSqlType.Select)
             {
                 List<string> columns = new();
@@ -1170,6 +1174,12 @@ namespace LogicEntity.Default.MySql
                 }
 
                 manipulation = "Select " + (sql.Distinct ? "Distinct" : string.Empty) + "\n" + string.Join(",\n", columns).Indent(2);
+
+                resultEntityInfo = new()
+                {
+                    CommandText = columns.Count == 1 ? columns[0] : null,
+                    EntitySource = EntitySource.SubQuery
+                };
             }
 
             //Delete
@@ -1304,10 +1314,15 @@ namespace LogicEntity.Default.MySql
                 {
                     LambdaExpression predicateExpression = sql.Having[i];
 
+#if DEBUG
+                    if (predicateExpression.Parameters.Count != 1)
+                        throw new Exception();
+#endif
+
                     var valueCmd = GetValueExpression(predicateExpression.Body, new SqlContext(level)
                     {
                         Parameters = parameters.Concat(
-                            predicateExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i].EntitySource)))
+                            predicateExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(resultEntityInfo)))
                             ).ToDictionary(s => s.Key, s => s.Value)
                     }, i == 0);
 
@@ -1399,7 +1414,7 @@ namespace LogicEntity.Default.MySql
                     var keyCmd = GetValueExpression(lambdaExpression.Body, new SqlContext(level)
                     {
                         Parameters = parameters.Concat(
-                            lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i].EntitySource)))
+                            lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(resultEntityInfo)))
                             ).ToDictionary(s => s.Key, s => s.Value)
                     });
 

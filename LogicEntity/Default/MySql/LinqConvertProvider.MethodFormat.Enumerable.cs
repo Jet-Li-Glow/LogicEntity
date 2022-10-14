@@ -1,5 +1,6 @@
 ﻿using LogicEntity.Collections;
 using LogicEntity.Collections.Generic;
+using LogicEntity.Default.MySql.Linq.Expressions;
 using LogicEntity.Linq.Expressions;
 using System;
 using System.Collections;
@@ -160,6 +161,11 @@ namespace LogicEntity.Default.MySql
         {
             MethodInfo[] methods = typeof(MySqlEnumerable).GetMethods(BindingFlags.Public | BindingFlags.Static);
 
+            foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.Value)))
+            {
+                MemberFormat[m] = (object)FormatValue;
+            }
+
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.InnerJoin)))
             {
                 MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Inner Join");
@@ -198,6 +204,16 @@ namespace LogicEntity.Default.MySql
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.NaturalRightJoin)))
             {
                 MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Right Join");
+            }
+
+            foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.RecursiveConcat)))
+            {
+                MemberFormat[m] = (object)FormatRecursiveConcat;
+            }
+
+            foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.RecursiveUnion)))
+            {
+                MemberFormat[m] = (object)FormatRecursiveUnion;
             }
         }
 
@@ -674,6 +690,31 @@ namespace LogicEntity.Default.MySql
             Type[] genericTypes = methodCallExpression.Method.GetGenericArguments();
 
             return SqlValue.TableExpression(new SumTableExpression((TableExpression)sourceExpression, selector, genericTypes[genericTypes.Length - 1]));
+        }
+
+        SqlValue FormatValue(MethodCallExpression methodCallExpression, SqlContext context)
+        {
+            return SqlValue.TableExpression(new SelectedTableExpression(null, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, methodCallExpression.Method.GetGenericArguments()[0]));
+        }
+
+        SqlValue FormatRecursiveConcat(MethodCallExpression methodCallExpression, SqlContext context)
+        {
+            object first = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+
+            if (first is IDataTable firstDataTable)
+                first = firstDataTable.Expression;
+
+            return SqlValue.TableExpression(new RecursiveUnionedTableExpression((TableExpression)first, (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand, false));
+        }
+
+        SqlValue FormatRecursiveUnion(MethodCallExpression methodCallExpression, SqlContext context)
+        {
+            object first = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+
+            if (first is IDataTable firstDataTable)
+                first = firstDataTable.Expression;
+
+            return SqlValue.TableExpression(new RecursiveUnionedTableExpression((TableExpression)first, (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand, true));
         }
     }
 }

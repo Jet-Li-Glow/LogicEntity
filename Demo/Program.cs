@@ -63,7 +63,7 @@ namespace Demo
 
             data = db.Students.Select(s => new { Id = s.Id + 1, Name = s.Name }).Take(10).Union(db.Students.Select(s => new { Id = s.Id + 2, Name = s.Name }).Take(10)).ToList();
 
-            data = db.Students.OrderBy(s => s.Id).Skip(10).Take(10);
+            data = db.Students.OrderBy(s => s.Id).Skip(10).Take(10).ToList();
 
             data = db.Students.Select(s => new { Id = ((int?)s.Id) ?? 0 }).Take(1).ToList();
 
