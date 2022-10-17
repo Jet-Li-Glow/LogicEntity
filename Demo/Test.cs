@@ -4,6 +4,7 @@ using LogicEntity;
 using LogicEntity.Collections;
 using LogicEntity.Collections.Generic;
 using LogicEntity.Default.MySql;
+using LogicEntity.Linq;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections;

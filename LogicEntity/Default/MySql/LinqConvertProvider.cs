@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,10 +14,9 @@ using LogicEntity.Default.MySql.ValueConversion;
 using LogicEntity.Collections.Generic;
 using LogicEntity.Collections;
 using LogicEntity.Method;
-using System.Data.SqlTypes;
 using LogicEntity.Default.MySql.Linq.Expressions;
 using LogicEntity.Default.MySql.ExpressionVisit;
-using System.Reflection.Emit;
+using LogicEntity.Linq;
 
 namespace LogicEntity.Default.MySql
 {

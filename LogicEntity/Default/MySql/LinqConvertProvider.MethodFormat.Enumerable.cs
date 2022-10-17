@@ -1,6 +1,7 @@
 ﻿using LogicEntity.Collections;
 using LogicEntity.Collections.Generic;
 using LogicEntity.Default.MySql.Linq.Expressions;
+using LogicEntity.Linq;
 using LogicEntity.Linq.Expressions;
 using System;
 using System.Collections;
@@ -19,24 +20,24 @@ namespace LogicEntity.Default.MySql
     {
         void InitEnumerableMethodFormat()
         {
-            MethodInfo[] methods = typeof(Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static);
+            MethodInfo[] methods = typeof(LogicEntity.Linq.Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static);
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Select)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Select)))
             {
                 MemberFormat[m] = (object)FormatSelect;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Join)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Join)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, nameof(Enumerable.Join));
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, nameof(LogicEntity.Linq.Enumerable.Join));
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Where) || m.Name == nameof(Enumerable.TakeWhile)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Where) || m.Name == nameof(LogicEntity.Linq.Enumerable.TakeWhile)))
             {
                 MemberFormat[m] = (object)FormatWhere;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.GroupBy)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.GroupBy)))
             {
                 MemberFormat[m] = (object)FormatGroupBy;
             }
@@ -47,57 +48,57 @@ namespace LogicEntity.Default.MySql
                 MemberFormat[m] = (object)FormatIGroupingDataTableElement;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Concat)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Concat)))
             {
                 MemberFormat[m] = (object)FormatConcat;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Union)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Union)))
             {
                 MemberFormat[m] = (object)FormatUnion;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.OrderBy)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.OrderBy)))
             {
                 MemberFormat[m] = (object)FormatOrderBy;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.OrderByDescending)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.OrderByDescending)))
             {
                 MemberFormat[m] = (object)FormatOrderByDescending;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.ThenBy)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.ThenBy)))
             {
                 MemberFormat[m] = (object)FormatThenBy;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.ThenByDescending)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.ThenByDescending)))
             {
                 MemberFormat[m] = (object)FormatThenByDescending;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Skip)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Skip)))
             {
                 MemberFormat[m] = (object)FormatSkip;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Take)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Take)))
             {
                 MemberFormat[m] = (object)FormatTake;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.All)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.All)))
             {
                 MemberFormat[m] = (object)FormatAll;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Any)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Any)))
             {
                 MemberFormat[m] = (object)FormatAny;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Average)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Average)))
             {
                 MemberFormat[m] = (object)FormatAverage;
             }
@@ -106,52 +107,52 @@ namespace LogicEntity.Default.MySql
 
             MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.Contains))] = (object)FormatListContains;
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Count) || m.Name == nameof(Enumerable.LongCount)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Count) || m.Name == nameof(LogicEntity.Linq.Enumerable.LongCount)))
             {
                 MemberFormat[m] = (object)FormatCount;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Distinct)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Distinct)))
             {
                 MemberFormat[m] = (object)FormatDistinct;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.DistinctBy)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.DistinctBy)))
             {
                 MemberFormat[m] = (object)FormatDistinctBy;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.ElementAt)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.ElementAt)))
             {
                 MemberFormat[m] = (object)FormatElementAt;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.First)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.First)))
             {
                 MemberFormat[m] = (object)FormatFirst;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Max)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Max)))
             {
                 MemberFormat[m] = (object)FormatMax;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.MaxBy)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.MaxBy)))
             {
                 MemberFormat[m] = (object)FormatMaxBy;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Min)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Min)))
             {
                 MemberFormat[m] = (object)FormatMin;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.MinBy)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.MinBy)))
             {
                 MemberFormat[m] = (object)FormatMinBy;
             }
 
-            foreach (var m in methods.Where(m => m.Name == nameof(Enumerable.Sum)))
+            foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Sum)))
             {
                 MemberFormat[m] = (object)FormatSum;
             }

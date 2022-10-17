@@ -13,6 +13,7 @@ using Demo.Tables;
 using LogicEntity;
 using LogicEntity.Collections.Generic;
 using LogicEntity.Default.MySql;
+using LogicEntity.Linq;
 using LogicEntity.Method;
 using MySql.Data.MySqlClient;
 
