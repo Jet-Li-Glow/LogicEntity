@@ -1314,6 +1314,11 @@ namespace LogicEntity.Linq
             return new DataTableImpl<TSource>(first.Db, new UnionedTableExpression(first.Expression, second.Expression, true));
         }
 
+        public static IDataTable<TSource> UnionBy<TSource, TKey>(this IDataTable<TSource> first, IDataTable<TSource> second, Expression<Func<TSource, TKey>> keySelector)
+        {
+            return first.Concat(second).DistinctBy(keySelector);
+        }
+
         public static IOrderedDataTable<TSource> OrderBy<TSource, TKey>(this IDataTable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
         {
             if (source is null)
@@ -2224,6 +2229,26 @@ namespace LogicEntity.Linq
         public static TSource SingleOrDefault<TSource>(this IDataTable<TSource> source, Expression<Func<TSource, bool>> predicate, TSource defaultValue)
         {
             return source.Where(predicate).Take(2).SingleOrDefault(defaultValue);
+        }
+
+        public static IDataTable<TSource> SkipWhile<TSource>(this IDataTable<TSource> source, Expression<Func<TSource, bool>> predicate)
+        {
+            return source.Where(
+                System.Linq.Expressions.Expression.Lambda<Func<TSource, bool>>(
+                    System.Linq.Expressions.Expression.Not(predicate.Body),
+                    predicate.Parameters
+                    )
+                );
+        }
+
+        public static IDataTable<TSource> SkipWhile<TSource>(this IDataTable<TSource> source, Expression<Func<TSource, int, bool>> predicate)
+        {
+            return source.Where(
+                System.Linq.Expressions.Expression.Lambda<Func<TSource, int, bool>>(
+                    System.Linq.Expressions.Expression.Not(predicate.Body),
+                    predicate.Parameters
+                    )
+                );
         }
 
         public static IDataTable<TSource> TakeWhile<TSource>(this IDataTable<TSource> source, Expression<Func<TSource, bool>> predicate)

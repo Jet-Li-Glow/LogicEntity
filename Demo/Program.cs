@@ -25,7 +25,7 @@ namespace Demo
         {
             //Version 1.0.0
 
-            //开发计划  
+            //开发计划  1.运算符优先级
 
             Console.WriteLine("-- Start --");
 
