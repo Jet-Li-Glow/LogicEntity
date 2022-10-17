@@ -1694,7 +1694,7 @@ namespace LogicEntity.Linq
             return (TResult)source.Db.ExecuteScalar(new AverageTableExpression(source.Expression, selector, typeof(TResult)));
         }
 
-        public static IEnumerable<TSource[]> Chunk<TSource>(this IEnumerable<TSource> source, int size)
+        public static IEnumerable<TSource[]> Chunk<TSource>(this IDataTable<TSource> source, int size)
         {
             int offset = 0;
 
