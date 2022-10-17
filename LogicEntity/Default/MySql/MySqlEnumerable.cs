@@ -1715,6 +1715,28 @@ namespace LogicEntity.Default.MySql
             return new DataTableImpl<TSource>(first.Db, new RecursiveUnionedTableExpression(first.Expression, secondFactory, true));
         }
 
+        public static IDataTable<TSource> ExceptAll<TSource>(this IDataTable<TSource> first, IDataTable<TSource> second)
+        {
+            if (first is null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (second is null)
+                throw new ArgumentNullException(nameof(second));
+
+            return new DataTableImpl<TSource>(first.Db, new ExceptAllTableExpression(first.Expression, second.Expression));
+        }
+
+        public static IDataTable<TSource> IntersectAll<TSource>(this IDataTable<TSource> first, IDataTable<TSource> second)
+        {
+            if (first is null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (second is null)
+                throw new ArgumentNullException(nameof(second));
+
+            return new DataTableImpl<TSource>(first.Db, new IntersectAllTableExpression(first.Expression, second.Expression));
+        }
+
         public static IDataTable<TSource> Timeout<TSource>(this IDataTable<TSource> source, int timeout)
         {
             return new DataTableImpl<TSource>(source.Db, new TimeoutTableExpression(source.Expression, timeout));

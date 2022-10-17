@@ -24,7 +24,7 @@ namespace Demo
         {
             //Version 1.0.0
 
-            //开发计划  1.Add Ignore
+            //开发计划  
 
             Console.WriteLine("-- Start --");
 
@@ -61,7 +61,11 @@ namespace Demo
 
             data = db.Students.Select(s => new { SubQuery = db.Majors.Where(m => m.MajorId == s.MajorId).Select(m => m.MajorName).First() }).ToList();
 
-            data = db.Students.Select(s => new { Id = s.Id + 1, Name = s.Name }).Take(10).Union(db.Students.Select(s => new { Id = s.Id + 2, Name = s.Name }).Take(10)).ToList();
+            data = db.Students.Select(s => new { s.Id, s.Name }).Union(db.Students.Select(s => new { s.Id, s.Name })).OrderBy(s => s.Id).Take(50).ToList();
+
+            data = db.Students.Select(s => new { s.Id, s.Name }).Except(db.Students.Select(s => new { s.Id, s.Name })).OrderBy(s => s.Id).Take(50).ToList();
+
+            data = db.Students.Select(s => new { s.Id, s.Name }).Intersect(db.Students.Select(s => new { s.Id, s.Name })).OrderBy(s => s.Id).Take(50).ToList();
 
             data = db.Students.OrderBy(s => s.Id).Skip(10).Take(10).ToList();
 

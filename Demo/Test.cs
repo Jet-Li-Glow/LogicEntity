@@ -238,6 +238,13 @@ namespace Demo
             }).ToList();
 
             //Select - 4
+            data = db.Students.Select(s => new { n = (int)s.Id + 100 }).Take(5).Union(
+                db.Value(() => new { n = 1 })
+                .RecursiveConcat(ns => ns.Where(s => s.n < 40).Select(s => new { n = s.n + 1 }))
+                .Take(20)
+                ).ToList();
+
+            //Select - 5
             dataTable = db.Students
                 .Where(s => s.Id > 0)
                 .Where(s => s.Id > 0)
@@ -265,7 +272,7 @@ namespace Demo
 
             data = ((IEnumerable)dataTable).Cast<object>().ToList();
 
-            //Select - 5
+            //Select - 6
             dataTable = db.Students
                 .NaturalJoin(db.Students)
                 .Select((a, b) => a)
@@ -276,7 +283,7 @@ namespace Demo
 
             data = ((IEnumerable)dataTable).Cast<object>().ToList();
 
-            //Select - 6
+            //Select - 7
             dataTable = db.Students.Select(s =>
                 db.Students
                     .Join(db.Students, (a, b) => a.Id == b.Id)
@@ -293,7 +300,7 @@ namespace Demo
 
             data = ((IEnumerable)dataTable).Cast<object>().ToList();
 
-            //Select - 7
+            //Select - 8
             data = db.Students.Select(
                 s => s.Id.As("Const Id"),
                 s => s.Name,
@@ -302,7 +309,7 @@ namespace Demo
                 s => s.Name.As("Chars").ReadChars(charsReader)
                 );
 
-            //Select - 8
+            //Select - 9
             data = db.Students.Average(s => s.Id + s.Id);
             data = db.Students.Count();
             data = db.Students.LongCount();
@@ -313,13 +320,13 @@ namespace Demo
             data = db.Students.Any(a => a.Name == "小明");
             data = db.Students.All(a => a.Name == "小明");
 
-            //Select - 9
+            //Select - 10
             data = db.Value(() => db.Students.Max(s => s.Id) + 1).ToList();
 
-            //Select - 10
+            //Select - 11
             data = db.Students.Select(s => new MyClass(s.Id + 1) { Name = s.Name + " - " }).Take(1).ToList();
 
-            //Select - 11
+            //Select - 12
             var nsdata = db.Value(() => new { n = 1 }).RecursiveConcat(ns =>
                 db.Students.Join(ns, (a, b) => a.Id == b.n)
                 .Select((a, b) => new { n = b.n + 1 })
@@ -331,7 +338,7 @@ namespace Demo
 
             data = db.Students.Join(nsdata, (a, b) => a.Id == b.n).Select((a, b) => new { b.n }).Union(nsdata).ToList();
 
-            //Select - 12
+            //Select - 13
             try
             {
                 db.Value(() => MyDbFunction.Sleep(10)).Timeout(5).First();
@@ -342,7 +349,7 @@ namespace Demo
             {
             }
 
-            //Select - 13
+            //Select - 14
             List<int> ids = new();
 
             data = db.Students.Where(s => ids.Contains(s.Id)).ToList();

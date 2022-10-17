@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -12,11 +13,18 @@ namespace LogicEntity.Default.MySql
     /// <summary>
     /// 数据操作Sql
     /// </summary>
-    internal class DataManipulationSql
+    internal class DataManipulationSql : IDataManipulationSql
     {
         SortedList<SelectNodeType, int> _nodes = new();
 
-        public DataManipulationSqlType DataManipulationType { get; set; } = DataManipulationSqlType.Select;
+        public DataManipulationSqlType SqlType { get; set; } = DataManipulationSqlType.Select;
+
+        public IDataManipulationSql SetSqlType(DataManipulationSqlType sqlType)
+        {
+            SqlType = sqlType;
+
+            return this;
+        }
 
         public Type Type { get; set; }
 
@@ -117,25 +125,6 @@ namespace LogicEntity.Default.MySql
             }
         }
 
-        object _union;
-
-        public object Union
-        {
-            get
-            {
-                return _union;
-            }
-
-            set
-            {
-                _union = value;
-
-                _nodes.Add(SelectNodeType.Union, 0);
-            }
-        }
-
-        public bool UnionDistinct { get; set; }
-
         List<OrderedTableExpression> _orderBy;
 
         public List<OrderedTableExpression> OrderBy
@@ -170,9 +159,7 @@ namespace LogicEntity.Default.MySql
             }
         }
 
-        public int Max => _nodes.Max(n => (int)n.Key);
-
-        public bool CanAdd(SelectNodeType nodeType)
+        public bool CanSet(SelectNodeType nodeType)
         {
             if (_nodes.Any() == false)
                 return true;
@@ -180,7 +167,118 @@ namespace LogicEntity.Default.MySql
             if (_nodes.ContainsKey(nodeType))
                 return false;
 
-            return (int)nodeType > Max;
+            return (int)nodeType > _nodes.Max(n => (int)n.Key);
+        }
+
+        public IDataManipulationSql SetDistinct(bool distinct)
+        {
+            Distinct = distinct;
+
+            return this;
+        }
+
+        public IDataManipulationSql SetHasIndex(bool hasIndex)
+        {
+            HasIndex = hasIndex;
+
+            return this;
+        }
+
+        public IDataManipulationSql SetDelete(List<string> tables)
+        {
+            Delete = tables;
+
+            return this;
+        }
+        public IDataManipulationSql SetSet(LambdaExpression[] assignments)
+        {
+            Set = assignments;
+
+            return this;
+        }
+
+        public IDataManipulationSql SetWhere(List<LambdaExpression> where)
+        {
+            DataManipulationSql sql = this;
+
+            if (sql.CanSet(SelectNodeType.Where) == false)
+            {
+                sql = new() { From = sql };
+            }
+
+            sql.Where = where;
+
+            return sql;
+        }
+
+        public IDataManipulationSql SetGroupBy(LambdaExpression groupBy)
+        {
+            DataManipulationSql sql = this;
+
+            if (sql.CanSet(SelectNodeType.GroupBy) == false)
+            {
+                sql = new() { From = sql };
+            }
+
+            sql.GroupBy = groupBy;
+
+            return sql;
+        }
+
+        public IDataManipulationSql SetSelect(object select)
+        {
+            DataManipulationSql sql = this;
+
+            if (sql.CanSet(SelectNodeType.Select) == false)
+            {
+                sql = new() { From = sql };
+            }
+
+            sql.Select = select;
+
+            return sql;
+        }
+
+        public IDataManipulationSql SetHaving(List<LambdaExpression> having)
+        {
+            DataManipulationSql sql = this;
+
+            if (sql.CanSet(SelectNodeType.Having) == false)
+            {
+                sql = new() { From = sql };
+            }
+
+            sql.Having = having;
+
+            return sql;
+        }
+
+        public IDataManipulationSql SetOrderBy(List<OrderedTableExpression> orderBy)
+        {
+            DataManipulationSql sql = this;
+
+            if (sql.CanSet(SelectNodeType.OrderBy) == false)
+            {
+                sql = new() { From = sql };
+            }
+
+            sql.OrderBy = orderBy;
+
+            return sql;
+        }
+
+        public IDataManipulationSql SetLimit(SkipTaked limit)
+        {
+            DataManipulationSql sql = this;
+
+            if (sql.CanSet(SelectNodeType.Limit) == false)
+            {
+                sql = new() { From = sql };
+            }
+
+            sql.Limit = limit;
+
+            return sql;
         }
 
         public static implicit operator List<DataManipulationSqlJoinedInfo>(DataManipulationSql sql)

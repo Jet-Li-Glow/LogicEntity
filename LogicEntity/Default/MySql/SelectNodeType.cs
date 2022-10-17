@@ -13,7 +13,6 @@ namespace LogicEntity.Default.MySql
         GroupBy,
         Select,
         Having,
-        Union,
         OrderBy,
         Limit
     }

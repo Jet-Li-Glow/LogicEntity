@@ -18,6 +18,7 @@ using LogicEntity.Method;
 using System.Data.SqlTypes;
 using LogicEntity.Default.MySql.Linq.Expressions;
 using LogicEntity.Default.MySql.ExpressionVisit;
+using System.Reflection.Emit;
 
 namespace LogicEntity.Default.MySql
 {
@@ -157,10 +158,16 @@ namespace LogicEntity.Default.MySql
 
             if (sql.IsCTE)
             {
-                sql = new()
+                sql = new DataManipulationSql()
                 {
                     Select = _AllColumnsLambdaExpression,
-                    From = sql,
+                    From = new()
+                    {
+                        new()
+                        {
+                            Table = sql
+                        }
+                    },
                     Type = sql.Type
                 };
             }
@@ -392,11 +399,11 @@ namespace LogicEntity.Default.MySql
             throw new UnsupportedExpressionException(operateExpression);
         }
 
-        DataManipulationSql GetDataManipulationSql(LogicEntity.Linq.Expressions.Expression expression)
+        IDataManipulationSql GetDataManipulationSql(LogicEntity.Linq.Expressions.Expression expression)
         {
             if (expression is OriginalTableExpression)
             {
-                return new()
+                return new DataManipulationSql()
                 {
                     From = new()
                     {
@@ -439,7 +446,7 @@ namespace LogicEntity.Default.MySql
                         table.Table = GetDataManipulationSql((TableExpression)table.Table);
                 }
 
-                return new()
+                return new DataManipulationSql()
                 {
                     From = tables
                 };
@@ -454,11 +461,17 @@ namespace LogicEntity.Default.MySql
                 {
                     var sourceSql = GetDataManipulationSql(rowFilteredTableExpression.Source);
 
-                    sourceSql.HasIndex = true;
+                    sourceSql.SetHasIndex(true);
 
-                    return new()
+                    return new DataManipulationSql()
                     {
-                        From = sourceSql,
+                        From = new()
+                        {
+                            new()
+                            {
+                                Table = sourceSql
+                            }
+                        },
                         Where = filters,
                         Type = expression.Type
                     };
@@ -477,19 +490,27 @@ namespace LogicEntity.Default.MySql
 
                 var sql = GetDataManipulationSql(current);
 
-                if (sql.CanAdd(SelectNodeType.Where))
+                if (sql.CanSet(SelectNodeType.Where))
                 {
-                    sql.Where = filters;
+                    sql.SetWhere(filters);
                 }
-                else if (sql.CanAdd(SelectNodeType.Having))
+                else if (sql.CanSet(SelectNodeType.Having))
                 {
-                    sql.Having = filters;
+                    sql.SetHaving(filters);
                 }
                 else
                 {
-                    sql = new() { From = sql };
-
-                    sql.Where = filters;
+                    sql = new DataManipulationSql()
+                    {
+                        From = new()
+                        {
+                            new()
+                            {
+                                Table = sql
+                            }
+                        },
+                        Where = filters
+                    };
                 }
 
                 sql.Type = expression.Type;
@@ -498,14 +519,7 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is GroupedTableExpression groupedTableExpression)
             {
-                var sql = GetDataManipulationSql(groupedTableExpression.Source);
-
-                if (sql.CanAdd(SelectNodeType.GroupBy) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
-                sql.GroupBy = (LambdaExpression)groupedTableExpression.KeySelector;
+                var sql = GetDataManipulationSql(groupedTableExpression.Source).SetGroupBy((LambdaExpression)groupedTableExpression.KeySelector);
 
                 sql.Type = expression.Type;
 
@@ -513,23 +527,53 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is UnionedTableExpression unionedTableExpression)
             {
-                var sql = GetDataManipulationSql(unionedTableExpression.Left);
+                string operateStr = "Union";
 
-                if (sql.CanAdd(SelectNodeType.Union) == false)
-                {
-                    sql = new() { From = sql };
-                }
+                if (unionedTableExpression.Distinct == false)
+                    operateStr += " All";
 
-                if (unionedTableExpression.Right is RecursiveUnionedTableExpression)
+                var sql = new UnionedSql()
                 {
-                    sql.Union = unionedTableExpression.Right;
-                }
-                else
-                {
-                    sql.Union = GetDataManipulationSql(unionedTableExpression.Right);
-                }
+                    Left = GetDataManipulationSql(unionedTableExpression.Left),
+                    BinaryTableOperate = operateStr,
+                    Right = GetDataManipulationSql(unionedTableExpression.Right)
+                };
 
-                sql.UnionDistinct = unionedTableExpression.Distinct;
+                sql.Type = expression.Type;
+
+                return sql;
+            }
+            else if (expression is IntersectTableExpression intersectTableExpression)
+            {
+                string operateStr = "Intersect";
+
+                if (intersectTableExpression is IntersectAllTableExpression)
+                    operateStr += " All";
+
+                var sql = new UnionedSql()
+                {
+                    Left = GetDataManipulationSql(intersectTableExpression.Left),
+                    BinaryTableOperate = operateStr,
+                    Right = GetDataManipulationSql(intersectTableExpression.Right)
+                };
+
+                sql.Type = expression.Type;
+
+                return sql;
+            }
+            else if (expression is ExceptTableExpression exceptTableExpression)
+            {
+                string operateStr = "Except";
+
+                if (exceptTableExpression is ExceptAllTableExpression)
+                    operateStr += " All";
+
+                var sql = new UnionedSql()
+                {
+                    Left = GetDataManipulationSql(exceptTableExpression.Left),
+                    BinaryTableOperate = operateStr,
+                    Right = GetDataManipulationSql(exceptTableExpression.Right)
+                };
 
                 sql.Type = expression.Type;
 
@@ -537,7 +581,7 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is OrderedTableExpression orderedTableExpression)
             {
-                List<OrderedTableExpression> es = new();
+                List<OrderedTableExpression> keys = new();
 
                 bool hasStart = false;
 
@@ -547,7 +591,7 @@ namespace LogicEntity.Default.MySql
                 {
                     if (hasStart == false)
                     {
-                        es.Add(orderedTable);
+                        keys.Add(orderedTable);
 
                         hasStart = orderedTable.Ordered == false;
                     }
@@ -555,16 +599,9 @@ namespace LogicEntity.Default.MySql
                     current = orderedTable.Source;
                 }
 
-                es.Reverse();
+                keys.Reverse();
 
-                var sql = GetDataManipulationSql(current);
-
-                if (sql.CanAdd(SelectNodeType.OrderBy) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
-                sql.OrderBy = es;
+                var sql = GetDataManipulationSql(current).SetOrderBy(keys);
 
                 sql.Type = expression.Type;
 
@@ -618,18 +655,11 @@ namespace LogicEntity.Default.MySql
                 if (taked < 0)
                     taked = 0;
 
-                var sql = GetDataManipulationSql(current);
-
-                if (sql.CanAdd(SelectNodeType.Limit) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
-                sql.Limit = new()
+                var sql = GetDataManipulationSql(current).SetLimit(new()
                 {
                     Skip = skip,
                     Taked = taked
-                };
+                });
 
                 sql.Type = expression.Type;
 
@@ -637,14 +667,9 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is SelectedTableExpression columnFilteredTableExpression)
             {
-                var sql = columnFilteredTableExpression.Source is null ? new() : GetDataManipulationSql(columnFilteredTableExpression.Source);
+                var sql = columnFilteredTableExpression.Source is null ? new DataManipulationSql() : GetDataManipulationSql(columnFilteredTableExpression.Source);
 
-                if (sql.CanAdd(SelectNodeType.Select) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
-                sql.Select = columnFilteredTableExpression.Selector;
+                sql = sql.SetSelect(columnFilteredTableExpression.Selector);
 
                 sql.Type = expression.Type;
 
@@ -652,104 +677,78 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is DistinctTableExpression distinctTableExpression)
             {
-                var sql = GetDataManipulationSql(distinctTableExpression.Source);
+                var sql = GetDataManipulationSql(distinctTableExpression.Source).SetDistinct(true);
 
-                sql.Distinct = true;
+                sql.Type = expression.Type;
 
                 return sql;
             }
             else if (expression is AverageTableExpression averageTableExpression)
             {
-                var sql = GetDataManipulationSql(averageTableExpression.Source);
-
-                if (sql.CanAdd(SelectNodeType.Select) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
                 LambdaExpression selector = (LambdaExpression)averageTableExpression.Selector;
 
-                sql.Select = System.Linq.Expressions.Expression.Lambda(
+                selector = System.Linq.Expressions.Expression.Lambda(
                     System.Linq.Expressions.Expression.Call(_Average.MakeGenericMethod(selector.Body.Type), selector.Body),
                     selector.Parameters
                     );
 
-                sql.Type = averageTableExpression.Type;
+                var sql = GetDataManipulationSql(averageTableExpression.Source).SetSelect(selector);
+
+                sql.Type = expression.Type;
 
                 return sql;
             }
             else if (expression is CountTableExpression countTableExpression)
             {
-                var sql = GetDataManipulationSql(countTableExpression.Source);
+                var sql = GetDataManipulationSql(countTableExpression.Source)
+                    .SetSelect(System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Call(_Count)));
 
-                if (sql.CanAdd(SelectNodeType.Select) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
-                sql.Select = System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Call(_Count));
-
-                sql.Type = countTableExpression.Type;
+                sql.Type = expression.Type;
 
                 return sql;
             }
             else if (expression is MaxTableExpression maxTableExpression)
             {
-                var sql = GetDataManipulationSql(maxTableExpression.Source);
-
-                if (sql.CanAdd(SelectNodeType.Select) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
                 LambdaExpression selector = (LambdaExpression)maxTableExpression.Selector;
 
-                sql.Select = System.Linq.Expressions.Expression.Lambda(
+                selector = System.Linq.Expressions.Expression.Lambda(
                     System.Linq.Expressions.Expression.Call(_Max.MakeGenericMethod(selector.Body.Type), selector.Body),
                     selector.Parameters
                     );
 
-                sql.Type = maxTableExpression.Type;
+                var sql = GetDataManipulationSql(maxTableExpression.Source).SetSelect(selector);
+
+                sql.Type = expression.Type;
 
                 return sql;
             }
             else if (expression is MinTableExpression minTableExpression)
             {
-                var sql = GetDataManipulationSql(minTableExpression.Source);
-
-                if (sql.CanAdd(SelectNodeType.Select) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
                 LambdaExpression selector = (LambdaExpression)minTableExpression.Selector;
 
-                sql.Select = System.Linq.Expressions.Expression.Lambda(
+                selector = System.Linq.Expressions.Expression.Lambda(
                     System.Linq.Expressions.Expression.Call(_Min.MakeGenericMethod(selector.Body.Type), selector.Body),
                     selector.Parameters
                     );
 
-                sql.Type = minTableExpression.Type;
+                var sql = GetDataManipulationSql(minTableExpression.Source).SetSelect(selector);
+
+                sql.Type = expression.Type;
 
                 return sql;
             }
             else if (expression is SumTableExpression sumTableExpression)
             {
-                var sql = GetDataManipulationSql(sumTableExpression.Source);
-
-                if (sql.CanAdd(SelectNodeType.Select) == false)
-                {
-                    sql = new() { From = sql };
-                }
-
                 LambdaExpression selector = (LambdaExpression)sumTableExpression.Selector;
 
-                sql.Select = System.Linq.Expressions.Expression.Lambda(
+                selector = System.Linq.Expressions.Expression.Lambda(
                     System.Linq.Expressions.Expression.Call(_Sum.MakeGenericMethod(selector.Body.Type), selector.Body),
                     selector.Parameters
                     );
 
-                sql.Type = sumTableExpression.Type;
+                var sql = GetDataManipulationSql(sumTableExpression.Source).SetSelect(selector);
+
+                sql.Type = expression.Type;
 
                 return sql;
             }
@@ -802,16 +801,17 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is RecursiveUnionedTableExpression recursiveUnionedTableExpression)
             {
-                var sql = GetDataManipulationSql(recursiveUnionedTableExpression.Left);
+                string operateStr = "Union";
 
-                if (sql.CanAdd(SelectNodeType.Union) == false)
+                if (recursiveUnionedTableExpression.Distinct == false)
+                    operateStr += " All";
+
+                var sql = new UnionedSql()
                 {
-                    sql = new() { From = sql };
-                }
-
-                sql.Union = recursiveUnionedTableExpression.RightFactory;
-
-                sql.UnionDistinct = recursiveUnionedTableExpression.Distinct;
+                    Left = GetDataManipulationSql(recursiveUnionedTableExpression.Left),
+                    BinaryTableOperate = operateStr,
+                    Right = recursiveUnionedTableExpression.RightFactory
+                };
 
                 sql.Type = expression.Type;
 
@@ -821,7 +821,7 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is CTETableExpression cteTableExpression)
             {
-                return new()
+                return new DataManipulationSql()
                 {
                     From = new()
                     {
@@ -835,32 +835,32 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is RemoveOperateExpression removeOperateExpression)
             {
-                var sql = GetDataManipulationSql(removeOperateExpression.Source);
-
-                sql.DataManipulationType = DataManipulationSqlType.Delete;
+                var sql = GetDataManipulationSql(removeOperateExpression.Source).SetSqlType(DataManipulationSqlType.Delete);
 
                 if (removeOperateExpression.Selectors is not null)
                 {
                     LambdaExpression[] lambdaExpressions = (LambdaExpression[])removeOperateExpression.Selectors;
 
-                    sql.Delete = lambdaExpressions.Select(lambdaExpression =>
+                    sql = sql.SetDelete(lambdaExpressions.Select(lambdaExpression =>
                     {
                         if (lambdaExpression.Body is not ParameterExpression parameterExpression)
                             throw new UnsupportedExpressionException(lambdaExpression.Body);
 
                         return SqlNode.GetTableAlias(lambdaExpression.Parameters.IndexOf(parameterExpression), 0);
-                    }).ToList();
+                    }).ToList());
                 }
+
+                sql.Type = expression.Type;
 
                 return sql;
             }
             else if (expression is SetOperateExpression setOperateExpression)
             {
-                var sql = GetDataManipulationSql(setOperateExpression.Source);
+                var sql = GetDataManipulationSql(setOperateExpression.Source).SetSqlType(DataManipulationSqlType.Update);
 
-                sql.DataManipulationType = DataManipulationSqlType.Update;
+                sql.SetSet((LambdaExpression[])setOperateExpression.Assignments);
 
-                sql.Set = (LambdaExpression[])setOperateExpression.Assignments;
+                sql.Type = expression.Type;
 
                 return sql;
             }
@@ -876,18 +876,29 @@ namespace LogicEntity.Default.MySql
             throw new UnsupportedExpressionException(expression);
         }
 
-        Command Build(DataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
+        Command Build(IDataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
         {
             if (parameters is null)
                 parameters = new();
 
+            if (sql is DataManipulationSql dataManipulationSql)
+                return BuildSql(dataManipulationSql, parameters, level);
+
+            if (sql is UnionedSql unionedSql)
+                return BuildUnionSql(unionedSql, parameters, level, cteAlias);
+
+            throw new Exception();
+        }
+
+        Command BuildSql(DataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
+        {
             Command command = new();
 
             command.CommandTimeout = sql.Timeout;
 
             Command.Result result = new();
 
-            if (sql.DataManipulationType == DataManipulationSqlType.Select)
+            if (sql.SqlType == DataManipulationSqlType.Select)
                 result.Type = GetResultType(sql.Type);
 
             command.Results.Add(result);
@@ -924,7 +935,7 @@ namespace LogicEntity.Default.MySql
 
                         text = alias;
                     }
-                    else if (table.Table is DataManipulationSql subQuery)
+                    else if (table.Table is IDataManipulationSql subQuery)
                     {
                         if (subQuery.IsCTE)
                         {
@@ -978,7 +989,7 @@ namespace LogicEntity.Default.MySql
                     tableTexts.Add(table.Join + text);
                 }
 
-                from = (sql.DataManipulationType == DataManipulationSqlType.Update ? string.Empty : "\nFrom") + "\n" + string.Join("\n", tableTexts).Indent(2);
+                from = (sql.SqlType == DataManipulationSqlType.Update ? string.Empty : "\nFrom") + "\n" + string.Join("\n", tableTexts).Indent(2);
             }
 
             //Group By
@@ -1040,7 +1051,7 @@ namespace LogicEntity.Default.MySql
             //Select
             EntityInfo resultEntityInfo = entityInfos.FirstOrDefault();
 
-            if (sql.DataManipulationType == DataManipulationSqlType.Select)
+            if (sql.SqlType == DataManipulationSqlType.Select)
             {
                 List<string> columns = new();
 
@@ -1183,7 +1194,7 @@ namespace LogicEntity.Default.MySql
             }
 
             //Delete
-            if (sql.DataManipulationType == DataManipulationSqlType.Delete)
+            if (sql.SqlType == DataManipulationSqlType.Delete)
             {
                 manipulation = "Delete";
 
@@ -1196,7 +1207,7 @@ namespace LogicEntity.Default.MySql
             //Update
             string set = string.Empty;
 
-            if (sql.DataManipulationType == DataManipulationSqlType.Update)
+            if (sql.SqlType == DataManipulationSqlType.Update)
             {
                 manipulation = "Update";
 
@@ -1338,93 +1349,17 @@ namespace LogicEntity.Default.MySql
                 having = "\nHaving\n" + string.Join("\n" + SqlNode.And + " ", havingConditions).Indent(2);
             }
 
-            //Union
-            string union = string.Empty;
-
-            if (sql.Union is not null)
-            {
-                string unionedTable = string.Empty;
-
-                if (sql.Union is DataManipulationSql unionSql)
-                {
-                    if (unionSql.IsCTE)
-                    {
-                        string alias = SqlNode.GetCTEAlias(ctes.Count, level);
-
-                        ctes.Add(new()
-                        {
-                            Alias = alias,
-                            Sql = unionSql
-                        });
-
-                        unionedTable = Build(new()
-                        {
-                            Select = _AllColumnsLambdaExpression,
-                            From = new()
-                            {
-                                new()
-                                {
-                                    Table = new CTETableExpression(alias, unionSql.Type)
-                                }
-                            },
-                            Type = unionSql.Type
-                        }, parameters, level).CommandText;
-                    }
-                    else
-                    {
-                        var unionCommand = Build(unionSql, new(), 0);
-
-                        unionedTable = unionCommand.CommandText;
-
-                        if (unionSql.Max >= (int)SelectNodeType.Union)
-                            unionedTable = SqlNode.SubQuery(unionedTable);
-
-                        command.Parameters.AddRange(unionCommand.Parameters);
-                    }
-                }
-                else if (sql.Union is LambdaExpression lambdaExpression) //cte
-                {
-                    var sqlValue = GetValueExpression(lambdaExpression.Body, new(level)
-                    {
-                        Parameters = parameters.Concat(
-                            lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.DataTable(new CTETableExpression(cteAlias, sql.Type))))
-                            ).ToDictionary(s => s.Key, s => s.Value)
-                    });
-
-                    unionedTable = sqlValue.CommantText?.ToString();
-
-                    if (sqlValue.Parameters is not null)
-                        command.Parameters.AddRange(sqlValue.Parameters);
-                }
-
-                union = "\nUnion" + (sql.UnionDistinct ? string.Empty : " All") + "\n" + unionedTable.Indent(2);
-            }
-
             //Order By
             string orderBy = string.Empty;
 
             if (sql.OrderBy is not null)
             {
-                List<string> keys = new();
+                var orderByText = GetSqlOrderBy(sql.OrderBy, parameters, level, resultEntityInfo);
 
-                foreach (OrderedTableExpression expression in sql.OrderBy)
-                {
-                    LambdaExpression lambdaExpression = (LambdaExpression)expression.KeySelector;
+                orderBy = orderByText.CommandText;
 
-                    var keyCmd = GetValueExpression(lambdaExpression.Body, new SqlContext(level)
-                    {
-                        Parameters = parameters.Concat(
-                            lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(resultEntityInfo)))
-                            ).ToDictionary(s => s.Key, s => s.Value)
-                    });
-
-                    keys.Add(keyCmd.CommantText + " " + (expression.Descending ? SqlNode.Desc : SqlNode.Asc));
-
-                    if (keyCmd.Parameters is not null)
-                        command.Parameters.AddRange(keyCmd.Parameters);
-                }
-
-                orderBy = "\nOrder By\n  " + string.Join(", ", keys);
+                if (orderByText.Parameters is not null)
+                    command.Parameters.AddRange(orderByText.Parameters);
             }
 
             //Limit
@@ -1432,12 +1367,7 @@ namespace LogicEntity.Default.MySql
 
             if (sql.Limit is not null)
             {
-                string count = sql.Limit.Taked.ToString();
-
-                if (sql.Limit.Skip > 0)
-                    count = sql.Limit.Skip.ToString() + ", " + count;
-
-                limit = "\nLimit\n  " + count;
+                limit = GetSqlLimit(sql.Limit);
             }
 
             //with
@@ -1445,26 +1375,191 @@ namespace LogicEntity.Default.MySql
 
             if (ctes.Any())
             {
-                foreach (var cte in ctes)
-                {
-                    var cteCommand = BuildCTE(cte.Sql, parameters, level + 1, cte.Alias);
+                var withText = GetSqlWith(ctes, parameters, level);
 
-                    cte.CommandText = cteCommand.CommandText;
+                with = withText.CommandText;
 
-                    command.Parameters.AddRange(cteCommand.Parameters);
-                }
-
-                with = "With Recursive\n" + string.Join(",\n", ctes.Select(s => SqlNode.As(s.Alias, "\n" + SqlNode.SubQuery(s.CommandText)))).Indent(2) + "\n";
+                if (withText.Parameters is not null)
+                    command.Parameters.AddRange(withText.Parameters);
             }
 
-            command.CommandText = with + manipulation + from + set + where + groupBy + having + union + orderBy + limit;
+            command.CommandText = with + manipulation + from + set + where + groupBy + having + orderBy + limit;
 
             return command;
         }
 
-        Command BuildCTE(DataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias)
+        Command BuildUnionSql(UnionedSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
         {
-            return Build(sql, parameters, level, cteAlias);
+            Command command = new();
+
+            command.CommandTimeout = sql.Timeout;
+
+            Command.Result result = new();
+
+            result.Type = GetResultType(sql.Type);
+
+            command.Results.Add(result);
+
+            //With
+            List<CTEInfo> ctes = new();
+
+            //left
+            string left = string.Empty;
+
+            var leftCommand = Build(sql.Left, parameters, level);
+
+            left = SqlNode.Bracket("\n" + leftCommand.CommandText.Indent(2) + "\n");
+
+            command.Parameters.AddRange(leftCommand.Parameters);
+
+            //right
+            string right = string.Empty;
+
+            if (sql.Right is IDataManipulationSql rightSql)
+            {
+                if (rightSql.IsCTE)
+                {
+                    string alias = SqlNode.GetCTEAlias(ctes.Count, level);
+
+                    ctes.Add(new()
+                    {
+                        Alias = alias,
+                        Sql = rightSql
+                    });
+
+                    right = BuildSql(new()
+                    {
+                        Select = _AllColumnsLambdaExpression,
+                        From = new()
+                            {
+                                new()
+                                {
+                                    Table = new CTETableExpression(alias, rightSql.Type)
+                                }
+                            },
+                        Type = rightSql.Type
+                    }, parameters, level).CommandText;
+                }
+                else
+                {
+                    var rightCommand = Build(rightSql, new(), 0);
+
+                    right = rightCommand.CommandText;
+
+                    command.Parameters.AddRange(rightCommand.Parameters);
+                }
+            }
+            else if (sql.Right is LambdaExpression lambdaExpression) //cte
+            {
+                var sqlValue = GetValueExpression(lambdaExpression.Body, new(level)
+                {
+                    Parameters = parameters.Concat(
+                        lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.DataTable(new CTETableExpression(cteAlias, sql.Type))))
+                        ).ToDictionary(s => s.Key, s => s.Value)
+                });
+
+                right = sqlValue.CommantText?.ToString();
+
+                if (sqlValue.Parameters is not null)
+                    command.Parameters.AddRange(sqlValue.Parameters);
+            }
+
+            right = SqlNode.Bracket("\n" + right.Indent(2) + "\n");
+
+            //Order By
+            string orderBy = string.Empty;
+
+            if (sql.OrderBy is not null)
+            {
+                var orderByText = GetSqlOrderBy(sql.OrderBy, parameters, level, new EntityInfo() { EntitySource = EntitySource.SubQuery });
+
+                orderBy = orderByText.CommandText;
+
+                if (orderByText.Parameters is not null)
+                    command.Parameters.AddRange(orderByText.Parameters);
+            }
+
+            //Limit
+            string limit = string.Empty;
+
+            if (sql.Limit is not null)
+            {
+                limit = GetSqlLimit(sql.Limit);
+            }
+
+            //with
+            string with = string.Empty;
+
+            if (ctes.Any())
+            {
+                var withText = GetSqlWith(ctes, parameters, level);
+
+                with = withText.CommandText;
+
+                if (withText.Parameters is not null)
+                    command.Parameters.AddRange(withText.Parameters);
+            }
+
+            command.CommandText = with + left + "\n\n" + sql.BinaryTableOperate + "\n\n" + right + "\n" + orderBy + limit;
+
+            return command;
+        }
+
+        SqlText GetSqlWith(List<CTEInfo> ctes, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
+        {
+            List<KeyValuePair<string, object>> ps = new();
+
+            foreach (var cte in ctes)
+            {
+                var cteCommand = Build(cte.Sql, parameters, level + 1, cte.Alias);
+
+                cte.CommandText = cteCommand.CommandText;
+
+                ps.AddRange(cteCommand.Parameters);
+            }
+
+            return new()
+            {
+                CommandText = "With Recursive\n" + string.Join(",\n", ctes.Select(s => SqlNode.As(s.Alias, "\n" + SqlNode.SubQuery(s.CommandText)))).Indent(2) + "\n",
+                Parameters = ps
+            };
+        }
+
+        SqlText GetSqlOrderBy(List<OrderedTableExpression> orderedTableExpressions, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, EntityInfo entityInfo)
+        {
+            SqlText result = new();
+
+            List<string> keys = new();
+
+            List<KeyValuePair<string, object>> ps = new();
+
+            foreach (OrderedTableExpression expression in orderedTableExpressions)
+            {
+                LambdaExpression lambdaExpression = (LambdaExpression)expression.KeySelector;
+
+                var keyCmd = GetValueExpression(lambdaExpression.Body, new SqlContext(level)
+                {
+                    Parameters = parameters.Concat(
+                        lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfo)))
+                        ).ToDictionary(s => s.Key, s => s.Value)
+                });
+
+                keys.Add(keyCmd.CommantText + " " + (expression.Descending ? SqlNode.Desc : SqlNode.Asc));
+
+                if (keyCmd.Parameters is not null)
+                    ps.AddRange(keyCmd.Parameters);
+            }
+
+            return new()
+            {
+                CommandText = "\nOrder By\n  " + string.Join(", ", keys),
+                Parameters = ps
+            };
+        }
+
+        string GetSqlLimit(SkipTaked skipTaked)
+        {
+            return "\nLimit\n  " + (skipTaked.Skip > 0 ? (skipTaked.Skip + ", ") : null) + skipTaked.Taked;
         }
 
         List<SqlColumnInfo> ExpandColumns(IEnumerable<SqlColumnInfo> nodes, Dictionary<MemberInfo, string> groupKeys, ref Dictionary<string, ConstructorInfo> constructors, Dictionary<ParameterExpression, string> indexParemeters)
@@ -2329,7 +2424,7 @@ namespace LogicEntity.Default.MySql
         {
             public string Alias { get; set; }
 
-            public DataManipulationSql Sql { get; set; }
+            public IDataManipulationSql Sql { get; set; }
 
             public string CommandText { get; set; }
         }
@@ -2355,6 +2450,13 @@ namespace LogicEntity.Default.MySql
         class EntityPropertyInfo
         {
             public Func<object, object> Writer { get; set; }
+        }
+
+        class SqlText
+        {
+            public string CommandText { get; set; }
+
+            public IEnumerable<KeyValuePair<string, object>> Parameters { get; set; }
         }
     }
 }

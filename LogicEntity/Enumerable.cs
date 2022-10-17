@@ -1813,6 +1813,17 @@ namespace LogicEntity
             return source.Skip(index).Take(1).AsEnumerable().ElementAtOrDefault(0);
         }
 
+        public static IDataTable<TSource> Except<TSource>(this IDataTable<TSource> first, IDataTable<TSource> second)
+        {
+            if (first is null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (second is null)
+                throw new ArgumentNullException(nameof(second));
+
+            return new DataTableImpl<TSource>(first.Db, new ExceptTableExpression(first.Expression, second.Expression));
+        }
+
         public static TSource First<TSource>(this IDataTable<TSource> source)
         {
             return source.Take(1).AsEnumerable().First();
@@ -1841,6 +1852,17 @@ namespace LogicEntity
         public static TSource FirstOrDefault<TSource>(this IDataTable<TSource> source, System.Linq.Expressions.Expression<Func<TSource, bool>> predicate, TSource defaultValue)
         {
             return source.Where(predicate).Take(1).AsEnumerable().FirstOrDefault(defaultValue);
+        }
+
+        public static IDataTable<TSource> Intersect<TSource>(this IDataTable<TSource> first, IDataTable<TSource> second)
+        {
+            if (first is null)
+                throw new ArgumentNullException(nameof(first));
+
+            if (second is null)
+                throw new ArgumentNullException(nameof(second));
+
+            return new DataTableImpl<TSource>(first.Db, new IntersectTableExpression(first.Expression, second.Expression));
         }
 
         public static long LongCount<TSource>(this IDataTable<TSource> source)
