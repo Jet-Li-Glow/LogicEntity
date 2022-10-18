@@ -64,6 +64,8 @@ namespace LogicEntity.Default.MySql
 
         public SqlValueValueType? ValueType { get; set; }
 
+        public SqlOperator? SqlOperator { get; set; }
+
         public Dictionary<MemberInfo, string> GroupKeys { get; set; }
 
         public List<EntityInfo> FromTables { get; set; }

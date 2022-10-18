@@ -1277,6 +1277,8 @@ namespace LogicEntity.Default.MySql
             {
                 List<string> whereConditions = new();
 
+                bool isMultiple = sql.Where.Count > 1;
+
                 for (int i = 0; i < sql.Where.Count; i++)
                 {
                     LambdaExpression predicateExpression = sql.Where[i];
@@ -1300,8 +1302,19 @@ namespace LogicEntity.Default.MySql
                         })).ToDictionary(s => s.Key, s => s.Value)
                     }, i == 0);
 
-                    if (i > 0 && valueCmd.ValueType == SqlValueValueType.Logic)
-                        valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+                    if (isMultiple)
+                    {
+                        if (i == 0)
+                        {
+                            if (NeedLeftBracket(valueCmd.SqlOperator, SqlOperator.AndAlso))
+                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+                        }
+                        else
+                        {
+                            if (NeedRightBracket(SqlOperator.AndAlso, valueCmd.SqlOperator))
+                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+                        }
+                    }
 
                     whereConditions.Add(valueCmd.CommantText?.ToString());
 
@@ -1319,6 +1332,8 @@ namespace LogicEntity.Default.MySql
             {
                 List<string> havingConditions = new();
 
+                bool isMultiple = sql.Having.Count > 1;
+
                 for (int i = 0; i < sql.Having.Count; i++)
                 {
                     LambdaExpression predicateExpression = sql.Having[i];
@@ -1335,8 +1350,19 @@ namespace LogicEntity.Default.MySql
                             ).ToDictionary(s => s.Key, s => s.Value)
                     }, i == 0);
 
-                    if (i > 0 && valueCmd.ValueType == SqlValueValueType.Logic)
-                        valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+                    if (isMultiple)
+                    {
+                        if (i == 0)
+                        {
+                            if (NeedLeftBracket(valueCmd.SqlOperator, SqlOperator.AndAlso))
+                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+                        }
+                        else
+                        {
+                            if (NeedRightBracket(SqlOperator.AndAlso, valueCmd.SqlOperator))
+                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+                        }
+                    }
 
                     havingConditions.Add(valueCmd.CommantText?.ToString());
 
@@ -1344,7 +1370,7 @@ namespace LogicEntity.Default.MySql
                         command.Parameters.AddRange(valueCmd.Parameters);
                 }
 
-                having = "\nHaving\n" + string.Join("\n" + SqlNode.And + " ", havingConditions).Indent(2);
+                having = "\nHaving\n" + string.Join("\n" + SqlNode.AndAlso + " ", havingConditions).Indent(2);
             }
 
             //Order By
@@ -1988,7 +2014,7 @@ namespace LogicEntity.Default.MySql
                 {
                     string text = operandCommand.CommantText?.ToString();
 
-                    if (operandCommand.ValueType == SqlValueValueType.Calculation)
+                    if (NeedRightBracket(SqlOperator.Negate, operandCommand.SqlOperator))
                         text = SqlNode.Bracket(text);
 
                     return new()
@@ -2049,124 +2075,252 @@ namespace LogicEntity.Default.MySql
                 List<KeyValuePair<string, object>> ps = new();
 
                 if (left.Parameters != null)
-                {
                     ps.AddRange(left.Parameters);
-                }
 
                 if (right.Parameters != null)
-                {
                     ps.AddRange(right.Parameters);
-                }
-
-                if (left.ValueType == SqlValueValueType.Calculation)
-                    left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
-
-                if (right.ValueType == SqlValueValueType.Logic || right.ValueType == SqlValueValueType.Calculation)
-                    right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
 
                 object cmdText = null;
 
-                SqlValueValueType? valueType = null;
+                SqlOperator? sqlOperator = null;
 
                 if (binaryExpression.NodeType == ExpressionType.GreaterThan)
+                {
+                    sqlOperator = SqlOperator.GreaterThan;
+
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
                     cmdText = $"{left.CommantText} {SqlNode.GreaterThan} {right.CommantText}";
+                }
                 else if (binaryExpression.NodeType == ExpressionType.GreaterThanOrEqual)
+                {
+                    sqlOperator = SqlOperator.GreaterThanOrEqual;
+
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
                     cmdText = $"{left.CommantText} {SqlNode.GreaterThanOrEqual} {right.CommantText}";
+                }
                 else if (binaryExpression.NodeType == ExpressionType.LessThan)
+                {
+                    sqlOperator = SqlOperator.LessThan;
+
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
                     cmdText = $"{left.CommantText} {SqlNode.LessThan} {right.CommantText}";
+                }
                 else if (binaryExpression.NodeType == ExpressionType.LessThanOrEqual)
+                {
+                    sqlOperator = SqlOperator.LessThanOrEqual;
+
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
                     cmdText = $"{left.CommantText} {SqlNode.LessThanOrEqual} {right.CommantText}";
+                }
                 else if (binaryExpression.NodeType == ExpressionType.Equal)
+                {
+                    sqlOperator = SqlOperator.Equal;
+
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
                     cmdText = $"{left.CommantText} {((right.IsConstant && right.ConstantValue is null) ? SqlNode.Is : SqlNode.Equal)} {right.CommantText}";
+                }
                 else if (binaryExpression.NodeType == ExpressionType.NotEqual)
+                {
+                    sqlOperator = SqlOperator.NotEqual;
+
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
                     cmdText = $"{left.CommantText} {((right.IsConstant && right.ConstantValue is null) ? SqlNode.IsNot : SqlNode.NotEqual)} {right.CommantText}";
+                }
                 else if (binaryExpression.NodeType == ExpressionType.And)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.And} {right.CommantText}";
+                    sqlOperator = SqlOperator.And;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.And} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.AndAlso)
                 {
-                    cmdText = $"{left.CommantText} {(isRoot ? "\n" : string.Empty) + SqlNode.AndAlso} {right.CommantText}";
+                    sqlOperator = SqlOperator.AndAlso;
 
-                    valueType = SqlValueValueType.Logic;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {(isRoot ? "\n" : string.Empty) + SqlNode.AndAlso} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.Or)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.Or} {right.CommantText}";
+                    sqlOperator = SqlOperator.Or;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.Or} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.OrElse)
                 {
-                    cmdText = $"{left.CommantText} {(isRoot ? "\n " : string.Empty) + SqlNode.OrElse} {right.CommantText}";
+                    sqlOperator = SqlOperator.OrElse;
 
-                    valueType = SqlValueValueType.Logic;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {(isRoot ? "\n " : string.Empty) + SqlNode.OrElse} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.Add || binaryExpression.NodeType == ExpressionType.AddChecked)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.Add} {right.CommantText}";
+                    sqlOperator = SqlOperator.Add;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.Add} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.Subtract || binaryExpression.NodeType == ExpressionType.SubtractChecked)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.Subtract} {right.CommantText}";
+                    sqlOperator = SqlOperator.Subtract;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.Subtract} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.Multiply || binaryExpression.NodeType == ExpressionType.MultiplyChecked)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.Multiply} {right.CommantText}";
+                    sqlOperator = SqlOperator.Multiply;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.Multiply} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.Divide)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.Divide} {right.CommantText}";
+                    sqlOperator = SqlOperator.Divide;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.Divide} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.Modulo)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.Modulo} {right.CommantText}";
+                    sqlOperator = SqlOperator.Modulo;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.Modulo} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.ArrayIndex)
+                {
                     cmdText = SqlNode.JsonIndex(
                         left.CommantText as JsonAccess ?? new JsonAccess(left.CommantText?.ToString()),
                         right.CommantText?.ToString()
                         );
+                }
                 else if (binaryExpression.NodeType == ExpressionType.Coalesce)
+                {
                     cmdText = SqlNode.Call("ifNull", left.CommantText?.ToString(), right.CommantText?.ToString());
+                }
                 else if (binaryExpression.NodeType == ExpressionType.ExclusiveOr)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.ExclusiveOr} {right.CommantText}";
+                    sqlOperator = SqlOperator.ExclusiveOr;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.ExclusiveOr} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.LeftShift)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.LeftShift} {right.CommantText}";
+                    sqlOperator = SqlOperator.LeftShift;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.LeftShift} {right.CommantText}";
                 }
                 else if (binaryExpression.NodeType == ExpressionType.RightShift)
                 {
-                    cmdText = $"{left.CommantText} {SqlNode.RightShift} {right.CommantText}";
+                    sqlOperator = SqlOperator.RightShift;
 
-                    valueType = SqlValueValueType.Calculation;
+                    if (NeedLeftBracket(left.SqlOperator, sqlOperator.Value))
+                        left.CommantText = SqlNode.Bracket(left.CommantText?.ToString());
+
+                    if (NeedRightBracket(sqlOperator.Value, right.SqlOperator))
+                        right.CommantText = SqlNode.Bracket(right.CommantText?.ToString());
+
+                    cmdText = $"{left.CommantText} {SqlNode.RightShift} {right.CommantText}";
                 }
                 else
+                {
                     throw new UnsupportedExpressionException(expression);
+                }
 
                 return new()
                 {
                     CommantText = cmdText,
                     Parameters = ps,
-                    ValueType = valueType
+                    SqlOperator = sqlOperator
                 };
             }
 
@@ -2377,6 +2531,22 @@ namespace LogicEntity.Default.MySql
             }
 
             throw new UnsupportedExpressionException(expression);
+        }
+
+        bool NeedLeftBracket(SqlOperator? left, SqlOperator right)
+        {
+            if (left is null)
+                return false;
+
+            return (int)left.Value > (int)right;
+        }
+
+        bool NeedRightBracket(SqlOperator left, SqlOperator? right)
+        {
+            if (right is null)
+                return false;
+
+            return (int)right.Value >= (int)left;
         }
 
         Type GetResultType(Type expressionType)

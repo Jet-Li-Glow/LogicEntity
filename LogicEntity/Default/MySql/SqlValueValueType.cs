@@ -10,16 +10,6 @@ namespace LogicEntity.Default.MySql
     {
         GroupKey,
 
-        GroupElement,
-
-        /// <summary>
-        /// 逻辑值
-        /// </summary>
-        Logic,
-
-        /// <summary>
-        /// 计算值（+、-、*、/...）
-        /// </summary>
-        Calculation
+        GroupElement
     }
 }

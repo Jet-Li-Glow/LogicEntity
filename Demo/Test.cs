@@ -358,8 +358,13 @@ namespace Demo
             //Select - 15
             data = db.Students.Select(s => new { s.Id }).UnionBy(db.Students.Select(s => new { s.Id }), s => s.Id).Take(10).ToList();
 
-            //Select - 15
+            //Select - 16
             data = db.Students.SkipWhile((s, i) => i < 5 || i > 15).ToList();
+
+            //Select - 17
+            int v = 1;
+
+            Assert(db.Value(() => (v + v) * (v + v)).First(), 4);
 
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
