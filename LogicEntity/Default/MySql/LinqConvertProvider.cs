@@ -1392,12 +1392,6 @@ namespace LogicEntity.Default.MySql
 
             command.CommandTimeout = sql.Timeout;
 
-            Command.Result result = new();
-
-            result.Type = GetResultType(sql.Type);
-
-            command.Results.Add(result);
-
             //With
             List<CTEInfo> ctes = new();
 
@@ -1409,6 +1403,8 @@ namespace LogicEntity.Default.MySql
             left = SqlNode.Bracket("\n" + leftCommand.CommandText.Indent(2) + "\n");
 
             command.Parameters.AddRange(leftCommand.Parameters);
+
+            command.Results.AddRange(leftCommand.Results);
 
             //right
             string right = string.Empty;
