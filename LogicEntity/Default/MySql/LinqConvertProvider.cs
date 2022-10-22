@@ -894,7 +894,7 @@ namespace LogicEntity.Default.MySql
 
             command.CommandTimeout = sql.Timeout;
 
-            Command.Result result = new();
+            CommandResult result = new();
 
             if (sql.SqlType == DataManipulationSqlType.Select)
                 result.Type = GetResultType(sql.Type);

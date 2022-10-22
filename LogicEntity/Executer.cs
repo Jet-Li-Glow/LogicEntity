@@ -171,7 +171,7 @@ namespace LogicEntity
 
             using (IDbCommand dbCommand = connection.CreateCommand(transaction, command.CommandText, command.Parameters, command.CommandTimeout))
             {
-                Command.Result resultInfo = null;
+                CommandResult resultInfo = null;
 
                 using (IDataReader reader = dbCommand.ExecuteReader())
                 {
@@ -558,7 +558,7 @@ namespace LogicEntity
 
             using (IDbCommand dbCommand = connection.CreateCommand(transaction, command.CommandText, command.Parameters, command.CommandTimeout))
             {
-                Command.Result resultInfo = null;
+                CommandResult resultInfo = null;
 
                 using (IDataReader reader = dbCommand.ExecuteReader())
                 {
@@ -668,7 +668,7 @@ namespace LogicEntity
             if (command.Results.Any() == false)
                 return result;
 
-            Command.Result resultInfo = command.Results.First();
+            CommandResult resultInfo = command.Results.First();
 
             if (resultInfo is null || resultInfo.Type is null)
                 return result;

@@ -92,24 +92,6 @@ namespace LogicEntity
         /// <summary>
         /// 结果类型
         /// </summary>
-        public List<Result> Results { get; } = new();
-
-        /// <summary>
-        /// 结果
-        /// </summary>
-        public class Result
-        {
-            public Type Type { get; set; }
-
-            /// <summary>
-            /// 构造函数
-            /// </summary>
-            public Dictionary<string, ConstructorInfo> Constructors { get; } = new();
-
-            /// <summary>
-            /// 读取器
-            /// </summary>
-            public Dictionary<int, Delegate> Readers { get; } = new();
-        }
+        public List<CommandResult> Results { get; } = new();
     }
 }
