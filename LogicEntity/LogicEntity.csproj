@@ -9,7 +9,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/Jet-Li-Glow/LogicEntity</PackageProjectUrl>
-    <PackageTags>sql, ado.net</PackageTags>
+    <PackageTags>sql;ado.net;orm</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
