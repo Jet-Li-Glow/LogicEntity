@@ -150,7 +150,7 @@ namespace LogicEntity.Default.MySql
             return command;
         }
 
-        Command GetSelectCommand(TableExpression tableExpression)
+        CommandExtend GetSelectCommand(TableExpression tableExpression)
         {
             var sql = GetDataManipulationSql(tableExpression);
 
@@ -177,102 +177,147 @@ namespace LogicEntity.Default.MySql
         {
             if (operateExpression is AddOperateExpression addOperateExpression)
             {
-                OriginalTableExpression table = (OriginalTableExpression)addOperateExpression.Source;
+                if (addOperateExpression is AddOrUpdateOperateExpression addOrUpdateOperateExpression)
+                {
+                    return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression(addOrUpdateOperateExpression.Source, addOrUpdateOperateExpression.Elements, true));
+                }
+
+                if (addOperateExpression is AddIgnoreOperateExpression addIgnoreOperate)
+                {
+                    return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression("Insert Ignore", addIgnoreOperate.Source, addIgnoreOperate.Elements));
+                }
+
+                if (addOperateExpression is ReplaceOperateExpression replaceOperateExpression)
+                {
+                    return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression("Replace Into", replaceOperateExpression.Source, replaceOperateExpression.Elements));
+                }
+
+                return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression(addOperateExpression.Source, addOperateExpression.Elements, false));
+            }
+
+            if (operateExpression is AddOrUpdateWithFactoryOperateExpression addOrUpdateWithFactoryOperateExpression)
+            {
+                OriginalTableExpression table = (OriginalTableExpression)addOrUpdateWithFactoryOperateExpression.Source;
 
                 PropertyInfo[] properties = table.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
                     .Where(p => p.PropertyType.IsAssignableTo(typeof(IValue))).ToArray();
 
                 Dictionary<PropertyInfo, EntityPropertyInfo> validProperties = new();
 
-                List<Dictionary<PropertyInfo, IValue>> rows = new();
+                Command command = new();
 
-                foreach (object element in addOperateExpression.Elements)
+                //Values
+                string valuesExpression = string.Empty;
+
+                if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.Entity)
                 {
-                    Dictionary<PropertyInfo, IValue> row = new();
+                    List<Dictionary<PropertyInfo, IValue>> rows = new();
 
-                    foreach (PropertyInfo property in properties)
+                    foreach (object element in addOrUpdateWithFactoryOperateExpression.Elements)
                     {
-                        IValue propertyValue = (IValue)property.GetValue(element);
+                        Dictionary<PropertyInfo, IValue> row = new();
 
-                        if (propertyValue.ValueSetted is false)
-                            continue;
-
-                        if (validProperties.ContainsKey(property) == false)
+                        foreach (PropertyInfo property in properties)
                         {
-                            System.Linq.Expressions.Expression<Func<object, object>> writer = null;
+                            IValue propertyValue = (IValue)property.GetValue(element);
 
-                            ParameterExpression obj = System.Linq.Expressions.Expression.Parameter(typeof(object));
+                            if (propertyValue.ValueSetted is false)
+                                continue;
 
-                            System.Linq.Expressions.Expression val = obj;
-
-                            if (PropertyConvert.TryGetValue(property, out ValueConverter converter) && converter.Writer is not null)
+                            if (validProperties.ContainsKey(property) == false)
                             {
-                                Type parameterType = converter.Writer.Method.GetParameters()[0].ParameterType;
+                                System.Linq.Expressions.Expression<Func<object, object>> writer = null;
 
-                                if (val.Type != parameterType)
-                                    val = System.Linq.Expressions.Expression.Convert(val, parameterType);
+                                if (PropertyConvert.TryGetValue(property, out ValueConverter converter) && converter.Writer is not null)
+                                {
+                                    ParameterExpression obj = System.Linq.Expressions.Expression.Parameter(typeof(object));
 
-                                val = System.Linq.Expressions.Expression.Invoke(System.Linq.Expressions.Expression.Constant(converter.Writer), val);
+                                    System.Linq.Expressions.Expression val = obj;
+
+                                    Type parameterType = converter.Writer.Method.GetParameters()[0].ParameterType;
+
+                                    if (val.Type != parameterType)
+                                        val = System.Linq.Expressions.Expression.Convert(val, parameterType);
+
+                                    val = System.Linq.Expressions.Expression.Invoke(System.Linq.Expressions.Expression.Constant(converter.Writer), val);
+
+                                    writer = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(val, obj);
+                                }
+
+                                validProperties.Add(property, new()
+                                {
+                                    Writer = writer?.Compile()
+                                });
                             }
 
-                            writer = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(val, obj);
-
-                            validProperties.Add(property, new()
-                            {
-                                Writer = writer.Compile()
-                            });
+                            row[property] = propertyValue;
                         }
 
-                        row[property] = propertyValue;
+                        rows.Add(row);
                     }
 
-                    rows.Add(row);
-                }
+                    List<string> rowCmds = new();
 
-                List<string> rowCmds = new();
-
-                List<KeyValuePair<string, object>> parameters = new();
-
-                foreach (Dictionary<PropertyInfo, IValue> row in rows)
-                {
-                    List<string> columnCmds = new();
-
-                    foreach (KeyValuePair<PropertyInfo, EntityPropertyInfo> entityProperty in validProperties)
+                    foreach (Dictionary<PropertyInfo, IValue> row in rows)
                     {
-                        if (row.TryGetValue(entityProperty.Key, out IValue value))
+                        List<string> columnCmds = new();
+
+                        foreach (KeyValuePair<PropertyInfo, EntityPropertyInfo> entityProperty in validProperties)
                         {
-                            if (value.ValueType == ValueType.Value)
+                            if (row.TryGetValue(entityProperty.Key, out IValue value))
                             {
-                                var p = SqlNode.Parameter(entityProperty.Value.Writer(value.Object));
+                                if (value.ValueType == ValueType.Value)
+                                {
+                                    var p = SqlNode.Parameter(entityProperty.Value.Writer is null ? value.Object : entityProperty.Value.Writer(value.Object));
 
-                                columnCmds.Add(p.Key);
+                                    columnCmds.Add(p.Key);
 
-                                parameters.Add(p);
+                                    command.Parameters.Add(p);
+                                }
+                                else
+                                {
+                                    LambdaExpression lambdaExpression = (LambdaExpression)value.Object;
+
+                                    SqlValue sqlValue = GetValueExpression(lambdaExpression.Body, new(0), true);
+
+                                    columnCmds.Add(sqlValue.CommantText?.ToString());
+
+                                    if (sqlValue.Parameters is not null)
+                                        command.Parameters.AddRange(sqlValue.Parameters);
+                                }
+
+                                continue;
                             }
-                            else
-                            {
-                                LambdaExpression lambdaExpression = (LambdaExpression)value.Object;
 
-                                SqlValue sqlValue = GetValueExpression(lambdaExpression.Body, new(0), true);
-
-                                columnCmds.Add(sqlValue.CommantText?.ToString());
-
-                                if (sqlValue.Parameters is not null)
-                                    parameters.AddRange(sqlValue.Parameters);
-                            }
-
-                            continue;
+                            columnCmds.Add(SqlNode.Default);
                         }
 
-                        columnCmds.Add(SqlNode.Default);
+                        rowCmds.Add(SqlNode.Bracket(string.Join(", ", columnCmds)));
                     }
 
-                    rowCmds.Add(SqlNode.Bracket(string.Join(", ", columnCmds)));
+                    valuesExpression = $"Values\n{string.Join(",\n", rowCmds).Indent(2)}";
+                }
+                else if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.DataTable)
+                {
+                    CommandExtend dataTableCommand = Convert(addOrUpdateWithFactoryOperateExpression.DataTable.Expression) as CommandExtend;
+
+                    if (dataTableCommand is null
+                        || dataTableCommand.ColumnProperties.Any(s => s is null)
+                        || dataTableCommand.ColumnProperties.Except(properties).Any())
+                        throw new UnsupportedExpressionException(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
+
+                    validProperties = dataTableCommand.ColumnProperties.ToDictionary(s => s, s => default(EntityPropertyInfo));
+
+                    valuesExpression = dataTableCommand.CommandText;
+
+                    if (dataTableCommand.Parameters is not null)
+                        command.Parameters.AddRange(dataTableCommand.Parameters);
                 }
 
+                //Update
                 string onDuplicateKeyUpdate = string.Empty;
 
-                if (addOperateExpression.Update)
+                if (addOrUpdateWithFactoryOperateExpression.Update)
                 {
                     onDuplicateKeyUpdate = "\nOn Duplicate Key Update\n";
 
@@ -281,12 +326,12 @@ namespace LogicEntity.Default.MySql
 
                     List<KeyValuePair<string, string>> columnAndValues;
 
-                    if (addOperateExpression is AddOrUpdateOperateExpression addOrUpdateOperateExpression)
+                    if (addOrUpdateWithFactoryOperateExpression.UpdateFactory is not null)
                     {
-                        MemberInitExpression memberInitExpression = addOrUpdateOperateExpression.UpdateFactory.Body as MemberInitExpression;
+                        MemberInitExpression memberInitExpression = addOrUpdateWithFactoryOperateExpression.UpdateFactory.Body as MemberInitExpression;
 
                         if (memberInitExpression is null)
-                            throw new UnsupportedExpressionException(addOrUpdateOperateExpression.UpdateFactory.Body);
+                            throw new UnsupportedExpressionException(addOrUpdateWithFactoryOperateExpression.UpdateFactory.Body);
 
                         BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
 
@@ -295,7 +340,7 @@ namespace LogicEntity.Default.MySql
                             Parameters = new()
                             {
                                 {
-                                    addOrUpdateOperateExpression.UpdateFactory.Parameters[0],
+                                    addOrUpdateWithFactoryOperateExpression .UpdateFactory.Parameters[0],
                                     LambdaParameterInfo.Entity(new EntityInfo()
                                     {
                                         CommandText = _updateFactoryVersion == UpdateFactoryVersion.V8_0 ? FullName(table) : null,
@@ -303,7 +348,7 @@ namespace LogicEntity.Default.MySql
                                     } )
                                 },
                                 {
-                                    addOrUpdateOperateExpression.UpdateFactory.Parameters[1],
+                                    addOrUpdateWithFactoryOperateExpression .UpdateFactory.Parameters[1],
                                     LambdaParameterInfo.Entity(new EntityInfo()
                                     {
                                         CommandText = _updateFactoryVersion == UpdateFactoryVersion.V8_0 ? SqlNode.NewRowAlias : null,
@@ -313,7 +358,7 @@ namespace LogicEntity.Default.MySql
                             }
                         };
 
-                        ColumnVisitor columnVisitor = new ColumnVisitor(addOrUpdateOperateExpression.UpdateFactory.Parameters[1]);
+                        ColumnVisitor columnVisitor = new ColumnVisitor(addOrUpdateWithFactoryOperateExpression.UpdateFactory.Parameters[1]);
 
                         columnAndValues = blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(memberInit =>
                         {
@@ -329,7 +374,7 @@ namespace LogicEntity.Default.MySql
                             var updateValue = GetValueExpression(right, sqlContext);
 
                             if (updateValue.Parameters is not null)
-                                parameters.AddRange(updateValue.Parameters);
+                                command.Parameters.AddRange(updateValue.Parameters);
 
                             return KeyValuePair.Create(columnName, updateValue.CommantText?.ToString());
                         }).ToList();
@@ -347,28 +392,17 @@ namespace LogicEntity.Default.MySql
                     onDuplicateKeyUpdate += string.Join(",\n", columnAndValues.Select(s => SqlNode.Assign(s.Key, s.Value))).Indent(2);
                 }
 
-                Command command = new();
-
-                string addOperate = "Insert Into";
-
-                if (addOperateExpression is AddIgnoreOperateExpression)
-                    addOperate = "Insert Ignore";
-                else if (addOperateExpression is ReplaceOperateExpression)
-                    addOperate = "Replace Into";
-
-                command.CommandText = $"{addOperate} {FullName(table)}"
+                command.CommandText = $"{addOrUpdateWithFactoryOperateExpression.AddOperate} {FullName(table)}"
                     + $"\n(\n{string.Join(",\n", validProperties.Select(p => SqlNode.SqlName(ColumnName(p.Key)))).Indent(2)}\n)"
-                    + $"\nValues\n{string.Join(",\n", rowCmds).Indent(2)}"
+                    + $"\n{valuesExpression}"
                     + $"{onDuplicateKeyUpdate}";
-
-                command.Parameters.AddRange(parameters);
 
                 return command;
             }
 
             if (operateExpression is AddNextTableExpression addNextTableExpression)
             {
-                Command command = GetOperateCommand(new AddOperateExpression(addNextTableExpression.Source, new object[] { addNextTableExpression.Element }, false));
+                Command command = GetOperateCommand(new AddOperateExpression(addNextTableExpression.Source, new object[] { addNextTableExpression.Element }));
 
                 command.CommandText += ";\nSelect Last_Insert_Id();";
 
@@ -874,7 +908,7 @@ namespace LogicEntity.Default.MySql
             throw new UnsupportedExpressionException(expression);
         }
 
-        Command Build(IDataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
+        CommandExtend Build(IDataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
         {
             if (parameters is null)
                 parameters = new();
@@ -888,9 +922,9 @@ namespace LogicEntity.Default.MySql
             throw new Exception();
         }
 
-        Command BuildSql(DataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
+        CommandExtend BuildSql(DataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
         {
-            Command command = new();
+            CommandExtend command = new();
 
             command.CommandTimeout = sql.Timeout;
 
@@ -1161,6 +1195,8 @@ namespace LogicEntity.Default.MySql
 
                 SetClientReader(columnExpressions);
 
+                command.ColumnProperties = columnExpressions.Select(s => s.PropertyInfo).ToList();
+
                 for (int i = 0; i < columnExpressions.Count; i++)
                 {
                     var column = columnExpressions[i];
@@ -1412,9 +1448,9 @@ namespace LogicEntity.Default.MySql
             return command;
         }
 
-        Command BuildUnionSql(UnionedSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
+        CommandExtend BuildUnionSql(UnionedSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
         {
-            Command command = new();
+            CommandExtend command = new();
 
             command.CommandTimeout = sql.Timeout;
 
@@ -1431,6 +1467,8 @@ namespace LogicEntity.Default.MySql
             command.Parameters.AddRange(leftCommand.Parameters);
 
             command.Results.AddRange(leftCommand.Results);
+
+            command.ColumnProperties = leftCommand.ColumnProperties;
 
             //right
             string right = string.Empty;
@@ -1599,7 +1637,8 @@ namespace LogicEntity.Default.MySql
                         ns.AddRange(newExpression.Members.Zip(newExpression.Arguments, (a, b) => new SqlColumnInfo()
                         {
                             Alias = SqlNode.Member(node.Alias, a.Name),
-                            Expression = b
+                            Expression = b,
+                            PropertyInfo = a as PropertyInfo
                         }));
                     }
                     else
@@ -1649,10 +1688,13 @@ namespace LogicEntity.Default.MySql
                     {
                         BinaryExpression assign = (BinaryExpression)e;
 
+                        MemberInfo member = ((MemberExpression)assign.Left).Member;
+
                         return new SqlColumnInfo()
                         {
-                            Alias = SqlNode.Member(node.Alias, ((MemberExpression)assign.Left).Member.Name),
-                            Expression = assign.Right
+                            Alias = SqlNode.Member(node.Alias, member.Name),
+                            Expression = assign.Right,
+                            PropertyInfo = member as PropertyInfo
                         };
                     }), groupKeys, ref constructors, indexParemeters));
 
@@ -2602,6 +2644,8 @@ namespace LogicEntity.Default.MySql
             public object Expression { get; set; }
 
             public Delegate Reader { get; set; }
+
+            public PropertyInfo PropertyInfo { get; set; }
         }
 
         class GroupKeyExpression

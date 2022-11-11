@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using LogicEntity.Collections;
 using LogicEntity.Collections.Generic;
@@ -1760,17 +1761,39 @@ namespace LogicEntity.Default.MySql
             if (elements.Any() is false)
                 throw new InvalidOperationException("No elements");
 
-            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOperateExpression(source.Expression, elements.Cast<object>(), false), timeout));
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOperateExpression(source.Expression, elements.Cast<object>()), timeout));
+        }
+
+        public static int AddRange<TSource>(this ITable<TSource> source, IDataTable<TSource> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements, false));
+        }
+
+        public static int AddRange<TSource>(this ITable<TSource> source, int timeout, IDataTable<TSource> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements, false), timeout));
         }
 
         public static int AddOrUpdate<TSource>(this ITable<TSource> source, int timeout, params TSource[] elements)
         {
-            return source.AddRangeOrUpdate(elements, timeout, null);
+            return source.AddRangeOrUpdate(elements, timeout);
         }
 
         public static int AddOrUpdate<TSource>(this ITable<TSource> source, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory, params TSource[] elements)
         {
-            return source.AddRangeOrUpdate(elements, null, updateFactory);
+            return source.AddRangeOrUpdate(elements, updateFactory);
         }
 
         public static int AddOrUpdate<TSource>(this ITable<TSource> source, int timeout, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory, params TSource[] elements)
@@ -1779,16 +1802,6 @@ namespace LogicEntity.Default.MySql
         }
 
         public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, int timeout)
-        {
-            return source.AddRangeOrUpdate(elements, timeout, null);
-        }
-
-        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
-        {
-            return source.AddRangeOrUpdate(elements, null, updateFactory);
-        }
-
-        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, int? timeout, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
         {
             if (source is null)
                 throw new ArgumentNullException(nameof(source));
@@ -1799,12 +1812,91 @@ namespace LogicEntity.Default.MySql
             if (elements.Any() is false)
                 throw new InvalidOperationException("No elements");
 
-            OperateExpression operateExpression = new AddOrUpdateOperateExpression(source.Expression, elements.Cast<object>(), updateFactory);
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOrUpdateOperateExpression(source.Expression, elements.Cast<object>()), timeout));
+        }
 
-            if (timeout.HasValue)
-                operateExpression = new TimeoutOperateExpression(operateExpression, timeout.Value);
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
 
-            return source.Db.ExecuteNonQuery(operateExpression);
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (elements.Any() is false)
+                throw new InvalidOperationException("No elements");
+
+            if (updateFactory is null)
+                throw new ArgumentNullException(nameof(updateFactory));
+
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements.Cast<object>(), updateFactory));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, int timeout, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (elements.Any() is false)
+                throw new InvalidOperationException("No elements");
+
+            if (updateFactory is null)
+                throw new ArgumentNullException(nameof(updateFactory));
+
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements.Cast<object>(), updateFactory), timeout));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IDataTable<TSource> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements, true));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IDataTable<TSource> elements, int timeout)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements, true), timeout));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IDataTable<TSource> elements, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (updateFactory is null)
+                throw new ArgumentNullException(nameof(updateFactory));
+
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements, updateFactory));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IDataTable<TSource> elements, int timeout, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
+
+            if (updateFactory is null)
+                throw new ArgumentNullException(nameof(updateFactory));
+
+            return source.Db.ExecuteNonQuery(new TimeoutOperateExpression(new AddOrUpdateWithFactoryOperateExpression(source.Expression, elements, updateFactory), timeout));
         }
 
         public static int AddIgnore<TSource>(this ITable<TSource> source, params TSource[] elements)

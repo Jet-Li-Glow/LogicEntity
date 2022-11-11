@@ -9,7 +9,7 @@ namespace LogicEntity.Default.MySql.Linq.Expressions
 {
     internal class AddIgnoreOperateExpression : AddOperateExpression
     {
-        public AddIgnoreOperateExpression(TableExpression source, IEnumerable<object> elements) : base(source, elements, false)
+        public AddIgnoreOperateExpression(TableExpression source, IEnumerable<object> elements) : base(source, elements)
         {
 
         }

@@ -2354,7 +2354,7 @@ namespace LogicEntity.Linq
             if (elements.Any() is false)
                 throw new InvalidOperationException("No elements");
 
-            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements.Cast<object>(), false));
+            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements.Cast<object>()));
         }
 
         public static ulong AddNext<TSource>(this ITable<TSource> source, TSource element)
@@ -2384,7 +2384,7 @@ namespace LogicEntity.Linq
             if (elements.Any() is false)
                 throw new InvalidOperationException("No elements");
 
-            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements.Cast<object>(), true));
+            return source.Db.ExecuteNonQuery(new AddOrUpdateOperateExpression(source.Expression, elements.Cast<object>()));
         }
 
         public static int Remove<TSource>(this IDataTable<TSource> source)

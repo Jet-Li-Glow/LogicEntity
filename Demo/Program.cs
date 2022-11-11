@@ -137,6 +137,13 @@ namespace Demo
                     MajorId = new(() => db.Majors.Max(m => m.MajorId))
                 });
 
+            rowsAffected = db.Students.AddRangeOrUpdate(db.Majors.Select(s => new Student()
+            {
+                Name = "Insert Into Select",
+                MajorId = db.Majors.Max(m => m.MajorId)
+            }).Take(1),
+            (oldValue, newValue) => new Student() { Name = oldValue.Name + " - " + newValue.Name + " - Update Factory" });
+
             rowsAffected = db.Students.AddIgnore(new Student()
             {
                 Id = (int)autoIncrementId,

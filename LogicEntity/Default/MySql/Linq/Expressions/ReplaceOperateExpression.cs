@@ -9,7 +9,7 @@ namespace LogicEntity.Default.MySql.Linq.Expressions
 {
     internal class ReplaceOperateExpression : AddOperateExpression
     {
-        public ReplaceOperateExpression(TableExpression source, IEnumerable<object> elements) : base(source, elements, false)
+        public ReplaceOperateExpression(TableExpression source, IEnumerable<object> elements) : base(source, elements)
         {
 
         }
