@@ -52,6 +52,12 @@ namespace LogicEntity.Default.MySql
             return default;
         }
 
+        [MethodFormat("Exists{1}")]
+        public static bool Exists<T>(IDataTable<T> source)
+        {
+            return default;
+        }
+
         [MethodFormat("Avg({1})")]
         internal static T Average<T>(T t)
         {

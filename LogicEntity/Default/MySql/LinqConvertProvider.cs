@@ -24,8 +24,7 @@ namespace LogicEntity.Default.MySql
     {
         readonly PropertyInfo _GroupingDataTableKey = typeof(IGroupingDataTable<>).GetProperty(nameof(IGroupingDataTable<int>.Key));
         readonly LambdaExpression _AllColumnsLambdaExpression = System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Call(typeof(DbFunction).GetMethod(nameof(DbFunction.AllColumns), BindingFlags.Static | BindingFlags.NonPublic)));
-        readonly MethodInfo _Any = typeof(DbFunction).GetMethod(nameof(DbFunction.Any)).MakeGenericMethod(typeof(bool));
-        readonly MethodInfo _All = typeof(DbFunction).GetMethod(nameof(DbFunction.All)).MakeGenericMethod(typeof(bool));
+        readonly MethodInfo _Exists = typeof(DbFunction).GetMethod(nameof(DbFunction.Exists)).MakeGenericMethod(typeof(object));
         readonly MethodInfo _Average = typeof(DbFunction).GetMethod(nameof(DbFunction.Average), BindingFlags.Static | BindingFlags.NonPublic);
         readonly MethodInfo _Count = typeof(DbFunction).GetMethod(nameof(DbFunction.Count), BindingFlags.Static | BindingFlags.NonPublic);
         readonly MethodInfo _Max = typeof(DbFunction).GetMethod(nameof(DbFunction.Max), BindingFlags.Static | BindingFlags.NonPublic);
@@ -793,15 +792,12 @@ namespace LogicEntity.Default.MySql
 
                 source = new SelectedTableExpression(
                     source,
-                    System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Constant(true)),
-                    typeof(bool)
+                    _AllColumnsLambdaExpression,
+                    typeof(object)
                     );
 
                 LambdaExpression lambdaExpression = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Equal(
-                        System.Linq.Expressions.Expression.Constant(true),
-                        System.Linq.Expressions.Expression.Call(_Any, System.Linq.Expressions.Expression.Constant(new DataTableImpl<bool>(null, source)))
-                        )
+                    System.Linq.Expressions.Expression.Call(_Exists, System.Linq.Expressions.Expression.Constant(new DataTableImpl<object>(null, source)))
                     );
 
                 return new DataManipulationSql()
@@ -812,16 +808,22 @@ namespace LogicEntity.Default.MySql
             }
             else if (expression is AllTableExpression allTableExpression)
             {
+                LambdaExpression predicate = (LambdaExpression)allTableExpression.Predicate;
+
                 TableExpression source = new SelectedTableExpression(
-                    allTableExpression.Source,
-                    allTableExpression.Predicate,
-                    typeof(bool)
+                    new RowFilteredTableExpression(
+                        allTableExpression.Source,
+                        System.Linq.Expressions.Expression.Lambda(
+                            System.Linq.Expressions.Expression.Not(predicate.Body),
+                            predicate.Parameters
+                            )),
+                    _AllColumnsLambdaExpression,
+                    typeof(object)
                     );
 
                 LambdaExpression lambdaExpression = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Equal(
-                        System.Linq.Expressions.Expression.Constant(true),
-                        System.Linq.Expressions.Expression.Call(_All, System.Linq.Expressions.Expression.Constant(new DataTableImpl<bool>(null, source)))
+                    System.Linq.Expressions.Expression.Not(
+                        System.Linq.Expressions.Expression.Call(_Exists, System.Linq.Expressions.Expression.Constant(new DataTableImpl<object>(null, source)))
                         )
                     );
 
