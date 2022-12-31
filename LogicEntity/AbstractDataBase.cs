@@ -17,7 +17,10 @@ namespace LogicEntity
     /// </summary>
     public abstract class AbstractDataBase
     {
-        internal ConcurrentDictionary<Thread, DbTransaction> Transactions { get; } = new();
+        /// <summary>
+        /// 当前线程的事务对象
+        /// </summary>
+        ThreadLocal<DbTransaction> _threadLocalTransaction = new ThreadLocal<DbTransaction>(false);
 
         /// <summary>
         /// 阻止程序集外部使用
@@ -61,6 +64,22 @@ namespace LogicEntity
         /// </summary>
         /// <returns></returns>
         internal protected abstract IDbConnection CreateDbConnection();
+
+        /// <summary>
+        /// 当前线程的事务对象
+        /// </summary>
+        internal DbTransaction ThreadLocalTransaction
+        {
+            get
+            {
+                return _threadLocalTransaction.Value;
+            }
+
+            set
+            {
+                _threadLocalTransaction.Value = value;
+            }
+        }
 
         //--------------------------------- Query ------------------------------------------------
 
@@ -142,9 +161,9 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<IEnumerable<object>> Query(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
+            if (ThreadLocalTransaction is not null)
             {
-                foreach (IEnumerable<object> result in transaction.Query(command))
+                foreach (IEnumerable<object> result in ThreadLocalTransaction.Query(command))
                     yield return result;
 
                 yield break;
@@ -212,9 +231,9 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<System.Data.DataTable> QueryDataTable(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
+            if (ThreadLocalTransaction is not null)
             {
-                foreach (System.Data.DataTable result in transaction.QueryDataTable(command))
+                foreach (System.Data.DataTable result in ThreadLocalTransaction.QueryDataTable(command))
                     yield return result;
 
                 yield break;
@@ -282,8 +301,8 @@ namespace LogicEntity
         /// <returns></returns>
         public int ExecuteNonQuery(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
-                return transaction.ExecuteNonQuery(command);
+            if (ThreadLocalTransaction is not null)
+                return ThreadLocalTransaction.ExecuteNonQuery(command);
 
             using (IDbConnection connection = CreateDbConnection())
             {
@@ -349,8 +368,8 @@ namespace LogicEntity
         /// <returns></returns>
         public object ExecuteScalar(Command command)
         {
-            if (Transactions.TryGetValue(Thread.CurrentThread, out DbTransaction transaction))
-                return transaction.ExecuteScalar(command);
+            if (ThreadLocalTransaction is not null)
+                return ThreadLocalTransaction.ExecuteScalar(command);
 
             using (IDbConnection connection = CreateDbConnection())
             {

@@ -135,7 +135,7 @@ namespace LogicEntity.Default.MySql
 
                 var collection = new System.Text.RegularExpressions.Regex("(^|[^0-9a-zA-Z])" + key + "($|[^0-9a-zA-Z])").Matches(command.CommandText);
 
-                if (collection.Count == 0 || collection.Count > command.Parameters.Count)
+                if (collection.Count == 0)
                     throw new Exception("参数名称错误");
             }
 
@@ -2019,9 +2019,7 @@ namespace LogicEntity.Default.MySql
                 if (unaryExpression.NodeType == ExpressionType.Quote)
                     return operandCommand;
 
-                if (unaryExpression.NodeType == ExpressionType.Convert ||
-                    unaryExpression.NodeType == ExpressionType.ConvertChecked ||
-                    unaryExpression.NodeType == ExpressionType.TypeAs)
+                if (IsConvertExpression(unaryExpression))
                 {
                     if (unaryExpression.Operand.Type == typeof(char) && unaryExpression.Type == typeof(int))
                     {
@@ -2112,9 +2110,19 @@ namespace LogicEntity.Default.MySql
                     return GetValueExpression(System.Linq.Expressions.Expression.Call(null, binaryExpression.Method, methodArg1, methodArg2), context);
                 }
 
-                var left = GetValueExpression(binaryExpression.Left, context, isRoot);
+                System.Linq.Expressions.Expression leftExpression = binaryExpression.Left;
+                System.Linq.Expressions.Expression rightExpression = binaryExpression.Right;
 
-                var right = GetValueExpression(binaryExpression.Right, context);
+                //Enum Equal
+                if (IsEnumEqual(binaryExpression))
+                {
+                    leftExpression = ((UnaryExpression)binaryExpression.Left).Operand;
+                    rightExpression = ((UnaryExpression)binaryExpression.Right).Operand;
+                }
+
+                var left = GetValueExpression(leftExpression, context, isRoot);
+
+                var right = GetValueExpression(rightExpression, context);
 
                 List<KeyValuePair<string, object>> ps = new();
 
@@ -2442,11 +2450,18 @@ namespace LogicEntity.Default.MySql
                             if (argCmd.IsConstant is false)
                                 throw new UnsupportedExpressionException(arg, $"The parameter {parameterInfos[i].Name} of method {method.Name} must be a constant");
 
-                            string str = argCmd.ConstantValue?.ToString();
+                            string commandText = null;
+
+                            if (argCmd.ConstantValue is null)
+                                commandText = SqlNode.Null;
+                            else if (argCmd.ConstantValue is string)
+                                commandText = SqlNode.SqlString(argCmd.ConstantValue.ToString());
+                            else
+                                commandText = argCmd.ConstantValue.ToString();
 
                             args.Add(new()
                             {
-                                CommantText = str is null ? SqlNode.Null : SqlNode.SqlString(str)
+                                CommantText = commandText
                             });
 
                             continue;
@@ -2613,6 +2628,20 @@ namespace LogicEntity.Default.MySql
             return rowFilteredTableExpression.Type is not null && ((LambdaExpression)rowFilteredTableExpression.Filter).Parameters.Count == 2;
         }
 
+        bool IsEnumEqual(BinaryExpression binaryExpression)
+        {
+            return binaryExpression.NodeType == ExpressionType.Equal
+                && IsConvertExpression(binaryExpression.Left)
+                && GetUnderlyingValueGenericType(((UnaryExpression)binaryExpression.Left).Operand.Type).IsSubclassOf(typeof(Enum))
+                && IsConvertExpression(binaryExpression.Right)
+                && GetUnderlyingValueGenericType(((UnaryExpression)binaryExpression.Right).Operand.Type).IsSubclassOf(typeof(Enum));
+        }
+
+        bool IsConvertExpression(System.Linq.Expressions.Expression expression)
+        {
+            return expression.NodeType == ExpressionType.Convert || expression.NodeType == ExpressionType.ConvertChecked || expression.NodeType == ExpressionType.TypeAs;
+        }
+
         string FullName(OriginalTableExpression table)
         {
             string tableName = SqlNode.SqlName(table.Name);
@@ -2626,6 +2655,14 @@ namespace LogicEntity.Default.MySql
         string ColumnName(MemberInfo member)
         {
             return member.GetCustomAttribute<ColumnAttribute>()?.Name ?? member.Name;
+        }
+
+        Type GetUnderlyingValueGenericType(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Value<>))
+                return GetUnderlyingValueGenericType(type.GetGenericArguments()[0]);
+
+            return Nullable.GetUnderlyingType(type) ?? type;
         }
 
         class CTEInfo

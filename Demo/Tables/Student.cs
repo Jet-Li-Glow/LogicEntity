@@ -26,7 +26,7 @@ namespace Demo.Tables
 
         public Value<DateTime?> Birthday { get; set; }
 
-        public Value<Gender> Gender { get; set; }
+        public Value<Gender?> Gender { get; set; }
 
         public Value<int> MajorId { get; set; }
 

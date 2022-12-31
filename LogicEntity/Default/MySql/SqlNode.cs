@@ -206,7 +206,7 @@ namespace LogicEntity.Default.MySql
             if (type == typeof(decimal))
                 return DataType.Decimal;
 
-            if (type == typeof(string))
+            if (type == typeof(string) || type.IsSubclassOf(typeof(Enum)))
                 return DataType.Char;
 
             if (type == typeof(DateOnly))

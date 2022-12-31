@@ -366,6 +366,9 @@ namespace Demo
 
             Assert(db.Value(() => (v + v) * (v + v)).First(), 4);
 
+            //Select - 18
+            data = db.Students.FirstOrDefault(s => s.Gender == Gender.Male);
+
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
             {

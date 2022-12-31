@@ -23,7 +23,7 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //Version 1.0.0
+            //Version 1.0.1
 
             //开发计划  
 
@@ -50,7 +50,7 @@ namespace Demo
 
             data = db.Students.Where(s => s.Id == 1).ToList();
 
-            data = db.Students.Where(s => ((string)s.Name).Contains("123")).ToList();
+            data = db.Students.Where(s => ((string)s.Name).Contains("小")).Take(1).ToList();
 
             data = db.Students.Where((s, i) => i > 0).ToList();
 
@@ -236,7 +236,7 @@ namespace Demo
         }
 
         [MethodFormat("Sleep({1})")]
-        public static int Sleep(int seconds)
+        public static int Sleep([ConstantParameter] int seconds)
         {
             return default;
         }

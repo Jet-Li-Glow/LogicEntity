@@ -22,8 +22,6 @@ namespace LogicEntity
 
         IDbTransaction _transaction;
 
-        Thread _thread;
-
         public DbTransaction(AbstractDataBase db, IsolationLevel? il)
         {
             _db = db;
@@ -34,10 +32,10 @@ namespace LogicEntity
 
             _transaction = il.HasValue ? _connection.BeginTransaction(il.Value) : _connection.BeginTransaction();
 
-            _thread = Thread.CurrentThread;
-
-            if (db.Transactions.TryAdd(_thread, this) == false)
+            if (db.ThreadLocalTransaction is not null)
                 throw new Exception("Nested transactions are not supported");
+
+            db.ThreadLocalTransaction = this;
         }
 
         /// <summary>
@@ -310,9 +308,11 @@ namespace LogicEntity
         /// </summary>
         public void Dispose()
         {
-            _db.Transactions.TryRemove(_thread, out var _);
+            _transaction.Dispose();
 
             _connection.Dispose();
+
+            _db.ThreadLocalTransaction = null;
         }
     }
 }
