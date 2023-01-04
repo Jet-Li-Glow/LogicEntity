@@ -2454,7 +2454,7 @@ namespace LogicEntity.Default.MySql
 
                             if (argCmd.ConstantValue is null)
                                 commandText = SqlNode.Null;
-                            else if (argCmd.ConstantValue is string)
+                            else if (argCmd.ConstantValue is string or Enum)
                                 commandText = SqlNode.SqlString(argCmd.ConstantValue.ToString());
                             else
                                 commandText = argCmd.ConstantValue.ToString();
