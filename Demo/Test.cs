@@ -108,7 +108,7 @@ namespace Demo
                         + string.Concat(g.Key.Name, g.Element((a, b) => a.MajorId), g.Element((a, b) => b.MajorId))
                         + string.Join("--", parameter.String, g.Element((a, b) => a.Name)),
 
-                    Calculation = (-g.Key.Id + 1) * 5 + Math.Round(1.25) + ((string)g.Key.Name).Length + g.Element((a, b) => a.JsonArray).Length,
+                    Calculation = (-g.Key.Id + 1) * 5 + Math.Round(1.25) + ((string)g.Key.Name).Length + g.Element((a, b) => ((Student.JsonObject)a.Json).Array).Length,
 
                     Condition = g.Key.Id > 0 ? (int)g.Key.Id : 0,
 
@@ -151,7 +151,7 @@ namespace Demo
                         + ((Student.JsonObject)g.Element((a, b) => a.Json)).Array[0]
                         + ((Student.JsonObject)g.Element((a, b) => a.Json)).Dictionary["A.B"]
                         + ((Student.JsonObject)g.Element((a, b) => a.Json)).Dictionary["A\"B\\C"],
-                    JsonArrayItemItem = g.Element((a, b) => a.JsonArray[7]),
+                    JsonArrayItemItem = g.Element((a, b) => ((Student.JsonObject)a.Json).Array[7]),
                     SubQuery = db.Students.
                                Where(a => a.Id == g.Key.Id && a.Name == g.Element((a, b) => a.Name))
                                .Select(a => db.Students.Where(b => b.Id == a.Id).Average(b => b.Id))
@@ -402,12 +402,12 @@ namespace Demo
             });
 
             //Insert - 2
-            rowsAffected = db.Students.Add(5, new Student() { Name = "Add Timeout", MajorId = 1 });
+            rowsAffected = db.Students.Timeout(5).Add(new Student() { Name = "Add Timeout", MajorId = 1 });
 
             //Insert - 3
             int maxId = db.Students.Max(s => s.Id);
 
-            rowsAffected = new TestDb80(Database.ConnectionStr).Students.AddOrUpdate(5,
+            rowsAffected = new TestDb80(Database.ConnectionStr).Students.Timeout(5).AddOrUpdate(
                 (oldValue, newValue) => new Student() { Name = oldValue.Name + " - " + newValue.Name + " - Update Factory 80" },
                 new Student()
                 {
@@ -436,7 +436,7 @@ namespace Demo
                 Description = "Description Value"
             });
 
-            rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).OrderByDescending(s => s.DateTime).Take(1).Set(s => s.Description.Assign(s.Description + " - Update"));
+            rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).OrderByDescending(s => s.DateTime).Take(1).Set(s => s.Description.SetValue(s.Description + " - Update"));
 
             rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).OrderByDescending(s => s.DateTime).Take(1).Remove();
 

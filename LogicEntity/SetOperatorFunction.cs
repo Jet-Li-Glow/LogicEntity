@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace LogicEntity
 {
-    public static class OperatorFunction
+    public static class SetOperatorFunction
     {
-        public static T Assign<T>(this T left, T right)
+        public static T SetValue<T>(this T left, T right)
         {
             return right;
         }
 
-        public static T Assign<T>(this Value<T> left, T right)
+        public static T SetValue<T>(this Value<T> left, T right)
         {
             return right;
         }
 
-        public static T Assign<T>(this T left, Value<T> right)
+        public static T SetValue<T>(this T left, Value<T> right)
         {
             return right;
         }

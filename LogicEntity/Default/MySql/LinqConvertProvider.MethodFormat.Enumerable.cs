@@ -3,6 +3,7 @@ using LogicEntity.Collections.Generic;
 using LogicEntity.Default.MySql.Linq.Expressions;
 using LogicEntity.Linq;
 using LogicEntity.Linq.Expressions;
+using LogicEntity.Method;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace LogicEntity.Default.MySql
 
             foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Join)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, nameof(LogicEntity.Linq.Enumerable.Join));
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, nameof(LogicEntity.Linq.Enumerable.Join));
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(LogicEntity.Linq.Enumerable.Where) || m.Name == nameof(LogicEntity.Linq.Enumerable.TakeWhile)))
@@ -169,42 +170,42 @@ namespace LogicEntity.Default.MySql
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.InnerJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Inner Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Inner Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.CrossJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Cross Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Cross Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.LeftJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Left Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Left Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.RightJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Right Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Right Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.NaturalJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.NaturalInnerJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Inner Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Inner Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.NaturalLeftJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Left Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Left Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.NaturalRightJoin)))
             {
-                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Right Join");
+                MemberFormat[m] = (MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context) => FormatJoin(methodCallExpression, context, "Natural Right Join");
             }
 
             foreach (var m in methods.Where(m => m.Name == nameof(MySqlEnumerable.RecursiveConcat)))
@@ -218,328 +219,272 @@ namespace LogicEntity.Default.MySql
             }
         }
 
-        SqlValue FormatSelect(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatSelect(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new SelectedTableExpression((TableExpression)source, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, methodCallExpression.Type));
+            return SelectToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                ((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                methodCallExpression.Type,
+                context
+                );
         }
 
-        SqlValue FormatJoin(MethodCallExpression methodCallExpression, SqlContext context, string join)
+        SqlExpressions.ISqlExpression FormatJoin(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context, string join)
         {
-            object left = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (left is IDataTable leftDataTable)
-                left = leftDataTable.Expression;
-
-            object right = GetValueExpression(methodCallExpression.Arguments[1], context with { GetTableExpression = true }).ConstantValue;
-
-            if (right is IDataTable rightDataTable)
-                right = rightDataTable.Expression;
-
             System.Linq.Expressions.Expression predicate = methodCallExpression.Arguments.Count > 2 ? ((UnaryExpression)methodCallExpression.Arguments[2]).Operand : null;
 
-            return SqlValue.TableExpression(new JoinedTableExpression((TableExpression)left, join, (TableExpression)right, predicate));
+            return JoinToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                join,
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[1], context),
+                predicate as LambdaExpression,
+                context
+                );
         }
 
-        SqlValue FormatWhere(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatWhere(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new RowFilteredTableExpression((TableExpression)source, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand));
+            return WhereToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                methodCallExpression.Method.IsDefined(typeof(HasIndexAttribute)),
+                context
+                );
         }
 
-        SqlValue FormatGroupBy(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatGroupBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new GroupedTableExpression((TableExpression)source, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand));
+            return GroupToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                context
+                );
         }
 
-        SqlValue FormatIGroupingDataTableElement(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatIGroupingDataTableElement(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var objectCmd = GetValueExpression(methodCallExpression.Object, context);
-
-            if (objectCmd.LambdaParameterInfo?.ParameterType != LambdaParameterType.GroupingDataTable)
-                throw new UnsupportedExpressionException(methodCallExpression);
+            SqlExpressions.GroupingDataTableExpression groupingDataTableExpression = (SqlExpressions.GroupingDataTableExpression)GetSqlExpression(methodCallExpression.Object, context);
 
             LambdaExpression expression = (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[0]).Operand;
 
-            return GetValueExpression(expression.Body, new(context.Level)
-            {
-                Parameters = expression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(objectCmd.LambdaParameterInfo.FromTables[i])))
-                        .ToDictionary(s => s.Key, s => s.Value)
-            });
+            context = context.ConcatParameters(
+                expression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                );
+
+            return GetSqlExpression(expression.Body, context);
         }
 
-        SqlValue FormatConcat(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatConcat(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var sqlContext = context with { GetTableExpression = true };
-
-            object first = GetValueExpression(methodCallExpression.Arguments[0], sqlContext).ConstantValue;
-
-            if (first is IDataTable firstDataTable)
-                first = firstDataTable.Expression;
-
-            object second = GetValueExpression(methodCallExpression.Arguments[1], sqlContext).ConstantValue;
-
-            if (second is IDataTable secondDataTable)
-                second = secondDataTable.Expression;
-
-            return SqlValue.TableExpression(new UnionedTableExpression((TableExpression)first, (TableExpression)second, false));
+            return BinaryTableToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                SqlExpressions.BinaryTableExpression.BinaryOperate.Union,
+                false,
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[1], context)
+                );
         }
 
-        SqlValue FormatUnion(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatUnion(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object first = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (first is IDataTable firstDataTable)
-                first = firstDataTable.Expression;
-
-            object second = GetValueExpression(methodCallExpression.Arguments[1], context with { GetTableExpression = true }).ConstantValue;
-
-            if (second is IDataTable secondDataTable)
-                second = secondDataTable.Expression;
-
-            return SqlValue.TableExpression(new UnionedTableExpression((TableExpression)first, (TableExpression)second, true));
+            return BinaryTableToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                SqlExpressions.BinaryTableExpression.BinaryOperate.Union,
+                true,
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[1], context)
+                );
         }
 
-        SqlValue FormatOrderBy(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatOrderBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new OrderedTableExpression((TableExpression)source, false, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, false));
+            return OrderByToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                false,
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                false,
+                context
+                );
         }
 
-        SqlValue FormatOrderByDescending(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatOrderByDescending(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new OrderedTableExpression((TableExpression)source, false, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, true));
+            return OrderByToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                false,
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                true,
+                context
+                );
         }
 
-        SqlValue FormatThenBy(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatThenBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new OrderedTableExpression((TableExpression)source, true, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, false));
+            return OrderByToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                true,
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                false,
+                context
+                );
         }
 
-        SqlValue FormatThenByDescending(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatThenByDescending(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new OrderedTableExpression((TableExpression)source, true, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, true));
+            return OrderByToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                true,
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                true,
+                context
+                );
         }
 
-        SqlValue FormatSkip(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatSkip(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+            var countExpression = GetSqlExpression(methodCallExpression.Arguments[1], context);
 
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            if (methodCallExpression.Arguments[1] is not ConstantExpression constantExpression)
+            if (countExpression is not SqlExpressions.ConstantExpression constantExpression)
                 throw new UnsupportedExpressionException(methodCallExpression.Arguments[1]);
 
-            return SqlValue.TableExpression(new SkippedTableExpression((TableExpression)source, (int)constantExpression.Value));
+            return SkipToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (int)constantExpression.Value
+                );
         }
 
-        SqlValue FormatTake(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatTake(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+            var countExpression = GetSqlExpression(methodCallExpression.Arguments[1], context);
 
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            if (methodCallExpression.Arguments[1] is not ConstantExpression constantExpression)
+            if (countExpression is not SqlExpressions.ConstantExpression constantExpression)
                 throw new UnsupportedExpressionException(methodCallExpression.Arguments[1]);
 
-            return SqlValue.TableExpression(new TakedTableExpression((TableExpression)source, (int)constantExpression.Value));
+            return TakeToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (int)constantExpression.Value
+                );
         }
 
-        SqlValue FormatAll(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatAll(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new AllTableExpression((TableExpression)source, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand));
+            return AllToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                context
+                );
         }
 
-        SqlValue FormatAny(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatAny(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            object predicate = null;
+            SqlExpressions.ISelectSql selectSql = (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             if (methodCallExpression.Arguments.Count > 1)
-                predicate = ((UnaryExpression)methodCallExpression.Arguments[1]).Operand;
+            {
+                selectSql = WhereToSql(
+                    selectSql,
+                    (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                    false,
+                    context
+                    );
+            }
 
-            return SqlValue.TableExpression(new AnyTableExpression((TableExpression)source, predicate));
+            return AnyToSql(
+                selectSql
+                );
         }
 
-        SqlValue FormatAverage(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatAverage(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var sourceCmd = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true });
+            SqlExpressions.ISqlExpression source = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             LambdaExpression selector = (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand;
 
-            if (sourceCmd.LambdaParameterInfo?.ParameterType == LambdaParameterType.GroupingDataTable)
+            if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
-                var cmd = GetValueExpression(selector.Body, new(context.Level)
-                {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
-                        .ToDictionary(s => s.Key, s => s.Value)
-                });
+                SqlExpressions.SqlContext averageContext = context.ConcatParameters(
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    );
 
-                return new()
-                {
-                    CommantText = SqlNode.Call("Avg", cmd.CommantText?.ToString()),
-                    Parameters = cmd.Parameters
-                };
+                return new SqlExpressions.MethodCallExpression("Avg", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, averageContext));
             }
 
-            object sourceExpression = sourceCmd.ConstantValue;
-
-            if (sourceExpression is IDataTable dataTable)
-                sourceExpression = dataTable.Expression;
-
-            return SqlValue.TableExpression(new AverageTableExpression((TableExpression)sourceExpression, selector, methodCallExpression.Type));
+            return AverageToSql(
+                (SqlExpressions.ISelectSql)source,
+                selector,
+                methodCallExpression.Type,
+                context
+                );
         }
 
-        SqlValue FormatListContains(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatListContains(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var source = GetValueExpression(methodCallExpression.Object, context);
+            SqlExpressions.ISqlExpression valueArray = GetSqlExpression(methodCallExpression.Object, context);
 
-            var value = GetValueExpression(methodCallExpression.Arguments[0], context);
+            SqlExpressions.IValueExpression value = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], context);
 
-            return GetInSqlValue(source, value);
+            return GetInExpression(value, valueArray);
         }
 
-        SqlValue FormatContains(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatContains(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var source = GetValueExpression(methodCallExpression.Arguments[0], context);
+            SqlExpressions.ISqlExpression valueArray = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
-            var value = GetValueExpression(methodCallExpression.Arguments[1], context);
+            SqlExpressions.IValueExpression value = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], context);
 
-            return GetInSqlValue(source, value);
+            return GetInExpression(value, valueArray);
         }
 
-        SqlValue GetInSqlValue(SqlValue source, SqlValue value)
+        SqlExpressions.IValueExpression GetInExpression(SqlExpressions.IValueExpression value, SqlExpressions.ISqlExpression valueArray)
         {
-            string text = null;
-
-            List<KeyValuePair<string, object>> ps = new();
-
-            if (source.IsConstant)
+            if (valueArray is SqlExpressions.IObjectExpression objectExpression)
             {
-                if (source.ConstantValue is null)
+                if (objectExpression.Value is null)
                     throw new ArgumentNullException(nameof(System.Linq.Enumerable.Contains));
 
-                List<string> keys = new();
+                List<SqlExpressions.ParameterExpression> parameters = new();
 
-                foreach (object obj in (IEnumerable)source.ConstantValue)
+                foreach (object obj in (IEnumerable)objectExpression.Value)
                 {
-                    var p = SqlNode.Parameter(obj);
-
-                    keys.Add(p.Key);
-
-                    ps.Add(p);
+                    parameters.Add(new(obj));
                 }
 
-                if (keys.Any() == false)
-                {
-                    return new()
-                    {
-                        CommantText = SqlNode.False
-                    };
-                }
+                if (parameters.Count == 0)
+                    return new SqlExpressions.ConstantExpression(false);
 
-                text = SqlNode.Bracket(string.Join(", ", keys));
-            }
-            else
-            {
-                text = source.CommantText?.ToString();
-
-                if (source.Parameters is not null)
-                    ps.AddRange(source.Parameters);
+                return new SqlExpressions.InExpression(value, new SqlExpressions.ValuesExpression(parameters));
             }
 
-            text = SqlNode.In(value.CommantText?.ToString(), text);
-
-            if (value.Parameters is not null)
-                ps.AddRange(value.Parameters);
-
-            return new()
+            if (valueArray is SqlExpressions.ISelectSql selectSql)
             {
-                CommantText = text,
-                Parameters = ps
-            };
-        }
-
-        SqlValue FormatCount(MethodCallExpression methodCallExpression, SqlContext context)
-        {
-            var sourceCmd = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true });
-
-            if (sourceCmd.LambdaParameterInfo?.ParameterType == LambdaParameterType.GroupingDataTable)
-            {
-                return new()
-                {
-                    CommantText = SqlNode.Call("Count", "*")
-                };
+                return new SqlExpressions.InExpression(value, selectSql);
             }
 
-            object sourceExpression = sourceCmd.ConstantValue;
-
-            if (sourceExpression is IDataTable dataTable)
-                sourceExpression = dataTable.Expression;
-
-            return SqlValue.TableExpression(new CountTableExpression((TableExpression)sourceExpression, methodCallExpression.Type));
+            return new SqlExpressions.MemberOfExpression((SqlExpressions.IValueExpression)valueArray, value);
         }
 
-        SqlValue FormatDistinct(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatCount(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+            var source = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
+            if (source is SqlExpressions.GroupingDataTableExpression)
+            {
+                return SqlExpressions.SqlExpression.CountExpression();
+            }
 
-            return SqlValue.TableExpression(new DistinctTableExpression((TableExpression)source));
+            return CountToSql(
+                (SqlExpressions.ISelectSql)source,
+                methodCallExpression.Type
+                );
         }
 
-        SqlValue FormatDistinctBy(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatDistinct(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+            return DistinctToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context)
+                );
+        }
 
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
+        SqlExpressions.ISqlExpression FormatDistinctBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
             Type[] genericArguments = methodCallExpression.Method.GetGenericArguments();
 
             ParameterExpression parameterExpression = System.Linq.Expressions.Expression.Parameter(typeof(IGroupingDataTable<,>).MakeGenericType(genericArguments[1], genericArguments[0]));
@@ -548,174 +493,179 @@ namespace LogicEntity.Default.MySql
                 System.Linq.Expressions.Expression.Property(parameterExpression, nameof(IGroupingDataTable<int, int>.Element)),
                 parameterExpression);
 
-            return SqlValue.TableExpression(new SelectedTableExpression(
-                new GroupedTableExpression((TableExpression)source, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand),
+            return SelectToSql(
+                GroupToSql(
+                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                    context
+                ),
                 selector,
-                methodCallExpression.Type));
+                methodCallExpression.Type,
+                context
+                );
         }
 
-        SqlValue FormatElementAt(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatElementAt(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
+            var countExpression = GetSqlExpression(methodCallExpression.Arguments[1], context);
 
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            if (methodCallExpression.Arguments[1] is not ConstantExpression constantExpression)
+            if (countExpression is not SqlExpressions.ConstantExpression constantExpression)
                 throw new UnsupportedExpressionException(methodCallExpression.Arguments[1]);
 
-            return SqlValue.TableExpression(new TakedTableExpression(new SkippedTableExpression((TableExpression)source, (int)constantExpression.Value), 1));
+            return TakeToSql(
+                SkipToSql(
+                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    (int)constantExpression.Value
+                    ),
+                1
+                );
         }
 
-        SqlValue FormatFirst(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatFirst(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
+            var source = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             if (methodCallExpression.Arguments.Count > 1)
-                source = new RowFilteredTableExpression((TableExpression)source, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand);
+            {
+                source = WhereToSql(
+                    (SqlExpressions.ISelectSql)source,
+                    (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                    false,
+                    context
+                    );
+            }
 
-            return SqlValue.TableExpression(new TakedTableExpression((TableExpression)source, 1));
+            return TakeToSql(
+                (SqlExpressions.ISelectSql)source,
+                1
+                );
         }
 
-        SqlValue FormatMax(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatMax(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var sourceCmd = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true });
+            var source = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             LambdaExpression selector = (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand;
 
-            if (sourceCmd.LambdaParameterInfo?.ParameterType == LambdaParameterType.GroupingDataTable)
+            if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
-                var cmd = GetValueExpression(selector.Body, new(context.Level)
-                {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
-                        .ToDictionary(s => s.Key, s => s.Value)
-                });
+                SqlExpressions.SqlContext maxContext = context.ConcatParameters(
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    );
 
-                return new()
-                {
-                    CommantText = SqlNode.Call("Max", cmd.CommantText?.ToString()),
-                    Parameters = cmd.Parameters
-                };
+                return new SqlExpressions.MethodCallExpression("Max", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, maxContext));
             }
 
-            object sourceExpression = sourceCmd.ConstantValue;
-
-            if (sourceExpression is IDataTable dataTable)
-                sourceExpression = dataTable.Expression;
-
-            Type[] genericTypes = methodCallExpression.Method.GetGenericArguments();
-
-            return SqlValue.TableExpression(new MaxTableExpression((TableExpression)sourceExpression, selector, genericTypes[genericTypes.Length - 1]));
+            return MaxToSql(
+                (SqlExpressions.ISelectSql)source,
+                selector,
+                methodCallExpression.Type,
+                context
+                );
         }
 
-        SqlValue FormatMaxBy(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatMaxBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new TakedTableExpression(new OrderedTableExpression((TableExpression)source, false, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, true), 1));
+            return TakeToSql(
+                OrderByToSql(
+                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    false,
+                    (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                    true,
+                    context
+                    ),
+                1
+                );
         }
 
-        SqlValue FormatMin(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatMin(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var sourceCmd = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true });
+            var source = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             LambdaExpression selector = (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand;
 
-            if (sourceCmd.LambdaParameterInfo?.ParameterType == LambdaParameterType.GroupingDataTable)
+            if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
-                var cmd = GetValueExpression(selector.Body, new(context.Level)
-                {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
-                        .ToDictionary(s => s.Key, s => s.Value)
-                });
+                SqlExpressions.SqlContext maxContext = context.ConcatParameters(
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    );
 
-                return new()
-                {
-                    CommantText = SqlNode.Call("Min", cmd.CommantText?.ToString()),
-                    Parameters = cmd.Parameters
-                };
+                return new SqlExpressions.MethodCallExpression("Min", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, maxContext));
             }
 
-            object sourceExpression = sourceCmd.ConstantValue;
-
-            if (sourceExpression is IDataTable dataTable)
-                sourceExpression = dataTable.Expression;
-
-            Type[] genericTypes = methodCallExpression.Method.GetGenericArguments();
-
-            return SqlValue.TableExpression(new MinTableExpression((TableExpression)sourceExpression, selector, genericTypes[genericTypes.Length - 1]));
+            return MinToSql(
+                (SqlExpressions.ISelectSql)source,
+                selector,
+                methodCallExpression.Type,
+                context
+                );
         }
 
-        SqlValue FormatMinBy(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatMinBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object source = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (source is IDataTable dataTable)
-                source = dataTable.Expression;
-
-            return SqlValue.TableExpression(new TakedTableExpression(new OrderedTableExpression((TableExpression)source, false, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, false), 1));
+            return TakeToSql(
+                OrderByToSql(
+                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    false,
+                    (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                    false,
+                    context
+                    ),
+                1
+                );
         }
 
-        SqlValue FormatSum(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatSum(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            var sourceCmd = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true });
+            var source = GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             LambdaExpression selector = (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand;
 
-            if (sourceCmd.LambdaParameterInfo?.ParameterType == LambdaParameterType.GroupingDataTable)
+            if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
-                var cmd = GetValueExpression(selector.Body, new(context.Level)
-                {
-                    Parameters = selector.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(sourceCmd.LambdaParameterInfo.FromTables[i])))
-                        .ToDictionary(s => s.Key, s => s.Value)
-                });
+                SqlExpressions.SqlContext maxContext = context.ConcatParameters(
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    );
 
-                return new()
-                {
-                    CommantText = SqlNode.Call("Sum", cmd.CommantText?.ToString()),
-                    Parameters = cmd.Parameters
-                };
+                return new SqlExpressions.MethodCallExpression("Sum", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, maxContext));
             }
 
-            object sourceExpression = sourceCmd.ConstantValue;
-
-            if (sourceExpression is IDataTable dataTable)
-                sourceExpression = dataTable.Expression;
-
-            Type[] genericTypes = methodCallExpression.Method.GetGenericArguments();
-
-            return SqlValue.TableExpression(new SumTableExpression((TableExpression)sourceExpression, selector, genericTypes[genericTypes.Length - 1]));
+            return SumToSql(
+                (SqlExpressions.ISelectSql)source,
+                selector,
+                methodCallExpression.Type,
+                context
+                );
         }
 
-        SqlValue FormatValue(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatValue(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            return SqlValue.TableExpression(new SelectedTableExpression(null, ((UnaryExpression)methodCallExpression.Arguments[1]).Operand, methodCallExpression.Method.GetGenericArguments()[0]));
+            return SelectToSql(
+                new SqlExpressions.SelectExpression(),
+                ((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                methodCallExpression.Method.GetGenericArguments()[0],
+                context
+                );
         }
 
-        SqlValue FormatRecursiveConcat(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatRecursiveConcat(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object first = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (first is IDataTable firstDataTable)
-                first = firstDataTable.Expression;
-
-            return SqlValue.TableExpression(new RecursiveUnionedTableExpression((TableExpression)first, (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand, false));
+            return RecursiveUnionToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                false,
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                context
+                );
         }
 
-        SqlValue FormatRecursiveUnion(MethodCallExpression methodCallExpression, SqlContext context)
+        SqlExpressions.ISqlExpression FormatRecursiveUnion(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            object first = GetValueExpression(methodCallExpression.Arguments[0], context with { GetTableExpression = true }).ConstantValue;
-
-            if (first is IDataTable firstDataTable)
-                first = firstDataTable.Expression;
-
-            return SqlValue.TableExpression(new RecursiveUnionedTableExpression((TableExpression)first, (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand, true));
+            return RecursiveUnionToSql(
+                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                true,
+                (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
+                context
+                );
         }
     }
 }

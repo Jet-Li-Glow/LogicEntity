@@ -1,8 +1,10 @@
-﻿using LogicEntity.Linq.Expressions;
+﻿using LogicEntity.Default.MySql.SqlExpressions;
+using LogicEntity.Linq.Expressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,34 +12,36 @@ namespace LogicEntity.Default.MySql
 {
     internal interface IDataManipulationSql
     {
-        public IDataManipulationSql SetSqlType(DataManipulationSqlType sqlType);
-
         Type Type { get; set; }
 
-        bool IsCTE { get; set; }
+        int? Timeout { get; set; }
 
-        public int? Timeout { get; set; }
+        List<CommonTableExpression> CommonTableExpressions { get; }
 
-        bool CanSet(SelectNodeType nodeType);
+        bool CanAddNode(SelectNodeType nodeType);
 
-        IDataManipulationSql SetDistinct(bool distinct);
+        SelectExpression AddSelect();
 
-        IDataManipulationSql SetHasIndex(bool hasIndex);
+        SelectExpression Distinct();
 
-        IDataManipulationSql SetDelete(List<string> tables);
+        SelectExpression AddIndex();
 
-        IDataManipulationSql SetSet(LambdaExpression[] assignments);
+        SelectExpression AddWhere();
 
-        IDataManipulationSql SetWhere(List<LambdaExpression> where);
+        SelectExpression AddGroupBy();
 
-        IDataManipulationSql SetGroupBy(LambdaExpression groupBy);
+        SelectExpression AddHaving();
 
-        IDataManipulationSql SetSelect(object select);
+        ISelectSql AddOrderBy();
 
-        IDataManipulationSql SetHaving(List<LambdaExpression> having);
+        ISelectSql AddThenBy();
 
-        IDataManipulationSql SetOrderBy(List<OrderedTableExpression> orderBy);
+        ISelectSql AddLimit();
 
-        IDataManipulationSql SetLimit(SkipTaked limit);
+        DeleteExpression AddDelete();
+
+        UpdateExpression AddUpdateSet();
+
+        Command Build(LinqConvertProvider linqConvertProvider);
     }
 }

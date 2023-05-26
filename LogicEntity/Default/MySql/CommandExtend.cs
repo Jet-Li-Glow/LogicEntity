@@ -9,6 +9,6 @@ namespace LogicEntity.Default.MySql
 {
     internal class CommandExtend : Command
     {
-        public List<PropertyInfo> ColumnProperties { get; set; }
+
     }
 }

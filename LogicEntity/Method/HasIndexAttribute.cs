@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Method
 {
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-    public class ConstantParameterAttribute : Attribute
+    internal class HasIndexAttribute : Attribute
     {
-
     }
 }
