@@ -8,17 +8,13 @@ namespace LogicEntity.Linq.Expressions
 {
     public class AnyTableExpression : TableExpression
     {
-        public AnyTableExpression(TableExpression source, object predicate)
+        public AnyTableExpression(TableExpression source)
         {
             Source = source;
-
-            Predicate = predicate;
         }
 
         public override Type Type => typeof(bool);
 
         public TableExpression Source { get; private set; }
-
-        public object Predicate { get; private set; }
     }
 }

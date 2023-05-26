@@ -12,7 +12,7 @@ namespace LogicEntity.Default.MySql
     public static class DbFunction
     {
         [MethodFormat("{1} As {2}")]
-        public static T As<T>(this T t, [ConstantParameter] string alias)
+        public static T As<T>(this T t, string alias)
         {
             return default;
         }
@@ -34,12 +34,6 @@ namespace LogicEntity.Default.MySql
 
         //-----------------------------------------------------------------------------------
 
-        [MethodFormat("*")]
-        internal static object AllColumns()
-        {
-            return default;
-        }
-
         [MethodFormat("Any{1}")]
         public static T Any<T>(IDataTable<T> source)
         {
@@ -54,36 +48,6 @@ namespace LogicEntity.Default.MySql
 
         [MethodFormat("Exists{1}")]
         public static bool Exists<T>(IDataTable<T> source)
-        {
-            return default;
-        }
-
-        [MethodFormat("Avg({1})")]
-        internal static T Average<T>(T t)
-        {
-            return default;
-        }
-
-        [MethodFormat("Count(*)")]
-        internal static int Count()
-        {
-            return default;
-        }
-
-        [MethodFormat("Max({1})")]
-        internal static T Max<T>(T t)
-        {
-            return default;
-        }
-
-        [MethodFormat("Min({1})")]
-        internal static T Min<T>(T t)
-        {
-            return default;
-        }
-
-        [MethodFormat("Sum({1})")]
-        internal static T Sum<T>(T t)
         {
             return default;
         }

@@ -7,9 +7,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using LogicEntity.Collections;
 using LogicEntity.Collections.Generic;
 using LogicEntity.Linq;
 using LogicEntity.Linq.Expressions;
+using LogicEntity.Method;
 
 namespace LogicEntity.Linq
 {
@@ -1105,6 +1107,7 @@ namespace LogicEntity.Linq
             return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(source.Db, new RowFilteredTableExpression(source.Expression, predicate));
         }
 
+        [HasIndex]
         public static IDataTable<TSource> Where<TSource>(this IDataTable<TSource> source, Expression<Func<TSource, int, bool>> predicate)
         {
             if (source is null)
@@ -1113,7 +1116,7 @@ namespace LogicEntity.Linq
             if (predicate is null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return new DataTableImpl<TSource>(source.Db, new RowFilteredTableExpression(source.Expression, predicate));
+            return new DataTableImpl<TSource>(source.Db, new RowFilteredTableExpression(source.Expression, predicate, true));
         }
 
         public static IGroupedDataTable<TKey, TSource> GroupBy<TSource, TKey>(this IDataTable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
@@ -1461,162 +1464,162 @@ namespace LogicEntity.Linq
 
         public static bool Any<TSource>(this IDataTable<TSource> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2>(this IDataTable<T1, T2> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3>(this IDataTable<T1, T2, T3> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4>(this IDataTable<T1, T2, T3, T4> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5>(this IDataTable<T1, T2, T3, T4, T5> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6>(this IDataTable<T1, T2, T3, T4, T5, T6> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7>(this IDataTable<T1, T2, T3, T4, T5, T6, T7> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> source)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, null));
+            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression));
         }
 
         public static bool Any<TSource>(this IDataTable<TSource> source, Expression<Func<TSource, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2>(this IDataTable<T1, T2> source, Expression<Func<T1, T2, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3>(this IDataTable<T1, T2, T3> source, Expression<Func<T1, T2, T3, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4>(this IDataTable<T1, T2, T3, T4> source, Expression<Func<T1, T2, T3, T4, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5>(this IDataTable<T1, T2, T3, T4, T5> source, Expression<Func<T1, T2, T3, T4, T5, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6>(this IDataTable<T1, T2, T3, T4, T5, T6> source, Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7>(this IDataTable<T1, T2, T3, T4, T5, T6, T7> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static bool Any<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, bool>> predicate)
         {
-            return (bool)source.Db.ExecuteScalar(new AnyTableExpression(source.Expression, predicate));
+            return source.Where(predicate).Any();
         }
 
         public static TResult Average<TSource, TResult>(this IDataTable<TSource> source, Expression<Func<TSource, TResult>> selector)
@@ -2351,10 +2354,10 @@ namespace LogicEntity.Linq
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements.Any() is false)
+            if (elements is not IDataTable && elements.Any() is false)
                 throw new InvalidOperationException("No elements");
 
-            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements.Cast<object>()));
+            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements));
         }
 
         public static ulong AddNext<TSource>(this ITable<TSource> source, TSource element)
@@ -2381,10 +2384,10 @@ namespace LogicEntity.Linq
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements.Any() is false)
+            if (elements is not IDataTable && elements.Any() is false)
                 throw new InvalidOperationException("No elements");
 
-            return source.Db.ExecuteNonQuery(new AddOrUpdateOperateExpression(source.Expression, elements.Cast<object>()));
+            return source.Db.ExecuteNonQuery(new AddOrUpdateOperateExpression(source.Expression, elements));
         }
 
         public static int Remove<TSource>(this IDataTable<TSource> source)

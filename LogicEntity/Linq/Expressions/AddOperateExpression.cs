@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace LogicEntity.Linq.Expressions
 {
     public class AddOperateExpression : OperateExpression
     {
-        public AddOperateExpression(TableExpression source, IEnumerable<object> elements)
+        public AddOperateExpression(TableExpression source, IEnumerable elements)
         {
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
@@ -20,6 +21,6 @@ namespace LogicEntity.Linq.Expressions
 
         public TableExpression Source { get; private set; }
 
-        public IEnumerable<object> Elements { get; private set; }
+        public IEnumerable Elements { get; private set; }
     }
 }

@@ -86,15 +86,13 @@ namespace Demo
 
             data = db.Students.Select(s => MyConvert.ToDictionary(s.Json)).Take(1).ToList();
 
-            data = db.Students.Select(s => s.JsonArray[4]).Take(1).ToList();
-
             data = db.Students.Select(s => ((Student.JsonObject)s.Json).Dictionary["Key - \" - \\ -"]).Take(1).ToList();
 
             data = db.Students.Take(1).Timeout(10).ToList();  //IDbCommand.CommandTimeout
 
             DataTable dataTable = db.Students.Take(1).Select(s => s.Id, s => s.Name);
 
-            dataTable = db.Students.Take(1).Select(10, s => s.Id, s => s.Name);  //IDbCommand.CommandTimeout
+            dataTable = db.Students.Take(1).Timeout(10).Select(s => s.Id, s => s.Name);  //IDbCommand.CommandTimeout
 
             data = db.Value(() => new { n = 1 }).RecursiveConcat(ns => ns.Where(s => s.n < 20).Select(s => new { n = s.n + 1 })).Take(20).ToList();
 
@@ -162,14 +160,14 @@ namespace Demo
 
             rowsAffected = db.Students.Where(s => s.Id == 1)
                 .Set(
-                s => s.Float.Assign(5.5f),
-                s => ((Student.JsonObject)s.Json).Array[0].Assign(-5)
+                s => s.Float.SetValue(5.5f),
+                s => ((Student.JsonObject)s.Json).Array[0].SetValue(-5)
                 );
 
             rowsAffected = db.Students
                 .Join(db.Majors, (s, m) => s.MajorId == m.MajorId)
                 .Where((s, m) => m.MajorId == 3)
-                .Set((s, m) => s.Name.Assign("Joined Set" + m.MajorName));
+                .Set((s, m) => s.Name.SetValue("Joined Set" + m.MajorName));
 
             //Delete
 
@@ -230,13 +228,13 @@ namespace Demo
         }
 
         [MethodFormat("Group_Concat({1} Separator {2})")]
-        public static string Group_Concat(string val, [ConstantParameter] string separator)
+        public static string Group_Concat(string val, string separator)
         {
             return default;
         }
 
         [MethodFormat("Sleep({1})")]
-        public static int Sleep([ConstantParameter] int seconds)
+        public static int Sleep(int seconds)
         {
             return default;
         }
@@ -287,7 +285,6 @@ namespace Demo
             options.MemberFormat[typeof(object).GetMethod(nameof(object.ToString))] = "Cast({0} As Char)";  //Default implementation (can be omitted)
 
             options.PropertyConverters.Set<Student.JsonObject, string>(typeof(Student).GetProperty(nameof(Student.Json)), s => JsonSerializer.Deserialize<Student.JsonObject>(s), s => JsonSerializer.Serialize(s));
-            options.PropertyConverters.Set<int[], string>(typeof(Student).GetProperty(nameof(Student.JsonArray)), s => JsonSerializer.Deserialize<int[]>(s), s => JsonSerializer.Serialize(s));
 
             return new LogicEntity.Default.MySql.LinqConvertProvider(options);
         }

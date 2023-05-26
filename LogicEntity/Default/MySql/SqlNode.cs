@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql
 {
+    /// <summary>
+    /// SqlFormat
+    /// </summary>
     internal static class SqlNode
     {
         public const string Null = "Null";
@@ -59,6 +64,7 @@ namespace LogicEntity.Default.MySql
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public static KeyValuePair<string, object> Parameter(object value)
         {
             if (value is IValue val)
@@ -231,7 +237,7 @@ namespace LogicEntity.Default.MySql
 
         public static string Call(string method, params string[] args)
         {
-            return $"{method}({string.Join(", ", args)})";
+            return $"{method}({string.Join(", ", args ?? Array.Empty<string>())})";
         }
 
         public static string Bracket(string sql)
@@ -252,6 +258,11 @@ namespace LogicEntity.Default.MySql
         public static string Assign(string left, string right)
         {
             return left + " " + Equal + " " + right;
+        }
+
+        public static string ColumnName(MemberInfo member)
+        {
+            return member.GetCustomAttribute<ColumnAttribute>()?.Name ?? member.Name;
         }
     }
 }

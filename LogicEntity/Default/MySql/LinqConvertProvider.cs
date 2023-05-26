@@ -23,43 +23,9 @@ namespace LogicEntity.Default.MySql
     public partial class LinqConvertProvider : ILinqConvertProvider
     {
         readonly PropertyInfo _GroupingDataTableKey = typeof(IGroupingDataTable<>).GetProperty(nameof(IGroupingDataTable<int>.Key));
-        readonly LambdaExpression _AllColumnsLambdaExpression = System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Call(typeof(DbFunction).GetMethod(nameof(DbFunction.AllColumns), BindingFlags.Static | BindingFlags.NonPublic)));
-        readonly MethodInfo _Exists = typeof(DbFunction).GetMethod(nameof(DbFunction.Exists)).MakeGenericMethod(typeof(object));
-        readonly MethodInfo _Average = typeof(DbFunction).GetMethod(nameof(DbFunction.Average), BindingFlags.Static | BindingFlags.NonPublic);
-        readonly MethodInfo _Count = typeof(DbFunction).GetMethod(nameof(DbFunction.Count), BindingFlags.Static | BindingFlags.NonPublic);
-        readonly MethodInfo _Max = typeof(DbFunction).GetMethod(nameof(DbFunction.Max), BindingFlags.Static | BindingFlags.NonPublic);
-        readonly MethodInfo _Min = typeof(DbFunction).GetMethod(nameof(DbFunction.Min), BindingFlags.Static | BindingFlags.NonPublic);
-        readonly MethodInfo _Sum = typeof(DbFunction).GetMethod(nameof(DbFunction.Sum), BindingFlags.Static | BindingFlags.NonPublic);
         readonly MethodInfo _Read = typeof(DbFunction).GetMethod(nameof(DbFunction.Read));
         readonly MethodInfo _ReadBytes = typeof(DbFunction).GetMethod(nameof(DbFunction.ReadBytes));
         readonly MethodInfo _ReadChars = typeof(DbFunction).GetMethod(nameof(DbFunction.ReadChars));
-        readonly static MethodInfo _Assign1 = typeof(OperatorFunction).GetMethods().Single(m =>
-        {
-            ParameterInfo[] parameterInfos = m.GetParameters();
-
-            return m.Name == nameof(OperatorFunction.Assign)
-                && parameterInfos.Length == 2
-                && parameterInfos[0].ParameterType.IsGenericType == false
-                && parameterInfos[1].ParameterType.IsGenericType == false;
-        });
-        readonly static MethodInfo _Assign2 = typeof(OperatorFunction).GetMethods().Single(m =>
-        {
-            ParameterInfo[] parameterInfos = m.GetParameters();
-
-            return m.Name == nameof(OperatorFunction.Assign)
-                && parameterInfos.Length == 2
-                && parameterInfos[0].ParameterType.IsGenericType == true
-                && parameterInfos[1].ParameterType.IsGenericType == false;
-        });
-        readonly static MethodInfo _Assign3 = typeof(OperatorFunction).GetMethods().Single(m =>
-        {
-            ParameterInfo[] parameterInfos = m.GetParameters();
-
-            return m.Name == nameof(OperatorFunction.Assign)
-                && parameterInfos.Length == 2
-                && parameterInfos[0].ParameterType.IsGenericType == false
-                && parameterInfos[1].ParameterType.IsGenericType == true;
-        });
 
         readonly Dictionary<PropertyInfo, ValueConverter> PropertyConvert = new();
 
@@ -103,113 +69,63 @@ namespace LogicEntity.Default.MySql
 
         public Command Convert(LogicEntity.Linq.Expressions.Expression expression)
         {
-            Command command = null;
+            Command command;
 
             if (expression is TableExpression tableExpression && expression is not AddNextTableExpression)
                 command = GetSelectCommand(tableExpression);
             else
                 command = GetOperateCommand(expression);
 
-            List<KeyValuePair<string, object>> parameters = new();
-
-            for (int i = 0; i < command.Parameters.Count; i++)
-            {
-                string key = "@param" + i.ToString();
-
-                command.CommandText = command.CommandText.Replace(command.Parameters[i].Key, key);
-
-                parameters.Add(KeyValuePair.Create(key, command.Parameters[i].Value));
-            }
-
-            command.Parameters.Clear();
-
-            command.Parameters.AddRange(parameters);
-
-#if DEBUG
-            for (int i = 0; i < command.Parameters.Count; i++)
-            {
-                string key = ("@param" + i);
-
-                if (command.Parameters[i].Key != key)
-                    throw new Exception("参数名称错误");
-
-                var collection = new System.Text.RegularExpressions.Regex("(^|[^0-9a-zA-Z])" + key + "($|[^0-9a-zA-Z])").Matches(command.CommandText);
-
-                if (collection.Count == 0)
-                    throw new Exception("参数名称错误");
-            }
-
-            if (command.CommandText.Contains(" @param" + command.Parameters.Count + " "))
-                throw new Exception("参数名称错误");
-
-            if (command.CommandText.Contains(" @Guid_"))
-                throw new Exception("参数名称错误");
-#endif
-
             return command;
         }
 
-        CommandExtend GetSelectCommand(TableExpression tableExpression)
+        Command GetSelectCommand(TableExpression tableExpression)
         {
-            var sql = GetDataManipulationSql(tableExpression);
-
-            if (sql.IsCTE)
-            {
-                sql = new DataManipulationSql()
-                {
-                    Select = _AllColumnsLambdaExpression,
-                    From = new()
-                    {
-                        new()
-                        {
-                            Table = sql
-                        }
-                    },
-                    Type = sql.Type
-                };
-            }
-
-            return Build(sql, new(), 0);
+            return GetDataManipulationSql(tableExpression).Build(this);
         }
 
         Command GetOperateCommand(LogicEntity.Linq.Expressions.Expression operateExpression)
         {
             if (operateExpression is AddOperateExpression addOperateExpression)
             {
-                if (addOperateExpression is AddOrUpdateOperateExpression addOrUpdateOperateExpression)
-                {
-                    return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression(addOrUpdateOperateExpression.Source, addOrUpdateOperateExpression.Elements, true));
-                }
+                return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression(
+                    SqlExpressions.InsertExpression.AddOperateType.Insert,
+                    addOperateExpression.Source,
+                    addOperateExpression.Elements
+                    ));
+            }
 
-                if (addOperateExpression is AddIgnoreOperateExpression addIgnoreOperate)
-                {
-                    return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression("Insert Ignore", addIgnoreOperate.Source, addIgnoreOperate.Elements));
-                }
-
-                if (addOperateExpression is ReplaceOperateExpression replaceOperateExpression)
-                {
-                    return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression("Replace Into", replaceOperateExpression.Source, replaceOperateExpression.Elements));
-                }
-
-                return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression(addOperateExpression.Source, addOperateExpression.Elements, false));
+            if (operateExpression is AddOrUpdateOperateExpression addOrUpdateOperateExpression)
+            {
+                return GetOperateCommand(new AddOrUpdateWithFactoryOperateExpression(
+                    SqlExpressions.InsertExpression.AddOperateType.Insert,
+                    addOrUpdateOperateExpression.Source,
+                    addOrUpdateOperateExpression.Elements,
+                    true,
+                    null
+                    ));
             }
 
             if (operateExpression is AddOrUpdateWithFactoryOperateExpression addOrUpdateWithFactoryOperateExpression)
             {
-                OriginalTableExpression table = (OriginalTableExpression)addOrUpdateWithFactoryOperateExpression.Source;
+                SqlExpressions.InsertExpression insertExpression = new();
 
-                PropertyInfo[] properties = table.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                    .Where(p => p.PropertyType.IsAssignableTo(typeof(IValue))).ToArray();
+                //AddOperate
+                insertExpression.AddOperate = addOrUpdateWithFactoryOperateExpression.AddOperate;
 
-                Dictionary<PropertyInfo, EntityPropertyInfo> validProperties = new();
-
-                Command command = new();
+                //Table
+                insertExpression.Table = (SqlExpressions.OriginalTableExpression)GetDataManipulationSql(addOrUpdateWithFactoryOperateExpression.Source);
 
                 //Values
                 string valuesExpression = string.Empty;
 
                 if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.Entity)
                 {
+                    PropertyInfo[] properties = insertExpression.Table.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
+                        .Where(p => p.PropertyType.IsAssignableTo(typeof(IValue))).ToArray();
+
+                    Dictionary<PropertyInfo, EntityPropertyInfo> validProperties = new();
+
                     List<Dictionary<PropertyInfo, IValue>> rows = new();
 
                     foreach (object element in addOrUpdateWithFactoryOperateExpression.Elements)
@@ -225,7 +141,7 @@ namespace LogicEntity.Default.MySql
 
                             if (validProperties.ContainsKey(property) == false)
                             {
-                                System.Linq.Expressions.Expression<Func<object, object>> writer = null;
+                                Expression<Func<object, object>> writer = null;
 
                                 if (PropertyConvert.TryGetValue(property, out ValueConverter converter) && converter.Writer is not null)
                                 {
@@ -255,11 +171,13 @@ namespace LogicEntity.Default.MySql
                         rows.Add(row);
                     }
 
-                    List<string> rowCmds = new();
+                    insertExpression.Columns = validProperties.Select(s => s.Key).ToList();
+
+                    List<SqlExpressions.ValuesExpression> rowExpressions = new();
 
                     foreach (Dictionary<PropertyInfo, IValue> row in rows)
                     {
-                        List<string> columnCmds = new();
+                        List<SqlExpressions.IValueExpression> valueExpressions = new();
 
                         foreach (KeyValuePair<PropertyInfo, EntityPropertyInfo> entityProperty in validProperties)
                         {
@@ -267,50 +185,31 @@ namespace LogicEntity.Default.MySql
                             {
                                 if (value.ValueType == ValueType.Value)
                                 {
-                                    var p = SqlNode.Parameter(entityProperty.Value.Writer is null ? value.Object : entityProperty.Value.Writer(value.Object));
-
-                                    columnCmds.Add(p.Key);
-
-                                    command.Parameters.Add(p);
+                                    valueExpressions.Add(new SqlExpressions.ParameterExpression(
+                                        entityProperty.Value.Writer is null ? value.Object : entityProperty.Value.Writer(value.Object)
+                                        ));
                                 }
                                 else
                                 {
                                     LambdaExpression lambdaExpression = (LambdaExpression)value.Object;
 
-                                    SqlValue sqlValue = GetValueExpression(lambdaExpression.Body, new(0), true);
-
-                                    columnCmds.Add(sqlValue.CommantText?.ToString());
-
-                                    if (sqlValue.Parameters is not null)
-                                        command.Parameters.AddRange(sqlValue.Parameters);
+                                    valueExpressions.Add((SqlExpressions.IValueExpression)GetSqlExpression(lambdaExpression.Body, new()));
                                 }
 
                                 continue;
                             }
 
-                            columnCmds.Add(SqlNode.Default);
+                            valueExpressions.Add(SqlExpressions.SqlExpression.DefaultValue);
                         }
 
-                        rowCmds.Add(SqlNode.Bracket(string.Join(", ", columnCmds)));
+                        rowExpressions.Add(new(valueExpressions));
                     }
 
-                    valuesExpression = $"Values\n{string.Join(",\n", rowCmds).Indent(2)}";
+                    insertExpression.Rows = new SqlExpressions.InsertRowsExpression(rowExpressions);
                 }
                 else if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.DataTable)
                 {
-                    CommandExtend dataTableCommand = Convert(addOrUpdateWithFactoryOperateExpression.DataTable.Expression) as CommandExtend;
-
-                    if (dataTableCommand is null
-                        || dataTableCommand.ColumnProperties.Any(s => s is null)
-                        || dataTableCommand.ColumnProperties.Except(properties).Any())
-                        throw new UnsupportedExpressionException(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
-
-                    validProperties = dataTableCommand.ColumnProperties.ToDictionary(s => s, s => default(EntityPropertyInfo));
-
-                    valuesExpression = dataTableCommand.CommandText;
-
-                    if (dataTableCommand.Parameters is not null)
-                        command.Parameters.AddRange(dataTableCommand.Parameters);
+                    insertExpression.Rows = (SqlExpressions.ISelectSql)GetDataManipulationSql(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
                 }
 
                 //Update
@@ -318,12 +217,9 @@ namespace LogicEntity.Default.MySql
 
                 if (addOrUpdateWithFactoryOperateExpression.Update)
                 {
-                    onDuplicateKeyUpdate = "\nOn Duplicate Key Update\n";
+                    insertExpression.OnDuplicateKeyUpdate = true;
 
-                    if (_updateFactoryVersion == UpdateFactoryVersion.V8_0)
-                        onDuplicateKeyUpdate = $"\nAs {SqlNode.NewRowAlias}" + onDuplicateKeyUpdate;
-
-                    List<KeyValuePair<string, string>> columnAndValues;
+                    insertExpression.UpdateFactoryVersion = _updateFactoryVersion;
 
                     if (addOrUpdateWithFactoryOperateExpression.UpdateFactory is not null)
                     {
@@ -334,69 +230,56 @@ namespace LogicEntity.Default.MySql
 
                         BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
 
-                        SqlContext sqlContext = new(0)
+                        var sqlContext = new SqlExpressions.SqlContext()
                         {
-                            Parameters = new()
+                            LambdaParameters = new()
                             {
                                 {
                                     addOrUpdateWithFactoryOperateExpression .UpdateFactory.Parameters[0],
-                                    LambdaParameterInfo.Entity(new EntityInfo()
-                                    {
-                                        CommandText = _updateFactoryVersion == UpdateFactoryVersion.V8_0 ? FullName(table) : null,
-                                        EntitySource = EntitySource.OriginalTable
-                                    } )
+                                    SqlExpressions.LambdaParameterInfo.Table(insertExpression.Table)
                                 },
                                 {
                                     addOrUpdateWithFactoryOperateExpression .UpdateFactory.Parameters[1],
-                                    LambdaParameterInfo.Entity(new EntityInfo()
-                                    {
-                                        CommandText = _updateFactoryVersion == UpdateFactoryVersion.V8_0 ? SqlNode.NewRowAlias : null,
-                                        EntitySource = EntitySource.OriginalTable
-                                    })
+                                    SqlExpressions.LambdaParameterInfo.Table(
+                                        _updateFactoryVersion == UpdateFactoryVersion.V8_0  ?
+                                            new SqlExpressions.OriginalTableExpression(insertExpression.Table.Schema, insertExpression.Table.Name) { Alias = SqlNode.NewRowAlias }
+                                            : insertExpression.Table
+                                            )
                                 }
                             }
                         };
 
                         ColumnVisitor columnVisitor = new ColumnVisitor(addOrUpdateWithFactoryOperateExpression.UpdateFactory.Parameters[1]);
 
-                        columnAndValues = blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(memberInit =>
+                        insertExpression.Assignments = blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(memberInit =>
                         {
                             BinaryExpression assign = (BinaryExpression)memberInit;
 
-                            string columnName = SqlNode.SqlName(ColumnName((PropertyInfo)((MemberExpression)assign.Left).Member));
+                            var left = new SqlExpressions.MemberExpression(insertExpression.Table, ((MemberExpression)assign.Left).Member);
 
-                            System.Linq.Expressions.Expression right = assign.Right;
+                            System.Linq.Expressions.Expression rightExpression = assign.Right;
 
                             if (_updateFactoryVersion == UpdateFactoryVersion.V5_7)
-                                right = columnVisitor.Visit(right);
+                                rightExpression = columnVisitor.Visit(rightExpression);
 
-                            var updateValue = GetValueExpression(right, sqlContext);
-
-                            if (updateValue.Parameters is not null)
-                                command.Parameters.AddRange(updateValue.Parameters);
-
-                            return KeyValuePair.Create(columnName, updateValue.CommantText?.ToString());
+                            return new SqlExpressions.AssignmentExpression(left, (SqlExpressions.IValueExpression)GetSqlExpression(rightExpression, sqlContext));
                         }).ToList();
                     }
                     else
                     {
-                        columnAndValues = validProperties.Select(p =>
+                        insertExpression.Assignments = insertExpression.Columns.Select(p =>
                         {
-                            string columnName = SqlNode.SqlName(ColumnName(p.Key));
+                            var valueExpression = new SqlExpressions.MemberExpression(insertExpression.Table, p);
 
-                            return KeyValuePair.Create(columnName, SqlNode.Call(nameof(DbFunction.Values), columnName));
+                            return new SqlExpressions.AssignmentExpression(
+                                valueExpression,
+                                new SqlExpressions.MethodCallExpression(nameof(DbFunction.Values), valueExpression)
+                                );
                         }).ToList();
                     }
-
-                    onDuplicateKeyUpdate += string.Join(",\n", columnAndValues.Select(s => SqlNode.Assign(s.Key, s.Value))).Indent(2);
                 }
 
-                command.CommandText = $"{addOrUpdateWithFactoryOperateExpression.AddOperate} {FullName(table)}"
-                    + $"\n(\n{string.Join(",\n", validProperties.Select(p => SqlNode.SqlName(ColumnName(p.Key)))).Indent(2)}\n)"
-                    + $"\n{valuesExpression}"
-                    + $"{onDuplicateKeyUpdate}";
-
-                return command;
+                return insertExpression.Build();
             }
 
             if (operateExpression is AddNextTableExpression addNextTableExpression)
@@ -410,504 +293,15 @@ namespace LogicEntity.Default.MySql
 
             if (operateExpression is RemoveOperateExpression removeOperateExpression)
             {
-                return Build(GetDataManipulationSql(removeOperateExpression), null, 0);
+                return GetDataManipulationSql(removeOperateExpression).Build(this);
             }
 
             if (operateExpression is SetOperateExpression setOperateExpression)
             {
-                return Build(GetDataManipulationSql(setOperateExpression), null, 0);
-            }
-
-            if (operateExpression is TimeoutOperateExpression timeoutOperateExpression)
-            {
-                var command = GetOperateCommand(timeoutOperateExpression.Source);
-
-                command.CommandTimeout = timeoutOperateExpression.Timeout;
-
-                return command;
+                return GetDataManipulationSql(setOperateExpression).Build(this);
             }
 
             throw new UnsupportedExpressionException(operateExpression);
-        }
-
-        IDataManipulationSql GetDataManipulationSql(LogicEntity.Linq.Expressions.Expression expression)
-        {
-            if (expression is OriginalTableExpression)
-            {
-                return new DataManipulationSql()
-                {
-                    From = new()
-                    {
-                        new()
-                        {
-                            Table = expression
-                        }
-                    },
-                    Type = expression.Type
-                };
-            }
-            else if (expression is JoinedTableExpression joinedTableExpression)
-            {
-                List<DataManipulationSqlJoinedInfo> tables = new();
-
-                TableExpression current = joinedTableExpression;
-
-                while (current is JoinedTableExpression s)
-                {
-                    tables.Add(new()
-                    {
-                        Join = s.Join + " ",
-                        Table = s.Right,
-                        LambdaExpression = (LambdaExpression)s.Predicate
-                    });
-
-                    current = s.Left;
-                }
-
-                tables.Add(new()
-                {
-                    Table = current
-                });
-
-                tables.Reverse();
-
-                foreach (var table in tables)
-                {
-                    if (table.Table is not OriginalTableExpression && table.Table is not CTETableExpression)
-                        table.Table = GetDataManipulationSql((TableExpression)table.Table);
-                }
-
-                return new DataManipulationSql()
-                {
-                    From = tables
-                };
-            }
-            else if (expression is RowFilteredTableExpression rowFilteredTableExpression)
-            {
-                List<LambdaExpression> filters = new();
-
-                filters.Add((LambdaExpression)rowFilteredTableExpression.Filter);
-
-                if (HasIndex(rowFilteredTableExpression))
-                {
-                    var sourceSql = GetDataManipulationSql(rowFilteredTableExpression.Source);
-
-                    sourceSql.SetHasIndex(true);
-
-                    return new DataManipulationSql()
-                    {
-                        From = new()
-                        {
-                            new()
-                            {
-                                Table = sourceSql
-                            }
-                        },
-                        Where = filters,
-                        Type = expression.Type
-                    };
-                }
-
-                TableExpression current = rowFilteredTableExpression.Source;
-
-                while (current is RowFilteredTableExpression rowFiltered && HasIndex(rowFiltered) == false)
-                {
-                    filters.Add((LambdaExpression)rowFiltered.Filter);
-
-                    current = rowFiltered.Source;
-                }
-
-                filters.Reverse();
-
-                var sql = GetDataManipulationSql(current);
-
-                if (sql.CanSet(SelectNodeType.Where))
-                {
-                    sql.SetWhere(filters);
-                }
-                else if (sql.CanSet(SelectNodeType.Having))
-                {
-                    sql.SetHaving(filters);
-                }
-                else
-                {
-                    sql = new DataManipulationSql()
-                    {
-                        From = new()
-                        {
-                            new()
-                            {
-                                Table = sql
-                            }
-                        },
-                        Where = filters
-                    };
-                }
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is GroupedTableExpression groupedTableExpression)
-            {
-                var sql = GetDataManipulationSql(groupedTableExpression.Source).SetGroupBy((LambdaExpression)groupedTableExpression.KeySelector);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is UnionedTableExpression unionedTableExpression)
-            {
-                string operateStr = "Union";
-
-                if (unionedTableExpression.Distinct == false)
-                    operateStr += " All";
-
-                var sql = new UnionedSql()
-                {
-                    Left = GetDataManipulationSql(unionedTableExpression.Left),
-                    BinaryTableOperate = operateStr,
-                    Right = GetDataManipulationSql(unionedTableExpression.Right)
-                };
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is IntersectTableExpression intersectTableExpression)
-            {
-                string operateStr = "Intersect";
-
-                if (intersectTableExpression is IntersectAllTableExpression)
-                    operateStr += " All";
-
-                var sql = new UnionedSql()
-                {
-                    Left = GetDataManipulationSql(intersectTableExpression.Left),
-                    BinaryTableOperate = operateStr,
-                    Right = GetDataManipulationSql(intersectTableExpression.Right)
-                };
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is ExceptTableExpression exceptTableExpression)
-            {
-                string operateStr = "Except";
-
-                if (exceptTableExpression is ExceptAllTableExpression)
-                    operateStr += " All";
-
-                var sql = new UnionedSql()
-                {
-                    Left = GetDataManipulationSql(exceptTableExpression.Left),
-                    BinaryTableOperate = operateStr,
-                    Right = GetDataManipulationSql(exceptTableExpression.Right)
-                };
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is OrderedTableExpression orderedTableExpression)
-            {
-                List<OrderedTableExpression> keys = new();
-
-                bool hasStart = false;
-
-                TableExpression current = orderedTableExpression;
-
-                while (current is OrderedTableExpression orderedTable)
-                {
-                    if (hasStart == false)
-                    {
-                        keys.Add(orderedTable);
-
-                        hasStart = orderedTable.Ordered == false;
-                    }
-
-                    current = orderedTable.Source;
-                }
-
-                keys.Reverse();
-
-                var sql = GetDataManipulationSql(current).SetOrderBy(keys);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is SkippedTableExpression || expression is TakedTableExpression)
-            {
-                List<(bool, int)> skipTakes = new();
-
-                TableExpression current = (TableExpression)expression;
-
-                while (current is SkippedTableExpression || current is TakedTableExpression)
-                {
-                    if (current is SkippedTableExpression skipExp)
-                    {
-                        skipTakes.Add((true, skipExp.Count));
-
-                        current = skipExp.Source;
-                    }
-                    else
-                    {
-                        TakedTableExpression tableExp = (TakedTableExpression)current;
-
-                        skipTakes.Add((false, tableExp.Count));
-
-                        current = tableExp.Source;
-                    }
-                }
-
-                skipTakes.Reverse();
-
-                int skip = 0;
-
-                int taked = int.MaxValue;
-
-                foreach (var e in skipTakes)
-                {
-                    if (e.Item1)
-                    {
-                        skip += e.Item2;
-
-                        taked -= e.Item2;
-                    }
-                    else
-                    {
-                        if (e.Item2 < taked)
-                            taked = e.Item2;
-                    }
-                }
-
-                if (taked < 0)
-                    taked = 0;
-
-                var sql = GetDataManipulationSql(current).SetLimit(new()
-                {
-                    Skip = skip,
-                    Taked = taked
-                });
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is SelectedTableExpression columnFilteredTableExpression)
-            {
-                var sql = columnFilteredTableExpression.Source is null ? new DataManipulationSql() : GetDataManipulationSql(columnFilteredTableExpression.Source);
-
-                sql = sql.SetSelect(columnFilteredTableExpression.Selector);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is DistinctTableExpression distinctTableExpression)
-            {
-                var sql = GetDataManipulationSql(distinctTableExpression.Source).SetDistinct(true);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is AverageTableExpression averageTableExpression)
-            {
-                LambdaExpression selector = (LambdaExpression)averageTableExpression.Selector;
-
-                selector = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Call(_Average.MakeGenericMethod(selector.Body.Type), selector.Body),
-                    selector.Parameters
-                    );
-
-                var sql = GetDataManipulationSql(averageTableExpression.Source).SetSelect(selector);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is CountTableExpression countTableExpression)
-            {
-                var sql = GetDataManipulationSql(countTableExpression.Source)
-                    .SetSelect(System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Call(_Count)));
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is MaxTableExpression maxTableExpression)
-            {
-                LambdaExpression selector = (LambdaExpression)maxTableExpression.Selector;
-
-                selector = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Call(_Max.MakeGenericMethod(selector.Body.Type), selector.Body),
-                    selector.Parameters
-                    );
-
-                var sql = GetDataManipulationSql(maxTableExpression.Source).SetSelect(selector);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is MinTableExpression minTableExpression)
-            {
-                LambdaExpression selector = (LambdaExpression)minTableExpression.Selector;
-
-                selector = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Call(_Min.MakeGenericMethod(selector.Body.Type), selector.Body),
-                    selector.Parameters
-                    );
-
-                var sql = GetDataManipulationSql(minTableExpression.Source).SetSelect(selector);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is SumTableExpression sumTableExpression)
-            {
-                LambdaExpression selector = (LambdaExpression)sumTableExpression.Selector;
-
-                selector = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Call(_Sum.MakeGenericMethod(selector.Body.Type), selector.Body),
-                    selector.Parameters
-                    );
-
-                var sql = GetDataManipulationSql(sumTableExpression.Source).SetSelect(selector);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is AnyTableExpression anyTableExpression)
-            {
-                TableExpression source = anyTableExpression.Source;
-
-                if (anyTableExpression.Predicate is not null)
-                    source = new RowFilteredTableExpression(source, anyTableExpression.Predicate);
-
-                source = new SelectedTableExpression(
-                    source,
-                    _AllColumnsLambdaExpression,
-                    typeof(object)
-                    );
-
-                LambdaExpression lambdaExpression = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Call(_Exists, System.Linq.Expressions.Expression.Constant(new DataTableImpl<object>(null, source)))
-                    );
-
-                return new DataManipulationSql()
-                {
-                    Select = lambdaExpression,
-                    Type = typeof(bool)
-                };
-            }
-            else if (expression is AllTableExpression allTableExpression)
-            {
-                LambdaExpression predicate = (LambdaExpression)allTableExpression.Predicate;
-
-                TableExpression source = new SelectedTableExpression(
-                    new RowFilteredTableExpression(
-                        allTableExpression.Source,
-                        System.Linq.Expressions.Expression.Lambda(
-                            System.Linq.Expressions.Expression.Not(predicate.Body),
-                            predicate.Parameters
-                            )),
-                    _AllColumnsLambdaExpression,
-                    typeof(object)
-                    );
-
-                LambdaExpression lambdaExpression = System.Linq.Expressions.Expression.Lambda(
-                    System.Linq.Expressions.Expression.Not(
-                        System.Linq.Expressions.Expression.Call(_Exists, System.Linq.Expressions.Expression.Constant(new DataTableImpl<object>(null, source)))
-                        )
-                    );
-
-                return new DataManipulationSql()
-                {
-                    Select = lambdaExpression,
-                    Type = typeof(bool)
-                };
-            }
-            else if (expression is RecursiveUnionedTableExpression recursiveUnionedTableExpression)
-            {
-                string operateStr = "Union";
-
-                if (recursiveUnionedTableExpression.Distinct == false)
-                    operateStr += " All";
-
-                var sql = new UnionedSql()
-                {
-                    Left = GetDataManipulationSql(recursiveUnionedTableExpression.Left),
-                    BinaryTableOperate = operateStr,
-                    Right = recursiveUnionedTableExpression.RightFactory
-                };
-
-                sql.Type = expression.Type;
-
-                sql.IsCTE = true;
-
-                return sql;
-            }
-            else if (expression is CTETableExpression cteTableExpression)
-            {
-                return new DataManipulationSql()
-                {
-                    From = new()
-                    {
-                        new()
-                        {
-                            Table = cteTableExpression
-                        }
-                    },
-                    Type = expression.Type
-                };
-            }
-            else if (expression is RemoveOperateExpression removeOperateExpression)
-            {
-                var sql = GetDataManipulationSql(removeOperateExpression.Source).SetSqlType(DataManipulationSqlType.Delete);
-
-                if (removeOperateExpression.Selectors is not null)
-                {
-                    LambdaExpression[] lambdaExpressions = (LambdaExpression[])removeOperateExpression.Selectors;
-
-                    sql = sql.SetDelete(lambdaExpressions.Select(lambdaExpression =>
-                    {
-                        if (lambdaExpression.Body is not ParameterExpression parameterExpression)
-                            throw new UnsupportedExpressionException(lambdaExpression.Body);
-
-                        return SqlNode.GetTableAlias(lambdaExpression.Parameters.IndexOf(parameterExpression), 0);
-                    }).ToList());
-                }
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is SetOperateExpression setOperateExpression)
-            {
-                var sql = GetDataManipulationSql(setOperateExpression.Source).SetSqlType(DataManipulationSqlType.Update);
-
-                sql.SetSet((LambdaExpression[])setOperateExpression.Assignments);
-
-                sql.Type = expression.Type;
-
-                return sql;
-            }
-            else if (expression is TimeoutTableExpression timeoutTableExpression)
-            {
-                var sql = GetDataManipulationSql(timeoutTableExpression.Source);
-
-                sql.Timeout = timeoutTableExpression.Timeout;
-
-                return sql;
-            }
-
-            throw new UnsupportedExpressionException(expression);
         }
 
         CommandExtend Build(IDataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
@@ -915,714 +309,661 @@ namespace LogicEntity.Default.MySql
             if (parameters is null)
                 parameters = new();
 
-            if (sql is DataManipulationSql dataManipulationSql)
-                return BuildSql(dataManipulationSql, parameters, level);
+            //if (sql is SelectSql dataManipulationSql)
+            //    return BuildSql(dataManipulationSql, parameters, level);
 
-            if (sql is UnionedSql unionedSql)
-                return BuildUnionSql(unionedSql, parameters, level, cteAlias);
+            //if (sql is BinaryTableSql unionedSql)
+            //    return BuildUnionSql(unionedSql, parameters, level, cteAlias);
 
             throw new Exception();
         }
 
-        CommandExtend BuildSql(DataManipulationSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
+        CommandExtend BuildSql(SqlExpressions.SelectExpression sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
         {
-            CommandExtend command = new();
+            throw new NotImplementedException();
 
-            command.CommandTimeout = sql.Timeout;
+            //CommandExtend command = new();
 
-            CommandResult result = new();
+            //command.CommandTimeout = sql.Timeout;
 
-            if (sql.SqlType == DataManipulationSqlType.Select)
-                result.Type = GetResultType(sql.Type);
+            //CommandResult result = new();
 
-            command.Results.Add(result);
+            //if (sql.SqlType == DataManipulationSqlType.Select)
+            //    result.Type = GetResultType(sql.Type);
 
-            //With
-            List<CTEInfo> ctes = new();
+            //command.Results.Add(result);
 
-            //From
-            string from = string.Empty;
+            ////With
+            //List<CTEInfo> ctes = new();
 
-            List<EntityInfo> entityInfos = new();
+            ////From
+            //string from = string.Empty;
 
-            if (sql.From is not null)
-            {
-                List<string> tableTexts = new();
-
-                for (int i = 0; i < sql.From.Count; i++)
-                {
-                    var table = sql.From[i];
-
-                    string alias = string.Empty;
-
-                    string text = string.Empty;
-
-                    if (table.Table is OriginalTableExpression originalTable)
-                    {
-                        alias = SqlNode.GetTableAlias(i, level);
-
-                        text = FullName(originalTable).As(alias);
-                    }
-                    else if (table.Table is CTETableExpression cteTableExpression)
-                    {
-                        alias = cteTableExpression.Alias;
-
-                        text = alias;
-                    }
-                    else if (table.Table is IDataManipulationSql subQuery)
-                    {
-                        if (subQuery.IsCTE)
-                        {
-                            alias = SqlNode.GetCTEAlias(ctes.Count, level);
-
-                            ctes.Add(new()
-                            {
-                                Alias = alias,
-                                Sql = subQuery
-                            });
-
-                            text = alias;
-                        }
-                        else
-                        {
-                            var subQueryCommand = Build(subQuery, new(), 0);
+            //List<EntityInfo> entityInfos = new();
 
-                            command.Parameters.AddRange(subQueryCommand.Parameters);
-
-                            alias = SqlNode.GetTableAlias(i, level);
+            //if (sql.From is not null)
+            //{
+            //    List<string> tableTexts = new();
 
-                            text = SqlNode.SubQuery(subQueryCommand.CommandText).As(alias);
-                        }
-                    }
-                    else
-                    {
-                        throw new Exception();
-                    }
+            //    for (int i = 0; i < sql.From.Count; i++)
+            //    {
+            //        var table = sql.From[i];
+
+            //        string alias = string.Empty;
+
+            //        string text = string.Empty;
+
+            //        if (table.Table is OriginalTableExpression originalTable)
+            //        {
+            //            alias = SqlNode.GetTableAlias(i, level);
+
+            //            text = FullName(originalTable).As(alias);
+            //        }
+            //        else if (table.Table is CTETableExpression cteTableExpression)
+            //        {
+            //            alias = cteTableExpression.Alias;
+
+            //            text = alias;
+            //        }
+            //        else if (table.Table is IDataManipulationSql subQuery)
+            //        {
+            //            if (subQuery.IsCTE)
+            //            {
+            //                alias = SqlNode.GetCTEAlias(ctes.Count, level);
+
+            //                ctes.Add(new()
+            //                {
+            //                    Alias = alias,
+            //                    Sql = subQuery
+            //                });
 
-                    entityInfos.Add(new()
-                    {
-                        CommandText = alias,
-                        EntitySource = table.Table is OriginalTableExpression ? EntitySource.OriginalTable : EntitySource.SubQuery
-                    });
+            //                text = alias;
+            //            }
+            //            else
+            //            {
+            //                var subQueryCommand = Build(subQuery, new(), 0);
 
-                    if (table.LambdaExpression is not null)
-                    {
-                        var predicateValue = GetValueExpression(table.LambdaExpression.Body, new SqlContext(level)
-                        {
-                            Parameters = parameters.Concat(
-                                table.LambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
-                                ).ToDictionary(s => s.Key, s => s.Value)
-                        });
+            //                command.Parameters.AddRange(subQueryCommand.Parameters);
 
-                        text += " On " + predicateValue.CommantText;
+            //                alias = SqlNode.GetTableAlias(i, level);
 
-                        if (predicateValue.Parameters is not null)
-                            command.Parameters.AddRange(predicateValue.Parameters);
-                    }
+            //                text = SqlNode.SubQuery(subQueryCommand.CommandText).As(alias);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            throw new Exception();
+            //        }
 
-                    tableTexts.Add(table.Join + text);
-                }
+            //        entityInfos.Add(new()
+            //        {
+            //            CommandText = alias,
+            //            EntitySource = table.Table is OriginalTableExpression ? EntitySource.OriginalTable : EntitySource.SubQuery
+            //        });
 
-                from = (sql.SqlType == DataManipulationSqlType.Update ? string.Empty : "\nFrom") + "\n" + string.Join("\n", tableTexts).Indent(2);
-            }
-
-            //Group By
-            string groupBy = string.Empty;
-
-            Dictionary<MemberInfo, string> groupKeys = new();
-
-            if (sql.GroupBy is not null)
-            {
-                List<GroupKeyExpression> groupKeyExpressions = new();
-
-                if (sql.GroupBy.Body is NewExpression keysEntityExpression)
-                {
-                    if (keysEntityExpression.Arguments.Count != keysEntityExpression.Members?.Count)
-                        throw new UnsupportedExpressionException(keysEntityExpression);
-
-                    groupKeyExpressions.AddRange(keysEntityExpression.Members.Zip(keysEntityExpression.Arguments, (a, b) => new GroupKeyExpression()
-                    {
-                        Member = a,
-                        Expression = b
-                    }));
-                }
-                else
-                {
-                    groupKeyExpressions.Add(new()
-                    {
-                        Member = _GroupingDataTableKey,
-                        Expression = sql.GroupBy.Body
-                    });
-                }
-
-                List<string> groupColumns = new();
-
-                foreach (var groupKey in groupKeyExpressions)
-                {
-                    var keyCmd = GetValueExpression(groupKey.Expression, new SqlContext(level)
-                    {
-                        Parameters = parameters.Concat(
-                            sql.GroupBy.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
-                            ).ToDictionary(s => s.Key, s => s.Value)
-                    });
-
-                    string keyText = keyCmd.CommantText?.ToString();
-
-                    groupColumns.Add(keyText);
-
-                    if (keyCmd.Parameters is not null)
-                        command.Parameters.AddRange(keyCmd.Parameters);
-
-                    groupKeys[groupKey.Member] = keyText;
-                }
-
-                groupBy = "\nGroup By\n  " + string.Join(", ", groupColumns);
-            }
-
-            //Manipulation
-            string manipulation = string.Empty;
-
-            //Select
-            EntityInfo resultEntityInfo = entityInfos.FirstOrDefault();
-
-            if (sql.SqlType == DataManipulationSqlType.Select)
-            {
-                List<string> columns = new();
-
-                if (sql.HasIndex)
-                    columns.Add(SqlNode.ColumnIndexValue.AsColumn(SqlNode.IndexColumnName));
-
-                List<SqlColumnInfo> columnExpressions = new();
-
-                if (sql.Select is null)
-                {
-                    ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(sql.Type);
-
-                    sql.Select = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
-                }
-
-                if (sql.Select is LambdaExpression[] lambdaExpressions)
-                {
-                    columnExpressions.AddRange(lambdaExpressions.Select(s =>
-                    {
-                        System.Linq.Expressions.Expression expression = s.Body;
-
-                        if (expression.NodeType == ExpressionType.Convert && expression.Type == typeof(object))
-                            expression = ((UnaryExpression)expression).Operand;
-
-                        string alias = null;
-
-                        if (expression is MemberExpression memberExpression)
-                            alias = memberExpression.Member.Name;
-
-                        return new SqlColumnInfo()
-                        {
-                            Alias = alias,
-                            SqlContext = new SqlContext(level)
-                            {
-                                Parameters = parameters.Concat(
-                                    s.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
-                                ).ToDictionary(s => s.Key, s => s.Value)
-                            },
-                            Expression = expression
-                        };
-                    }));
-                }
-                else if (sql.Select is LambdaExpression columnSelector)
-                {
-                    if (columnSelector.Body is MemberExpression memberExpression
-                        && memberExpression.Expression is ParameterExpression
-                        && memberExpression.Expression.Type.IsAssignableTo(typeof(IGroupingDataTable))
-                        && memberExpression.Member.Name == nameof(IGroupingDataTable<int, int>.Element))
-                    {
-                        ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(memberExpression.Type);
-
-                        columnSelector = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
-                    }
-
-                    Dictionary<string, ConstructorInfo> constructors = new();
-
-                    SqlContext sqlContext = new SqlContext(level)
-                    {
-                        Parameters = parameters.Concat(columnSelector.Parameters.Select((p, i) =>
-                        {
-                            LambdaParameterInfo lambdaParameterInfo = null;
-
-                            if (i >= entityInfos.Count)
-                            {
-                                lambdaParameterInfo = LambdaParameterInfo.ColumnIndexValue;
-                            }
-                            else if (p.Type.IsAssignableTo(typeof(IGroupingDataTable)))
-                            {
-                                lambdaParameterInfo = LambdaParameterInfo.GroupingDataTable(groupKeys, entityInfos);
-                            }
-                            else
-                            {
-                                lambdaParameterInfo = LambdaParameterInfo.Entity(entityInfos[i]);
-                            }
-
-                            return KeyValuePair.Create(p, lambdaParameterInfo);
-                        })).ToDictionary(s => s.Key, s => s.Value)
-                    };
-
-                    columnExpressions.AddRange(ExpandColumns(
-                        new List<SqlColumnInfo>()
-                        {
-                            new SqlColumnInfo()
-                            {
-                                Alias = null,
-                                Expression = columnSelector.Body
-                            }
-                        },
-                        groupKeys,
-                        ref constructors,
-                        sqlContext.Parameters.Where(p => p.Value.ParameterType == LambdaParameterType.ColumnIndexValue).ToDictionary(p => p.Key, p => p.Value.CommandText)
-                        ).Select(s =>
-                        {
-                            s.SqlContext = sqlContext;
-
-                            return s;
-                        })
-                        );
-
-                    foreach (var keyValue in constructors)
-                    {
-                        result.Constructors[keyValue.Key] = keyValue.Value;
-                    }
-                }
-                else
-                {
-                    throw new Exception("Unsupported Selector");
-                }
-
-                SetClientReader(columnExpressions);
-
-                command.ColumnProperties = columnExpressions.Select(s => s.PropertyInfo).ToList();
-
-                for (int i = 0; i < columnExpressions.Count; i++)
-                {
-                    var column = columnExpressions[i];
-
-                    if (column.Reader is not null)
-                        result.Readers[i] = column.Reader;
-
-                    var columnCmd = column.Expression is System.Linq.Expressions.Expression expression ?
-                          GetValueExpression(expression, column.SqlContext) : new() { CommantText = column.Expression.ToString() };
-
-                    string columnText = columnCmd.CommantText?.ToString();
-
-                    if (column.Alias is not null && SqlNode.NameEqual(column.Alias, columnText) == false)
-                        columnText = columnText.AsColumn(column.Alias);
-
-                    columns.Add(columnText);
-
-                    if (columnCmd.Parameters is not null)
-                        command.Parameters.AddRange(columnCmd.Parameters);
-                }
-
-                manipulation = "Select " + (sql.Distinct ? "Distinct" : string.Empty) + "\n" + string.Join(",\n", columns).Indent(2);
-
-                resultEntityInfo = new()
-                {
-                    CommandText = columns.Count == 1 ? columns[0] : null,
-                    EntitySource = EntitySource.SubQuery
-                };
-            }
-
-            //Delete
-            if (sql.SqlType == DataManipulationSqlType.Delete)
-            {
-                manipulation = "Delete";
-
-                if (sql.Delete is not null)
-                {
-                    manipulation += "\n" + string.Join(",\n", sql.Delete).Indent(2);
-                }
-            }
-
-            //Update
-            string set = string.Empty;
-
-            if (sql.SqlType == DataManipulationSqlType.Update)
-            {
-                manipulation = "Update";
-
-                List<string> assignments = sql.Set.Select(assignment =>
-                {
-                    System.Linq.Expressions.Expression left = null;
-
-                    System.Linq.Expressions.Expression right = null;
-
-                    if (assignment.Body.NodeType == ExpressionType.Assign)
-                    {
-                        BinaryExpression binaryExpression = (BinaryExpression)assignment.Body;
-
-                        left = binaryExpression.Left;
-
-                        right = binaryExpression.Right;
-                    }
-                    else if (assignment.Body is MethodCallExpression methodCallExpression
-                        && methodCallExpression.Method.IsGenericMethod)
-                    {
-                        MethodInfo method = methodCallExpression.Method.GetGenericMethodDefinition();
-
-                        if (method != _Assign1 && method != _Assign2 && method != _Assign3)
-                            throw new UnsupportedExpressionException(assignment.Body);
-
-                        left = methodCallExpression.Arguments[0];
-
-                        right = methodCallExpression.Arguments[1];
-                    }
-                    else
-                    {
-                        throw new UnsupportedExpressionException(assignment.Body);
-                    }
-
-                    SqlContext sqlContext = new(level)
-                    {
-                        Parameters = assignment.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
-                            .ToDictionary(s => s.Key, s => s.Value)
-                    };
-
-                    var leftCmd = GetValueExpression(left, sqlContext);
-
-                    var rightCmd = GetValueExpression(right, sqlContext);
-
-                    if (leftCmd.Parameters is not null)
-                        command.Parameters.AddRange(leftCmd.Parameters);
-
-                    if (rightCmd.Parameters is not null)
-                        command.Parameters.AddRange(rightCmd.Parameters);
-
-                    if (leftCmd.CommantText is JsonAccess jsonAccess && jsonAccess.Valid)
-                    {
-                        return SqlNode.Assign(
-                            jsonAccess.JsonDocument,
-                            SqlNode.Call("Json_Set", jsonAccess.JsonDocument, jsonAccess.JsonPath, rightCmd.CommantText?.ToString())
-                            );
-                    }
-
-                    return SqlNode.Assign(leftCmd.CommantText?.ToString(), rightCmd.CommantText?.ToString());
-                }).ToList();
-
-                set = "\nSet\n" + string.Join(",\n", assignments).Indent(2);
-            }
-
-            //Where
-            string where = string.Empty;
-
-            if (sql.Where is not null)
-            {
-                List<string> whereConditions = new();
-
-                bool isMultiple = sql.Where.Count > 1;
-
-                for (int i = 0; i < sql.Where.Count; i++)
-                {
-                    LambdaExpression predicateExpression = sql.Where[i];
-
-                    var valueCmd = GetValueExpression(predicateExpression.Body, new SqlContext(level)
-                    {
-                        Parameters = parameters.Concat(predicateExpression.Parameters.Select((p, i) =>
-                        {
-                            LambdaParameterInfo lambdaParameterInfo = null;
-
-                            if (i >= entityInfos.Count)
-                            {
-                                lambdaParameterInfo = LambdaParameterInfo.IndexColumnName;
-                            }
-                            else
-                            {
-                                lambdaParameterInfo = LambdaParameterInfo.Entity(entityInfos[i]);
-                            }
-
-                            return KeyValuePair.Create(p, lambdaParameterInfo);
-                        })).ToDictionary(s => s.Key, s => s.Value)
-                    }, i == 0);
-
-                    if (isMultiple)
-                    {
-                        if (i == 0)
-                        {
-                            if (NeedLeftBracket(valueCmd.SqlOperator, SqlOperator.AndAlso))
-                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
-                        }
-                        else
-                        {
-                            if (NeedRightBracket(SqlOperator.AndAlso, valueCmd.SqlOperator))
-                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
-                        }
-                    }
-
-                    whereConditions.Add(valueCmd.CommantText?.ToString());
-
-                    if (valueCmd.Parameters is not null)
-                        command.Parameters.AddRange(valueCmd.Parameters);
-                }
-
-                where = "\nWhere\n" + string.Join("\n" + SqlNode.AndAlso + " ", whereConditions).Indent(2);
-            }
-
-            //Having
-            string having = string.Empty;
-
-            if (sql.Having is not null)
-            {
-                List<string> havingConditions = new();
-
-                bool isMultiple = sql.Having.Count > 1;
-
-                for (int i = 0; i < sql.Having.Count; i++)
-                {
-                    LambdaExpression predicateExpression = sql.Having[i];
-
-#if DEBUG
-                    if (predicateExpression.Parameters.Count != 1)
-                        throw new Exception();
-#endif
-
-                    var valueCmd = GetValueExpression(predicateExpression.Body, new SqlContext(level)
-                    {
-                        Parameters = parameters.Concat(
-                            predicateExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(resultEntityInfo)))
-                            ).ToDictionary(s => s.Key, s => s.Value)
-                    }, i == 0);
-
-                    if (isMultiple)
-                    {
-                        if (i == 0)
-                        {
-                            if (NeedLeftBracket(valueCmd.SqlOperator, SqlOperator.AndAlso))
-                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
-                        }
-                        else
-                        {
-                            if (NeedRightBracket(SqlOperator.AndAlso, valueCmd.SqlOperator))
-                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
-                        }
-                    }
-
-                    havingConditions.Add(valueCmd.CommantText?.ToString());
-
-                    if (valueCmd.Parameters is not null)
-                        command.Parameters.AddRange(valueCmd.Parameters);
-                }
-
-                having = "\nHaving\n" + string.Join("\n" + SqlNode.AndAlso + " ", havingConditions).Indent(2);
-            }
-
-            //Order By
-            string orderBy = string.Empty;
-
-            if (sql.OrderBy is not null)
-            {
-                var orderByText = GetSqlOrderBy(sql.OrderBy, parameters, level, resultEntityInfo);
-
-                orderBy = orderByText.CommandText;
-
-                if (orderByText.Parameters is not null)
-                    command.Parameters.AddRange(orderByText.Parameters);
-            }
-
-            //Limit
-            string limit = string.Empty;
-
-            if (sql.Limit is not null)
-            {
-                limit = GetSqlLimit(sql.Limit);
-            }
-
-            //with
-            string with = string.Empty;
-
-            if (ctes.Any())
-            {
-                var withText = GetSqlWith(ctes, parameters, level);
-
-                with = withText.CommandText;
-
-                if (withText.Parameters is not null)
-                    command.Parameters.AddRange(withText.Parameters);
-            }
-
-            command.CommandText = with + manipulation + from + set + where + groupBy + having + orderBy + limit;
-
-            return command;
+            //        if (table.LambdaExpression is not null)
+            //        {
+            //            var predicateValue = GetValueExpression(table.LambdaExpression.Body, new SqlContext(level)
+            //            {
+            //                Parameters = parameters.Concat(
+            //                    table.LambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
+            //                    ).ToDictionary(s => s.Key, s => s.Value)
+            //            });
+
+            //            text += " On " + predicateValue.CommantText;
+
+            //            if (predicateValue.Parameters is not null)
+            //                command.Parameters.AddRange(predicateValue.Parameters);
+            //        }
+
+            //        tableTexts.Add(table.Join + text);
+            //    }
+
+            //    from = (sql.SqlType == DataManipulationSqlType.Update ? string.Empty : "\nFrom") + "\n" + string.Join("\n", tableTexts).Indent(2);
+            //            }
+
+            ////Group By
+            //            string groupBy = string.Empty;
+
+            //            Dictionary<MemberInfo, string> groupKeys = new();
+
+            //            if (sql.GroupBy is not null)
+            //            {
+            //                List<GroupKeyExpression> groupKeyExpressions = new();
+
+            //                if (sql.GroupBy.Body is NewExpression keysEntityExpression)
+            //                {
+            //                    if (keysEntityExpression.Arguments.Count != keysEntityExpression.Members?.Count)
+            //                        throw new UnsupportedExpressionException(keysEntityExpression);
+
+            //                    groupKeyExpressions.AddRange(keysEntityExpression.Members.Zip(keysEntityExpression.Arguments, (a, b) => new GroupKeyExpression()
+            //                    {
+            //                        Member = a,
+            //                        Expression = b
+            //                    }));
+            //                }
+            //                else
+            //                {
+            //                    groupKeyExpressions.Add(new()
+            //                    {
+            //                        Member = _GroupingDataTableKey,
+            //                        Expression = sql.GroupBy.Body
+            //                    });
+            //                }
+
+            //                List<string> groupColumns = new();
+
+            //                foreach (var groupKey in groupKeyExpressions)
+            //                {
+            //                    var keyCmd = GetValueExpression(groupKey.Expression, new SqlContext(level)
+            //                    {
+            //                        Parameters = parameters.Concat(
+            //                            sql.GroupBy.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
+            //                            ).ToDictionary(s => s.Key, s => s.Value)
+            //                    });
+
+            //                    string keyText = keyCmd.CommantText?.ToString();
+
+            //                    groupColumns.Add(keyText);
+
+            //                    if (keyCmd.Parameters is not null)
+            //                        command.Parameters.AddRange(keyCmd.Parameters);
+
+            //                    groupKeys[groupKey.Member] = keyText;
+            //                }
+
+            //                groupBy = "\nGroup By\n  " + string.Join(", ", groupColumns);
+            //            }
+
+            //            //Manipulation
+            //            string manipulation = string.Empty;
+
+            //            //Select
+            //            EntityInfo resultEntityInfo = entityInfos.FirstOrDefault();
+
+            //            if (sql.SqlType == DataManipulationSqlType.Select)
+            //            {
+            //                List<string> columns = new();
+
+            //                if (sql.HasIndex)
+            //                    columns.Add(SqlNode.ColumnIndexValue.AsColumn(SqlNode.IndexColumnName));
+
+            //                List<SqlColumnInfo> columnExpressions = new();
+
+            //                if (sql.Select is null)
+            //                {
+            //                    ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(sql.Type);
+
+            //                    sql.Select = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
+            //                }
+
+            //                if (sql.Select is LambdaExpression[] lambdaExpressions)
+            //                {
+            //                    columnExpressions.AddRange(lambdaExpressions.Select(s =>
+            //                    {
+            //                        System.Linq.Expressions.Expression expression = s.Body;
+
+            //                        if (expression.NodeType == ExpressionType.Convert && expression.Type == typeof(object))
+            //                            expression = ((UnaryExpression)expression).Operand;
+
+            //                        string alias = null;
+
+            //                        if (expression is MemberExpression memberExpression)
+            //                            alias = memberExpression.Member.Name;
+
+            //                        return new SqlColumnInfo()
+            //                        {
+            //                            Alias = alias,
+            //                            SqlContext = new SqlContext(level)
+            //                            {
+            //                                Parameters = parameters.Concat(
+            //                                    s.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
+            //                                ).ToDictionary(s => s.Key, s => s.Value)
+            //                            },
+            //                            Expression = expression
+            //                        };
+            //                    }));
+            //                }
+            //                else if (sql.Select is LambdaExpression columnSelector)
+            //                {
+            //                    if (columnSelector.Body is MemberExpression memberExpression
+            //                        && memberExpression.Expression is ParameterExpression
+            //                        && memberExpression.Expression.Type.IsAssignableTo(typeof(IGroupingDataTable))
+            //                        && memberExpression.Member.Name == nameof(IGroupingDataTable<int, int>.Element))
+            //                    {
+            //                        ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(memberExpression.Type);
+
+            //                        columnSelector = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
+            //                    }
+
+            //                    Dictionary<string, ConstructorInfo> constructors = new();
+
+            //                    SqlContext sqlContext = new SqlContext(level)
+            //                    {
+            //                        Parameters = parameters.Concat(columnSelector.Parameters.Select((p, i) =>
+            //                        {
+            //                            LambdaParameterInfo lambdaParameterInfo = null;
+
+            //                            if (i >= entityInfos.Count)
+            //                            {
+            //                                lambdaParameterInfo = LambdaParameterInfo.ColumnIndexValue;
+            //                            }
+            //                            else if (p.Type.IsAssignableTo(typeof(IGroupingDataTable)))
+            //                            {
+            //                                lambdaParameterInfo = LambdaParameterInfo.GroupingDataTable(groupKeys, entityInfos);
+            //                            }
+            //                            else
+            //                            {
+            //                                lambdaParameterInfo = LambdaParameterInfo.Entity(entityInfos[i]);
+            //                            }
+
+            //                            return KeyValuePair.Create(p, lambdaParameterInfo);
+            //                        })).ToDictionary(s => s.Key, s => s.Value)
+            //                    };
+
+            //                    columnExpressions.AddRange(ExpandColumns(
+            //                        new List<SqlColumnInfo>()
+            //                        {
+            //                            new SqlColumnInfo()
+            //                            {
+            //                                Alias = null,
+            //                                Expression = columnSelector.Body
+            //                            }
+            //                        },
+            //                        groupKeys,
+            //                        ref constructors,
+            //                        sqlContext.Parameters.Where(p => p.Value.ParameterType == LambdaParameterType.ColumnIndexValue).ToDictionary(p => p.Key, p => p.Value.CommandText)
+            //                        ).Select(s =>
+            //                        {
+            //                            s.SqlContext = sqlContext;
+
+            //                            return s;
+            //                        })
+            //                        );
+
+            //                    foreach (var keyValue in constructors)
+            //                    {
+            //                        result.Constructors[keyValue.Key] = keyValue.Value;
+            //                    }
+            //                }
+            //                else
+            //                {
+            //                    throw new Exception("Unsupported Selector");
+            //                }
+
+            //                SetClientReader(columnExpressions);
+
+            //                command.ColumnProperties = columnExpressions.Select(s => s.PropertyInfo).ToList();
+
+            //                for (int i = 0; i < columnExpressions.Count; i++)
+            //                {
+            //                    var column = columnExpressions[i];
+
+            //                    if (column.Reader is not null)
+            //                        result.Readers[i] = column.Reader;
+
+            //                    var columnCmd = column.Expression is System.Linq.Expressions.Expression expression ?
+            //                          GetValueExpression(expression, column.SqlContext) : new() { CommantText = column.Expression.ToString() };
+
+            //                    string columnText = columnCmd.CommantText?.ToString();
+
+            //                    if (column.Alias is not null && SqlNode.NameEqual(column.Alias, columnText) == false)
+            //                        columnText = columnText.AsColumn(column.Alias);
+
+            //                    columns.Add(columnText);
+
+            //                    if (columnCmd.Parameters is not null)
+            //                        command.Parameters.AddRange(columnCmd.Parameters);
+            //                }
+
+            //                manipulation = "Select " + (sql.Distinct ? "Distinct" : string.Empty) + "\n" + string.Join(",\n", columns).Indent(2);
+
+            //                resultEntityInfo = new()
+            //                {
+            //                    CommandText = columns.Count == 1 ? columns[0] : null,
+            //                    EntitySource = EntitySource.SubQuery
+            //                };
+            //            }
+
+            //            //Delete
+            //            if (sql.SqlType == DataManipulationSqlType.Delete)
+            //            {
+            //                manipulation = "Delete";
+
+            //                if (sql.Delete is not null)
+            //                {
+            //                    manipulation += "\n" + string.Join(",\n", sql.Delete).Indent(2);
+            //                }
+            //            }
+
+            //            //Update
+            //            string set = string.Empty;
+
+            //            if (sql.SqlType == DataManipulationSqlType.Update)
+            //            {
+            //                manipulation = "Update";
+
+            //                List<string> assignments = sql.Set.Select(assignment =>
+            //                {
+            //                    System.Linq.Expressions.Expression left = null;
+
+            //                    System.Linq.Expressions.Expression right = null;
+
+            //                    if (assignment.Body.NodeType == ExpressionType.Assign)
+            //                    {
+            //                        BinaryExpression binaryExpression = (BinaryExpression)assignment.Body;
+
+            //                        left = binaryExpression.Left;
+
+            //                        right = binaryExpression.Right;
+            //                    }
+            //                    else if (assignment.Body is MethodCallExpression methodCallExpression
+            //                        && methodCallExpression.Method.IsGenericMethod)
+            //                    {
+            //                        MethodInfo method = methodCallExpression.Method.GetGenericMethodDefinition();
+
+            //                        if (method != _Assign1 && method != _Assign2 && method != _Assign3)
+            //                            throw new UnsupportedExpressionException(assignment.Body);
+
+            //                        left = methodCallExpression.Arguments[0];
+
+            //                        right = methodCallExpression.Arguments[1];
+            //                    }
+            //                    else
+            //                    {
+            //                        throw new UnsupportedExpressionException(assignment.Body);
+            //                    }
+
+            //                    SqlContext sqlContext = new(level)
+            //                    {
+            //                        Parameters = assignment.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfos[i])))
+            //                            .ToDictionary(s => s.Key, s => s.Value)
+            //                    };
+
+            //                    var leftCmd = GetValueExpression(left, sqlContext);
+
+            //                    var rightCmd = GetValueExpression(right, sqlContext);
+
+            //                    if (leftCmd.Parameters is not null)
+            //                        command.Parameters.AddRange(leftCmd.Parameters);
+
+            //                    if (rightCmd.Parameters is not null)
+            //                        command.Parameters.AddRange(rightCmd.Parameters);
+
+            //                    if (leftCmd.CommantText is JsonAccess jsonAccess && jsonAccess.Valid)
+            //                    {
+            //                        return SqlNode.Assign(
+            //                            jsonAccess.JsonDocument,
+            //                            SqlNode.Call("Json_Set", jsonAccess.JsonDocument, jsonAccess.JsonPath, rightCmd.CommantText?.ToString())
+            //                            );
+            //                    }
+
+            //                    return SqlNode.Assign(leftCmd.CommantText?.ToString(), rightCmd.CommantText?.ToString());
+            //                }).ToList();
+
+            //                set = "\nSet\n" + string.Join(",\n", assignments).Indent(2);
+            //            }
+
+            //            //Where
+            //            string where = string.Empty;
+
+            //            if (sql.Where is not null)
+            //            {
+            //                List<string> whereConditions = new();
+
+            //                bool isMultiple = sql.Where.Count > 1;
+
+            //                for (int i = 0; i < sql.Where.Count; i++)
+            //                {
+            //                    LambdaExpression predicateExpression = sql.Where[i];
+
+            //                    var valueCmd = GetValueExpression(predicateExpression.Body, new SqlContext(level)
+            //                    {
+            //                        Parameters = parameters.Concat(predicateExpression.Parameters.Select((p, i) =>
+            //                        {
+            //                            LambdaParameterInfo lambdaParameterInfo = null;
+
+            //                            if (i >= entityInfos.Count)
+            //                            {
+            //                                lambdaParameterInfo = LambdaParameterInfo.IndexColumnName;
+            //                            }
+            //                            else
+            //                            {
+            //                                lambdaParameterInfo = LambdaParameterInfo.Entity(entityInfos[i]);
+            //                            }
+
+            //                            return KeyValuePair.Create(p, lambdaParameterInfo);
+            //                        })).ToDictionary(s => s.Key, s => s.Value)
+            //                    }, i == 0);
+
+            //                    if (isMultiple)
+            //                    {
+            //                        if (i == 0)
+            //                        {
+            //                            if (NeedLeftBracket(valueCmd.SqlOperator, SqlOperator.AndAlso))
+            //                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+            //                        }
+            //                        else
+            //                        {
+            //                            if (NeedRightBracket(SqlOperator.AndAlso, valueCmd.SqlOperator))
+            //                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+            //                        }
+            //                    }
+
+            //                    whereConditions.Add(valueCmd.CommantText?.ToString());
+
+            //                    if (valueCmd.Parameters is not null)
+            //                        command.Parameters.AddRange(valueCmd.Parameters);
+            //                }
+
+            //                where = "\nWhere\n" + string.Join("\n" + SqlNode.AndAlso + " ", whereConditions).Indent(2);
+            //            }
+
+            //            //Having
+            //            string having = string.Empty;
+
+            //            if (sql.Having is not null)
+            //            {
+            //                List<string> havingConditions = new();
+
+            //                bool isMultiple = sql.Having.Count > 1;
+
+            //                for (int i = 0; i < sql.Having.Count; i++)
+            //                {
+            //                    LambdaExpression predicateExpression = sql.Having[i];
+
+            //#if DEBUG
+            //                    if (predicateExpression.Parameters.Count != 1)
+            //                        throw new Exception();
+            //#endif
+
+            //                    var valueCmd = GetValueExpression(predicateExpression.Body, new SqlContext(level)
+            //                    {
+            //                        Parameters = parameters.Concat(
+            //                            predicateExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(resultEntityInfo)))
+            //                            ).ToDictionary(s => s.Key, s => s.Value)
+            //                    }, i == 0);
+
+            //                    if (isMultiple)
+            //                    {
+            //                        if (i == 0)
+            //                        {
+            //                            if (NeedLeftBracket(valueCmd.SqlOperator, SqlOperator.AndAlso))
+            //                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+            //                        }
+            //                        else
+            //                        {
+            //                            if (NeedRightBracket(SqlOperator.AndAlso, valueCmd.SqlOperator))
+            //                                valueCmd.CommantText = SqlNode.Bracket(valueCmd.CommantText?.ToString());
+            //                        }
+            //                    }
+
+            //                    havingConditions.Add(valueCmd.CommantText?.ToString());
+
+            //                    if (valueCmd.Parameters is not null)
+            //                        command.Parameters.AddRange(valueCmd.Parameters);
+            //                }
+
+            //                having = "\nHaving\n" + string.Join("\n" + SqlNode.AndAlso + " ", havingConditions).Indent(2);
+            //            }
+
+            //            //Order By
+            //            string orderBy = string.Empty;
+
+            //            if (sql.OrderBy is not null)
+            //            {
+            //                var orderByText = GetSqlOrderBy(sql.OrderBy, parameters, level, resultEntityInfo);
+
+            //                orderBy = orderByText.CommandText;
+
+            //                if (orderByText.Parameters is not null)
+            //                    command.Parameters.AddRange(orderByText.Parameters);
+            //            }
+
+            //            //Limit
+            //            string limit = string.Empty;
+
+            //            if (sql.Limit is not null)
+            //            {
+            //                limit = GetSqlLimit(sql.Limit);
+            //            }
+
+            //            //with
+            //            string with = string.Empty;
+
+            //            if (ctes.Any())
+            //            {
+            //                var withText = GetSqlWith(ctes, parameters, level);
+
+            //                with = withText.CommandText;
+
+            //                if (withText.Parameters is not null)
+            //                    command.Parameters.AddRange(withText.Parameters);
+            //            }
+
+            //            command.CommandText = with + manipulation + from + set + where + groupBy + having + orderBy + limit;
+
+            //            return command;
         }
 
-        CommandExtend BuildUnionSql(UnionedSql sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
+        CommandExtend BuildUnionSql(SqlExpressions.BinaryTableExpression sql, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, string cteAlias = null)
         {
-            CommandExtend command = new();
+            throw new NotImplementedException();
 
-            command.CommandTimeout = sql.Timeout;
+            //CommandExtend command = new();
 
-            //With
-            List<CTEInfo> ctes = new();
+            //command.CommandTimeout = sql.Timeout;
 
-            //left
-            string left = string.Empty;
+            ////With
+            //List<CTEInfo> ctes = new();
 
-            var leftCommand = Build(sql.Left, parameters, level);
+            ////left
+            //string left = string.Empty;
 
-            left = SqlNode.Bracket("\n" + leftCommand.CommandText.Indent(2) + "\n");
+            //var leftCommand = Build(sql.Left, parameters, level);
 
-            command.Parameters.AddRange(leftCommand.Parameters);
+            //left = SqlNode.Bracket("\n" + leftCommand.CommandText.Indent(2) + "\n");
 
-            command.Results.AddRange(leftCommand.Results);
+            //command.Parameters.AddRange(leftCommand.Parameters);
 
-            command.ColumnProperties = leftCommand.ColumnProperties;
+            //command.Results.AddRange(leftCommand.Results);
 
-            //right
-            string right = string.Empty;
+            //command.ColumnProperties = leftCommand.ColumnProperties;
 
-            if (sql.Right is IDataManipulationSql rightSql)
-            {
-                if (rightSql.IsCTE)
-                {
-                    string alias = SqlNode.GetCTEAlias(ctes.Count, level);
+            ////right
+            //string right = string.Empty;
 
-                    ctes.Add(new()
-                    {
-                        Alias = alias,
-                        Sql = rightSql
-                    });
+            //if (sql.Right is IDataManipulationSql rightSql)
+            //{
+            //    if (rightSql.IsCTE)
+            //    {
+            //        string alias = SqlNode.GetCTEAlias(ctes.Count, level);
 
-                    right = BuildSql(new()
-                    {
-                        Select = _AllColumnsLambdaExpression,
-                        From = new()
-                            {
-                                new()
-                                {
-                                    Table = new CTETableExpression(alias, rightSql.Type)
-                                }
-                            },
-                        Type = rightSql.Type
-                    }, parameters, level).CommandText;
-                }
-                else
-                {
-                    var rightCommand = Build(rightSql, new(), 0);
+            //        ctes.Add(new()
+            //        {
+            //            Alias = alias,
+            //            Sql = rightSql
+            //        });
 
-                    right = rightCommand.CommandText;
+            //        right = BuildSql(new()
+            //        {
+            //            Select = _AllColumnsLambdaExpression,
+            //            From = new()
+            //                {
+            //                    new()
+            //                    {
+            //                        Table = new CTETableExpression(alias, rightSql.Type)
+            //                    }
+            //                },
+            //            Type = rightSql.Type
+            //        }, parameters, level).CommandText;
+            //    }
+            //    else
+            //    {
+            //        var rightCommand = Build(rightSql, new(), 0);
 
-                    command.Parameters.AddRange(rightCommand.Parameters);
-                }
-            }
-            else if (sql.Right is LambdaExpression lambdaExpression) //cte
-            {
-                var sqlValue = GetValueExpression(lambdaExpression.Body, new(level)
-                {
-                    Parameters = parameters.Concat(
-                        lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.DataTable(new CTETableExpression(cteAlias, sql.Type))))
-                        ).ToDictionary(s => s.Key, s => s.Value)
-                });
+            //        right = rightCommand.CommandText;
 
-                right = sqlValue.CommantText?.ToString();
+            //        command.Parameters.AddRange(rightCommand.Parameters);
+            //    }
+            //}
+            //else if (sql.Right is LambdaExpression lambdaExpression) //cte
+            //{
+            //    var sqlValue = GetValueExpression(lambdaExpression.Body, new(level)
+            //    {
+            //        Parameters = parameters.Concat(
+            //            lambdaExpression.Parameters.Select((p) => KeyValuePair.Create(p, LambdaParameterInfo.DataTable(new CTETableExpression(cteAlias, sql.Type))))
+            //            ).ToDictionary(s => s.Key, s => s.Value)
+            //    });
 
-                if (sqlValue.Parameters is not null)
-                    command.Parameters.AddRange(sqlValue.Parameters);
-            }
+            //    right = sqlValue.CommantText?.ToString();
 
-            right = SqlNode.Bracket("\n" + right.Indent(2) + "\n");
+            //    if (sqlValue.Parameters is not null)
+            //        command.Parameters.AddRange(sqlValue.Parameters);
+            //}
 
-            //Order By
-            string orderBy = string.Empty;
+            //right = SqlNode.Bracket("\n" + right.Indent(2) + "\n");
 
-            if (sql.OrderBy is not null)
-            {
-                var orderByText = GetSqlOrderBy(sql.OrderBy, parameters, level, new EntityInfo() { EntitySource = EntitySource.SubQuery });
+            ////Order By
+            //string orderBy = string.Empty;
 
-                orderBy = orderByText.CommandText;
+            //if (sql.OrderBy is not null)
+            //{
+            //    var orderByText = GetSqlOrderBy(sql.OrderBy, parameters, level, new EntityInfo() { EntitySource = EntitySource.SubQuery });
 
-                if (orderByText.Parameters is not null)
-                    command.Parameters.AddRange(orderByText.Parameters);
-            }
+            //    orderBy = orderByText.CommandText;
 
-            //Limit
-            string limit = string.Empty;
+            //    if (orderByText.Parameters is not null)
+            //        command.Parameters.AddRange(orderByText.Parameters);
+            //}
 
-            if (sql.Limit is not null)
-            {
-                limit = GetSqlLimit(sql.Limit);
-            }
+            ////Limit
+            //string limit = string.Empty;
 
-            //with
-            string with = string.Empty;
+            //if (sql.Limit is not null)
+            //{
+            //    limit = GetSqlLimit(sql.Limit);
+            //}
 
-            if (ctes.Any())
-            {
-                var withText = GetSqlWith(ctes, parameters, level);
+            ////with
+            //string with = string.Empty;
 
-                with = withText.CommandText;
+            //if (ctes.Any())
+            //{
+            //    var withText = GetSqlWith(ctes, parameters, level);
 
-                if (withText.Parameters is not null)
-                    command.Parameters.AddRange(withText.Parameters);
-            }
+            //    with = withText.CommandText;
 
-            command.CommandText = with + left + "\n\n" + sql.BinaryTableOperate + "\n\n" + right + "\n" + orderBy + limit;
+            //    if (withText.Parameters is not null)
+            //        command.Parameters.AddRange(withText.Parameters);
+            //}
 
-            return command;
+            //command.CommandText = with + left + "\n\n" + sql.BinaryTableOperate + "\n\n" + right + "\n" + orderBy + limit;
+
+            //return command;
         }
 
-        SqlText GetSqlWith(List<CTEInfo> ctes, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level)
-        {
-            List<KeyValuePair<string, object>> ps = new();
-
-            foreach (var cte in ctes)
-            {
-                var cteCommand = Build(cte.Sql, parameters, level + 1, cte.Alias);
-
-                cte.CommandText = cteCommand.CommandText;
-
-                ps.AddRange(cteCommand.Parameters);
-            }
-
-            return new()
-            {
-                CommandText = "With Recursive\n" + string.Join(",\n", ctes.Select(s => SqlNode.As(s.Alias, "\n" + SqlNode.SubQuery(s.CommandText)))).Indent(2) + "\n",
-                Parameters = ps
-            };
-        }
-
-        SqlText GetSqlOrderBy(List<OrderedTableExpression> orderedTableExpressions, Dictionary<ParameterExpression, LambdaParameterInfo> parameters, int level, EntityInfo entityInfo)
-        {
-            SqlText result = new();
-
-            List<string> keys = new();
-
-            List<KeyValuePair<string, object>> ps = new();
-
-            foreach (OrderedTableExpression expression in orderedTableExpressions)
-            {
-                LambdaExpression lambdaExpression = (LambdaExpression)expression.KeySelector;
-
-                var keyCmd = GetValueExpression(lambdaExpression.Body, new SqlContext(level)
-                {
-                    Parameters = parameters.Concat(
-                        lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, LambdaParameterInfo.Entity(entityInfo)))
-                        ).ToDictionary(s => s.Key, s => s.Value)
-                });
-
-                keys.Add(keyCmd.CommantText + " " + (expression.Descending ? SqlNode.Desc : SqlNode.Asc));
-
-                if (keyCmd.Parameters is not null)
-                    ps.AddRange(keyCmd.Parameters);
-            }
-
-            return new()
-            {
-                CommandText = "\nOrder By\n  " + string.Join(", ", keys),
-                Parameters = ps
-            };
-        }
-
-        string GetSqlLimit(SkipTaked skipTaked)
-        {
-            return "\nLimit\n  " + (skipTaked.Skip > 0 ? (skipTaked.Skip + ", ") : null) + skipTaked.Taked;
-        }
-
-        List<SqlColumnInfo> ExpandColumns(IEnumerable<SqlColumnInfo> nodes, Dictionary<MemberInfo, string> groupKeys, ref Dictionary<string, ConstructorInfo> constructors, Dictionary<ParameterExpression, string> indexParemeters)
+        List<SqlColumnInfo> ExpandColumns(IEnumerable<SqlColumnInfo> nodes, Dictionary<MemberInfo, SqlExpressions.IValueExpression> groupKeys, ref Dictionary<string, ConstructorInfo> constructors, Dictionary<ParameterExpression, SqlExpressions.ISqlExpression> indexParemeters)
         {
             List<SqlColumnInfo> columns = new();
 
@@ -1640,7 +981,7 @@ namespace LogicEntity.Default.MySql
                         {
                             Alias = SqlNode.Member(node.Alias, a.Name),
                             Expression = b,
-                            PropertyInfo = a as PropertyInfo
+                            Member = a
                         }));
                     }
                     else
@@ -1696,7 +1037,7 @@ namespace LogicEntity.Default.MySql
                         {
                             Alias = SqlNode.Member(node.Alias, member.Name),
                             Expression = assign.Right,
-                            PropertyInfo = member as PropertyInfo
+                            Member = member
                         };
                     }), groupKeys, ref constructors, indexParemeters));
 
@@ -1705,12 +1046,12 @@ namespace LogicEntity.Default.MySql
 
                 if (node.Expression is ParameterExpression parameterExpression)
                 {
-                    if (indexParemeters.TryGetValue(parameterExpression, out string expression))
+                    if (indexParemeters.TryGetValue(parameterExpression, out SqlExpressions.ISqlExpression sqlExpression))
                     {
-                        columns.Add(new SqlColumnInfo()
+                        columns.Add(new()
                         {
                             Alias = node.Alias,
-                            Expression = expression
+                            Expression = (SqlExpressions.IValueExpression)sqlExpression
                         });
 
                         continue;
@@ -1718,27 +1059,40 @@ namespace LogicEntity.Default.MySql
 
                     foreach (PropertyInfo property in parameterExpression.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
                     {
-                        columns.Add(new SqlColumnInfo()
+                        columns.Add(new()
                         {
                             Alias = SqlNode.Member(node.Alias, property.Name),
-                            Expression = System.Linq.Expressions.Expression.Property(parameterExpression, property)
+                            Expression = System.Linq.Expressions.Expression.Property(parameterExpression, property),
+                            Member = property
                         });
                     }
 
                     continue;
                 }
 
-                if (groupKeys is not null
-                    && node.Expression is MemberExpression memberExpression
-                    && memberExpression.Expression is ParameterExpression
-                    && memberExpression.Expression.Type.IsAssignableTo(typeof(IGroupingDataTable))
-                    && memberExpression.Member.Name == nameof(IGroupingDataTable<int>.Key))
+                if (node.Expression is MemberExpression memberExpression)
                 {
-                    columns.AddRange(groupKeys.Select(k => new SqlColumnInfo()
+                    if (groupKeys is not null
+                        && memberExpression.Expression is ParameterExpression
+                        && memberExpression.Expression.Type.IsAssignableTo(typeof(IGroupingDataTable))
+                        && memberExpression.Member.Name == nameof(IGroupingDataTable<int>.Key))
                     {
-                        Alias = SqlNode.Member(node.Alias, k.Key == _GroupingDataTableKey ? null : k.Key.Name),
-                        Expression = k.Value
-                    }));
+                        columns.AddRange(groupKeys.Select(k => new SqlColumnInfo()
+                        {
+                            Alias = SqlNode.Member(node.Alias, k.Key == _GroupingDataTableKey ? null : k.Key.Name),
+                            Expression = k.Value,
+                            Member = k.Key
+                        }));
+
+                        continue;
+                    }
+
+                    node.Member = memberExpression.Member;
+
+                    if (node.Alias is null)
+                        node.Alias = memberExpression.Member.Name;
+
+                    columns.Add(node);
 
                     continue;
                 }
@@ -1755,15 +1109,15 @@ namespace LogicEntity.Default.MySql
             {
                 if (node.Expression is InvocationExpression invocationExpression)
                 {
-                    var funcCmd = GetValueExpression(invocationExpression.Expression, new SqlContext(0));
-
-                    if (funcCmd.IsConstant == false)
-                        throw new UnsupportedExpressionException(invocationExpression);
-
                     if (invocationExpression.Arguments.Count != 1)
                         throw new UnsupportedExpressionException(invocationExpression);
 
-                    node.Reader = (Delegate)funcCmd.ConstantValue;
+                    var sqlExpression = GetSqlExpression(invocationExpression.Expression, null);
+
+                    if (sqlExpression is not SqlExpressions.IObjectExpression objectExpression)
+                        throw new UnsupportedExpressionException(invocationExpression);
+
+                    node.Reader = (Delegate)objectExpression.Value;
 
                     node.Expression = invocationExpression.Arguments[0];
                 }
@@ -1784,12 +1138,12 @@ namespace LogicEntity.Default.MySql
                         }
                         else
                         {
-                            var readerCmd = GetValueExpression(readerExpression, new(0));
+                            var sqlExpression = GetSqlExpression(readerExpression, new());
 
-                            if (readerCmd.IsConstant == false)
+                            if (sqlExpression is not SqlExpressions.IObjectExpression objectExpression)
                                 throw new UnsupportedExpressionException(readerExpression);
 
-                            node.Reader = (Delegate)readerCmd.ConstantValue;
+                            node.Reader = (Delegate)objectExpression.Value;
                         }
 
                         node.Expression = methodCallExpression.Arguments[0];
@@ -1804,12 +1158,12 @@ namespace LogicEntity.Default.MySql
                         }
                         else
                         {
-                            var bytesReaderCmd = GetValueExpression(readerExpression, new(0));
+                            var sqlExpression = GetSqlExpression(readerExpression, new());
 
-                            if (bytesReaderCmd.IsConstant == false)
+                            if (sqlExpression is not SqlExpressions.IObjectExpression objectExpression)
                                 throw new UnsupportedExpressionException(readerExpression);
 
-                            node.Reader = (Delegate)bytesReaderCmd.ConstantValue;
+                            node.Reader = (Delegate)objectExpression.Value;
                         }
 
                         node.Expression = methodCallExpression.Arguments[0];
@@ -1824,12 +1178,12 @@ namespace LogicEntity.Default.MySql
                         }
                         else
                         {
-                            var CharsReaderCmd = GetValueExpression(readerExpression, new(0));
+                            var sqlExpression = GetSqlExpression(readerExpression, new());
 
-                            if (CharsReaderCmd.IsConstant == false)
+                            if (sqlExpression is not SqlExpressions.IObjectExpression objectExpression)
                                 throw new UnsupportedExpressionException(readerExpression);
 
-                            node.Reader = (Delegate)CharsReaderCmd.ConstantValue;
+                            node.Reader = (Delegate)objectExpression.Value;
                         }
 
                         node.Expression = methodCallExpression.Arguments[0];
@@ -1848,6 +1202,665 @@ namespace LogicEntity.Default.MySql
                     node.Reader = converter.Reader;
                 }
             }
+        }
+
+        internal List<SqlExpressions.ColumnInfo> GetSelectColumns(SqlExpressions.SelectExpression selectExpression, object selector, ref Dictionary<string, ConstructorInfo> constructors, SqlExpressions.SqlContext context)
+        {
+            List<SqlExpressions.ColumnInfo> columns = new();
+
+            List<SqlColumnInfo> columnInfos = new();
+
+            if (selector is null)
+            {
+                ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(selectExpression.Type);
+
+                selector = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
+            }
+
+            if (selector is LambdaExpression[] lambdaExpressions)
+            {
+                columnInfos.AddRange(lambdaExpressions.Select(s =>
+                {
+                    System.Linq.Expressions.Expression expression = s.Body;
+
+                    if (expression.NodeType == ExpressionType.Convert && expression.Type == typeof(object))
+                        expression = ((UnaryExpression)expression).Operand;
+
+                    return new SqlColumnInfo()
+                    {
+                        Alias = expression is MemberExpression memberExpression ? memberExpression.Member.Name : null,
+                        Expression = expression,
+                        SqlContext = context.ConcatParameters(
+                            s.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                        )
+                    };
+                }));
+            }
+            else if (selector is LambdaExpression columnSelector)
+            {
+                if (columnSelector.Body is MemberExpression memberExpression
+                    && memberExpression.Expression is ParameterExpression
+                    && memberExpression.Expression.Type.IsAssignableTo(typeof(IGroupingDataTable))
+                    && memberExpression.Member.Name == nameof(IGroupingDataTable<int, int>.Element))
+                {
+                    ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(memberExpression.Type);
+
+                    columnSelector = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
+                }
+
+                SqlExpressions.SqlContext sqlContext = context.ConcatParameters(
+                    columnSelector.Parameters.Select((p, i) =>
+                    {
+                        SqlExpressions.LambdaParameterInfo lambdaParameterInfo = null;
+
+                        int tableCount = selectExpression.From.Count;
+
+                        if (i >= tableCount)
+                        {
+                            lambdaParameterInfo = SqlExpressions.LambdaParameterInfo.ColumnIndexValue;
+                        }
+                        else if (p.Type.IsAssignableTo(typeof(IGroupingDataTable)))
+                        {
+                            lambdaParameterInfo = SqlExpressions.LambdaParameterInfo.GroupingDataTable(selectExpression.From, selectExpression.GroupBy);
+                        }
+                        else
+                        {
+                            lambdaParameterInfo = SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i));
+                        }
+
+                        return KeyValuePair.Create(p, lambdaParameterInfo);
+                    })
+                    );
+
+                columnInfos.AddRange(ExpandColumns(
+                    new List<SqlColumnInfo>()
+                    {
+                         new SqlColumnInfo()
+                         {
+                             Alias = null,
+                             Expression = columnSelector.Body
+                         }
+                    },
+                    selectExpression.GroupBy,
+                    ref constructors,
+                    new(sqlContext.LambdaParameters.Where(p => p.Value.ParameterType == SqlExpressions.LambdaParameterType.ColumnIndexValue).Select(p => KeyValuePair.Create(p.Key, p.Value.SqlExpression)))
+                    ));
+
+                columnInfos.ForEach(s => s.SqlContext = sqlContext);
+            }
+
+            SetClientReader(columnInfos);
+
+            columns.AddRange(columnInfos.Select(s =>
+            {
+                SqlExpressions.IValueExpression valueExpression = s.Expression as SqlExpressions.IValueExpression;
+
+                if (valueExpression is null)
+                {
+                    valueExpression = (SqlExpressions.IValueExpression)GetSqlExpression((System.Linq.Expressions.Expression)s.Expression, s.SqlContext);
+                }
+
+                SqlExpressions.ColumnInfo columnInfo = new()
+                {
+                    ValueExpression = valueExpression,
+                    Member = s.Member,
+                    Reader = s.Reader
+                };
+
+                if (s.Alias is not null)
+                    columnInfo.Alias = s.Alias;
+
+                return columnInfo;
+            }));
+
+            return columns;
+        }
+
+        SqlExpressions.ISqlExpression GetSqlExpression(System.Linq.Expressions.Expression expression, SqlExpressions.SqlContext context)
+        {
+            if (expression is null)
+                return null;
+
+            if (expression.NodeType == ExpressionType.Quote)
+            {
+                UnaryExpression unaryExpression = (UnaryExpression)expression;
+
+                return GetSqlExpression(unaryExpression.Operand, context);
+            }
+
+            if (expression.NodeType == ExpressionType.Constant)
+            {
+                ConstantExpression constantExpression = (ConstantExpression)expression;
+
+                return TryUnboxSubquery(constantExpression.Value, out var sqlExpression) ?
+                    sqlExpression : new SqlExpressions.ConstantExpression(constantExpression.Value);
+            }
+
+            if (expression.NodeType == ExpressionType.Parameter)
+            {
+                return context.LambdaParameters[(ParameterExpression)expression].SqlExpression;
+            }
+
+            if (expression.NodeType == ExpressionType.MemberAccess)
+            {
+                MemberExpression memberExpression = (MemberExpression)expression;
+
+                var sqlExpression = GetSqlExpression(memberExpression.Expression, context);
+
+                if (memberExpression.Expression is null || sqlExpression is SqlExpressions.IObjectExpression)
+                {
+                    object instance = memberExpression.Expression is null ? null : ((SqlExpressions.IObjectExpression)sqlExpression).Value;
+
+                    object obj;
+
+                    if (memberExpression.Member is PropertyInfo property)
+                    {
+                        obj = property.GetValue(instance);
+                    }
+                    else if (memberExpression.Member is FieldInfo field)
+                    {
+                        obj = field.GetValue(instance);
+                    }
+                    else
+                    {
+                        throw new UnsupportedExpressionException(expression);
+                    }
+
+                    return TryUnboxSubquery(obj, out var memberSqlExpression) ? memberSqlExpression : new SqlExpressions.ParameterExpression(obj);
+                }
+
+                if (TryGetMemberFormat(memberExpression.Member, out object format) && format is string formatStr)
+                {
+                    return new SqlExpressions.RawSqlExpression(formatStr, (SqlExpressions.IValueExpression)sqlExpression);
+                }
+
+                if (memberExpression.Expression.Type.IsAssignableTo(typeof(IGroupingDataTable)))
+                {
+                    if (memberExpression.Member.Name == nameof(IGroupingDataTable<int>.Key))
+                    {
+                        return new SqlExpressions.GroupKeyExpression(((SqlExpressions.GroupingDataTableExpression)sqlExpression).Members);
+                    }
+                    else if (memberExpression.Member.Name == nameof(IGroupingDataTable<int, int>.Element))
+                    {
+                        return ((SqlExpressions.GroupingDataTableExpression)sqlExpression).From.GetTable(0);
+                    }
+                }
+
+                if (sqlExpression is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+                {
+                    jsonExtractExpression.Member(memberExpression.Member);
+
+                    return jsonExtractExpression;
+                }
+
+                if (sqlExpression is SqlExpressions.MemberExpression sqlMemberExpression)
+                {
+                    SqlExpressions.JsonExtractExpression sqlJsonExtractExpression = new SqlExpressions.JsonExtractExpression(sqlMemberExpression);
+
+                    sqlJsonExtractExpression.Member(memberExpression.Member);
+
+                    return sqlJsonExtractExpression;
+                }
+
+                return new SqlExpressions.MemberExpression(sqlExpression, memberExpression.Member);
+            }
+
+            if (expression.NodeType == ExpressionType.Convert || expression.NodeType == ExpressionType.ConvertChecked || expression.NodeType == ExpressionType.TypeAs)
+            {
+                UnaryExpression unaryExpression = (UnaryExpression)expression;
+
+                var sqlExpression = GetSqlExpression(unaryExpression.Operand, context);
+
+                if (unaryExpression.Operand.Type == typeof(char) && unaryExpression.Type == typeof(int))
+                {
+                    return new SqlExpressions.MethodCallExpression("ASCII", (SqlExpressions.IValueExpression)sqlExpression);
+                }
+
+                if (unaryExpression.Operand.Type == typeof(int) && unaryExpression.Type == typeof(char))
+                {
+                    return new SqlExpressions.MethodCallExpression("Char", (SqlExpressions.IValueExpression)sqlExpression);
+                }
+
+                DataType? targetType = unaryExpression.Type.DbType();
+                DataType? sourceType = unaryExpression.Operand.Type.DbType();
+
+                if (targetType is null || targetType == sourceType)
+                    return sqlExpression;
+
+                return new SqlExpressions.CastExpression((SqlExpressions.IValueExpression)sqlExpression, targetType.Value);
+            }
+
+            if (expression.NodeType == ExpressionType.Negate || expression.NodeType == ExpressionType.NegateChecked)
+            {
+                UnaryExpression unaryExpression = (UnaryExpression)expression;
+
+                return new SqlExpressions.NegateExpression((SqlExpressions.IValueExpression)GetSqlExpression(unaryExpression.Operand, context));
+            }
+
+            if (expression.NodeType == ExpressionType.Not)
+            {
+                UnaryExpression unaryExpression = (UnaryExpression)expression;
+
+                return new SqlExpressions.NotExpression((SqlExpressions.IValueExpression)GetSqlExpression(unaryExpression.Operand, context));
+            }
+
+            if (expression.NodeType == ExpressionType.ArrayLength)
+            {
+                UnaryExpression unaryExpression = (UnaryExpression)expression;
+
+                return new SqlExpressions.MethodCallExpression("Json_Length", (SqlExpressions.IValueExpression)GetSqlExpression(unaryExpression.Operand, context));
+            }
+
+            if (expression is BinaryExpression binaryCallExpression && binaryCallExpression.Method is not null && MemberFormat.ContainsKey(binaryCallExpression.Method))
+            {
+                ParameterInfo[] parameterInfos = binaryCallExpression.Method.GetParameters();
+
+                System.Linq.Expressions.Expression methodArg1 = binaryCallExpression.Left;
+
+                Type parameterType1 = parameterInfos[0].ParameterType;
+
+                if (methodArg1.Type != parameterType1)
+                    methodArg1 = System.Linq.Expressions.Expression.Convert(methodArg1, parameterType1);
+
+                System.Linq.Expressions.Expression methodArg2 = binaryCallExpression.Right;
+
+                Type parameterType2 = parameterInfos[1].ParameterType;
+
+                if (methodArg2.Type != parameterType2)
+                    methodArg2 = System.Linq.Expressions.Expression.Convert(methodArg2, parameterType2);
+
+                return GetSqlExpression(System.Linq.Expressions.Expression.Call(null, binaryCallExpression.Method, methodArg1, methodArg2), context);
+            }
+
+            if (expression.NodeType == ExpressionType.GreaterThan)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.GreaterThanExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.GreaterThanOrEqual)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.GreaterThanOrEqualExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.LessThan)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.LessThanExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.LessThanOrEqual)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.LessThanOrEqualExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Equal)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                System.Linq.Expressions.Expression left = binaryExpression.Left;
+
+                System.Linq.Expressions.Expression right = binaryExpression.Right;
+
+                if (IsEnumCompare(binaryExpression))
+                {
+                    left = ((UnaryExpression)left).Operand;
+                    right = ((UnaryExpression)right).Operand;
+                }
+
+                return new SqlExpressions.EqualExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.NotEqual)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                System.Linq.Expressions.Expression left = binaryExpression.Left;
+
+                System.Linq.Expressions.Expression right = binaryExpression.Right;
+
+                if (IsEnumCompare(binaryExpression))
+                {
+                    left = ((UnaryExpression)left).Operand;
+                    right = ((UnaryExpression)right).Operand;
+                }
+
+                return new SqlExpressions.NotEqualExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.And)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.AndExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.AndAlso)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.AndAlsoExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Or)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.OrExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.OrElse)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.OrElseExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Add || expression.NodeType == ExpressionType.AddChecked)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.AddExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Subtract || expression.NodeType == ExpressionType.SubtractChecked)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.SubtractExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Multiply || expression.NodeType == ExpressionType.MultiplyChecked)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.MultiplyExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Divide)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.DivideExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Modulo)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.ModuloExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.ArrayIndex)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                var left = GetSqlExpression(binaryExpression.Left, context);
+
+                SqlExpressions.JsonExtractExpression jsonExtractExpression = left as SqlExpressions.JsonExtractExpression ?? new((SqlExpressions.IValueExpression)left);
+
+                jsonExtractExpression.Index((SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context));
+
+                return jsonExtractExpression;
+            }
+
+            if (expression.NodeType == ExpressionType.Coalesce)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.MethodCallExpression(
+                    "IfNull",
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.ExclusiveOr)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.ExclusiveOrExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.LeftShift)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.LeftShiftExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.RightShift)
+            {
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
+
+                return new SqlExpressions.RightShiftExpression(
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Left, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(binaryExpression.Right, context)
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Call)
+            {
+                MethodCallExpression methodCallExpression = (MethodCallExpression)expression;
+
+                MethodInfo method = methodCallExpression.Method;
+
+                //获取format
+                bool hasFormat = TryGetMemberFormat(method, out object format);
+
+                //SubQuery
+                if (hasFormat && format is Func<MethodCallExpression, SqlExpressions.SqlContext, SqlExpressions.ISqlExpression> formatFunc)
+                {
+                    return formatFunc(methodCallExpression, context);
+                }
+
+                //Object 和 参数
+                List<ParameterValueExpressionInfo> valueExpressions = new();
+
+                //获取 Object
+                SqlExpressions.IValueExpression objectValueExpression = methodCallExpression.Object is null ? new SqlExpressions.ConstantExpression(null) : (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Object, context);
+
+                if (objectValueExpression is not null)
+                {
+                    valueExpressions.Add(new()
+                    {
+                        Value = objectValueExpression
+                    });
+                }
+
+                //获取 参数
+                ParameterInfo[] parameterInfos = methodCallExpression.Method.GetParameters();
+
+                for (int i = 0; i < methodCallExpression.Arguments.Count; i++)
+                {
+                    var arg = methodCallExpression.Arguments[i];
+
+                    ParameterInfo parameterInfo = parameterInfos[i];
+
+                    if (parameterInfos[i].IsDefined(typeof(ParamArrayAttribute), true))
+                    {
+                        List<SqlExpressions.IValueExpression> paramValues = new();
+
+                        NewArrayExpression newArrayExpression = (NewArrayExpression)arg;
+
+                        foreach (var element in newArrayExpression.Expressions)
+                        {
+                            paramValues.Add((SqlExpressions.IValueExpression)GetSqlExpression(element, context));
+                        }
+
+                        valueExpressions.Add(new()
+                        {
+                            Values = paramValues,
+                            IsParamArray = true
+                        });
+
+                        continue;
+                    }
+
+                    var argExpression = GetSqlExpression(arg, context);
+
+                    valueExpressions.Add(new()
+                    {
+                        Value = (SqlExpressions.IValueExpression)argExpression
+                    });
+                }
+
+                //format
+                if (hasFormat)
+                {
+                    if (format is string formatStr)
+                    {
+                        return new SqlExpressions.RawSqlExpression(formatStr, valueExpressions.Select(s =>
+                        {
+                            if (s.IsParamArray)
+                                return new SqlExpressions.ParameterArrayExpression(s.Values.ToArray());
+
+                            return s.Value;
+                        }).ToArray());
+                    }
+
+                    if (format is Func<string[], string> convert)
+                    {
+                        return new SqlExpressions.RawSqlFactoryExpression(convert, valueExpressions.SelectMany(s => s.IsParamArray ? s.Values : new SqlExpressions.IValueExpression[] { s.Value }).ToArray());
+                    }
+
+                    throw new UnsupportedExpressionException(methodCallExpression);
+                }
+
+                //常量值
+                if (valueExpressions.All(s => s.IsConstant))
+                {
+                    object obj = method.Invoke(
+                        ((SqlExpressions.ConstantExpression)valueExpressions[0].Value).Value,
+                        valueExpressions.Skip(1).Select(s => s.ConstantValue).ToArray()
+                    );
+
+                    return TryUnboxSubquery(obj, out var sqlExpression) ? sqlExpression : new SqlExpressions.ParameterExpression(obj);
+                }
+
+                //索引器
+                if (IsIndexMethod(method, out bool indexIsNumber))
+                {
+                    SqlExpressions.JsonExtractExpression jsonExtractExpression = objectValueExpression as SqlExpressions.JsonExtractExpression ?? new(objectValueExpression);
+
+                    if (indexIsNumber)
+                        jsonExtractExpression.Index(valueExpressions[1].Value);
+                    else
+                        jsonExtractExpression.Member(valueExpressions[1].Value);
+
+                    return jsonExtractExpression;
+                }
+
+                return new SqlExpressions.MethodCallExpression(
+                    methodCallExpression.Method.Name,
+                    (methodCallExpression.Object is null ? valueExpressions.Skip(1) : valueExpressions).SelectMany(s => s.IsParamArray ? s.Values : new SqlExpressions.IValueExpression[] { s.Value }).ToArray()
+                    );
+            }
+
+            if (expression.NodeType == ExpressionType.Conditional)
+            {
+                ConditionalExpression conditionalExpression = (ConditionalExpression)expression;
+
+                return new SqlExpressions.MethodCallExpression(
+                    "If",
+                    (SqlExpressions.IValueExpression)GetSqlExpression(conditionalExpression.Test, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(conditionalExpression.IfTrue, context),
+                    (SqlExpressions.IValueExpression)GetSqlExpression(conditionalExpression.IfFalse, context)
+                    );
+            }
+
+            throw new UnsupportedExpressionException(expression);
+        }
+
+        bool TryUnboxSubquery(object obj, out SqlExpressions.ISqlExpression sqlExpression)
+        {
+            sqlExpression = null;
+
+            if (obj is not null && obj.GetType().IsAssignableTo(typeof(IDataTable)))
+            {
+                TableExpression tableExpression = ((IDataTable)obj).Expression;
+
+                var sql = GetDataManipulationSql(tableExpression);
+
+                if (sql is SqlExpressions.OriginalTableExpression originalTableExpression)
+                {
+                    sqlExpression = originalTableExpression;
+
+                    return true;
+                }
+
+                if (sql is SqlExpressions.CommonTableExpression commonTableExpression)
+                {
+                    commonTableExpression.CanModify = false;
+
+                    sqlExpression = commonTableExpression;
+                }
+                else
+                {
+                    sqlExpression = new SqlExpressions.CommonTableExpression((SqlExpressions.ISelectSql)sql, false);
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         SqlValue GetValueExpression(System.Linq.Expressions.Expression expression, SqlContext context, bool isRoot = false)
@@ -1956,12 +1969,7 @@ namespace LogicEntity.Default.MySql
                 {
                     if (instanceCmd.LambdaParameterInfo.EntitySource == EntitySource.OriginalTable)
                     {
-                        var text = new JsonAccess(SqlNode.Member(instanceCmd.CommantText?.ToString(), SqlNode.SqlName(ColumnName(member))));
-
-                        var jsonpath = member.GetCustomAttribute<JsonPathAttribute>();
-
-                        if (jsonpath is not null)
-                            text.SetPathRoot(SqlNode.SqlString(jsonpath.Path));
+                        var text = new JsonAccess(SqlNode.Member(instanceCmd.CommantText?.ToString(), SqlNode.SqlName(SqlNode.ColumnName(member))));
 
                         return new()
                         {
@@ -2114,7 +2122,7 @@ namespace LogicEntity.Default.MySql
                 System.Linq.Expressions.Expression rightExpression = binaryExpression.Right;
 
                 //Enum Equal
-                if (IsEnumEqual(binaryExpression))
+                if (IsEnumCompare(binaryExpression))
                 {
                     leftExpression = ((UnaryExpression)binaryExpression.Left).Operand;
                     rightExpression = ((UnaryExpression)binaryExpression.Right).Operand;
@@ -2445,27 +2453,27 @@ namespace LogicEntity.Default.MySql
                     {
                         var argCmd = GetValueExpression(arg, context);
 
-                        if (parameterInfos[i].IsDefined(typeof(ConstantParameterAttribute), true))
-                        {
-                            if (argCmd.IsConstant is false)
-                                throw new UnsupportedExpressionException(arg, $"The parameter {parameterInfos[i].Name} of method {method.Name} must be a constant");
+                        //if (parameterInfos[i].IsDefined(typeof(ConstantParameterAttribute), true))
+                        //{
+                        //    if (argCmd.IsConstant is false)
+                        //        throw new UnsupportedExpressionException(arg, $"The parameter {parameterInfos[i].Name} of method {method.Name} must be a constant");
 
-                            string commandText = null;
+                        //    string commandText = null;
 
-                            if (argCmd.ConstantValue is null)
-                                commandText = SqlNode.Null;
-                            else if (argCmd.ConstantValue is string or Enum or char)
-                                commandText = SqlNode.SqlString(argCmd.ConstantValue.ToString());
-                            else
-                                commandText = argCmd.ConstantValue.ToString();
+                        //    if (argCmd.ConstantValue is null)
+                        //        commandText = SqlNode.Null;
+                        //    else if (argCmd.ConstantValue is string or Enum or char)
+                        //        commandText = SqlNode.SqlString(argCmd.ConstantValue.ToString());
+                        //    else
+                        //        commandText = argCmd.ConstantValue.ToString();
 
-                            args.Add(new()
-                            {
-                                CommantText = commandText
-                            });
+                        //    args.Add(new()
+                        //    {
+                        //        CommantText = commandText
+                        //    });
 
-                            continue;
-                        }
+                        //    continue;
+                        //}
 
                         args.Add(new()
                         {
@@ -2608,30 +2616,23 @@ namespace LogicEntity.Default.MySql
             return (int)right.Value >= (int)left;
         }
 
-        Type GetResultType(Type expressionType)
-        {
-            if (expressionType.IsGenericType && expressionType.GetGenericTypeDefinition() == typeof(IDataTable<>))
-                return expressionType.GetGenericArguments()[0];
-
-            return expressionType;
-        }
-
         bool IsIndexMethod(MethodInfo method, out bool indexIsNumber)
         {
-            indexIsNumber = method.GetParameters().FirstOrDefault()?.ParameterType == typeof(int);
+            Type parameterType = method.GetParameters().FirstOrDefault()?.ParameterType;
+
+            indexIsNumber = parameterType == typeof(int)
+                || parameterType == typeof(uint)
+                || parameterType == typeof(short)
+                || parameterType == typeof(ushort)
+                || parameterType == typeof(long)
+                || parameterType == typeof(ulong);
 
             return method.DeclaringType.GetProperties().Where(p => p.GetIndexParameters().Length > 0).Select(p => p.GetMethod).Contains(method);
         }
 
-        bool HasIndex(RowFilteredTableExpression rowFilteredTableExpression)
+        bool IsEnumCompare(BinaryExpression binaryExpression)
         {
-            return rowFilteredTableExpression.Type is not null && ((LambdaExpression)rowFilteredTableExpression.Filter).Parameters.Count == 2;
-        }
-
-        bool IsEnumEqual(BinaryExpression binaryExpression)
-        {
-            return binaryExpression.NodeType == ExpressionType.Equal
-                && IsConvertExpression(binaryExpression.Left)
+            return IsConvertExpression(binaryExpression.Left)
                 && GetUnderlyingValueGenericType(((UnaryExpression)binaryExpression.Left).Operand.Type).IsSubclassOf(typeof(Enum))
                 && IsConvertExpression(binaryExpression.Right)
                 && GetUnderlyingValueGenericType(((UnaryExpression)binaryExpression.Right).Operand.Type).IsSubclassOf(typeof(Enum));
@@ -2650,11 +2651,6 @@ namespace LogicEntity.Default.MySql
                 tableName = SqlNode.Member(SqlNode.SqlName(table.Schema), tableName);
 
             return tableName;
-        }
-
-        string ColumnName(MemberInfo member)
-        {
-            return member.GetCustomAttribute<ColumnAttribute>()?.Name ?? member.Name;
         }
 
         Type GetUnderlyingValueGenericType(Type type)
@@ -2678,13 +2674,16 @@ namespace LogicEntity.Default.MySql
         {
             public string Alias { get; set; }
 
-            public SqlContext SqlContext { get; set; }
-
+            /// <summary>
+            /// System.Linq.Expressions.Expression Or SqlExpressions.IValueExpression
+            /// </summary>
             public object Expression { get; set; }
+
+            public SqlExpressions.SqlContext SqlContext { get; set; }
 
             public Delegate Reader { get; set; }
 
-            public PropertyInfo PropertyInfo { get; set; }
+            public MemberInfo Member { get; set; }
         }
 
         class GroupKeyExpression
@@ -2704,6 +2703,19 @@ namespace LogicEntity.Default.MySql
             public string CommandText { get; set; }
 
             public IEnumerable<KeyValuePair<string, object>> Parameters { get; set; }
+        }
+
+        class ParameterValueExpressionInfo
+        {
+            public SqlExpressions.IValueExpression Value { get; set; }
+
+            public IEnumerable<SqlExpressions.IValueExpression> Values { get; set; }
+
+            public bool IsParamArray { get; set; } = false;
+
+            public bool IsConstant => IsParamArray ? Values.All(v => v is SqlExpressions.ConstantExpression) : Value is SqlExpressions.ConstantExpression;
+
+            public object ConstantValue => IsParamArray ? Values.Select(s => ((SqlExpressions.ConstantExpression)s).Value).ToArray() : ((SqlExpressions.ConstantExpression)Value).Value;
         }
     }
 }

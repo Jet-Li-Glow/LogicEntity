@@ -15,8 +15,6 @@ namespace LogicEntity.Linq.Expressions
             KeySelector = keySelector;
         }
 
-        public override Type Type => Source.Type;
-
         public TableExpression Source { get; private set; }
 
         public object KeySelector { get; private set; }

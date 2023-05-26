@@ -45,9 +45,9 @@ namespace LogicEntity
             return Object?.ToString();
         }
 
-        public static implicit operator Value<T>(T vlaue)
+        public static implicit operator Value<T>(T value)
         {
-            return new(vlaue);
+            return new(value);
         }
 
         public static implicit operator T(Value<T> value)

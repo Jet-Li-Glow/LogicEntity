@@ -46,10 +46,6 @@ namespace Demo.Tables
 
         public Value<JsonObject> Json { get; set; }
 
-        [Column("Json")]
-        [JsonPath("$.Array")]
-        public int[] JsonArray { get; set; }
-
         public class JsonObject
         {
             public PropertyObject Object { get; set; }
