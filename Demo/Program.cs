@@ -25,7 +25,14 @@ namespace Demo
         {
             //Version 1.0.1
 
-            //开发计划  
+            //MySQL 8.0.31
+
+            //开发计划 1.FIrst().Id 适应性翻译
+            //         2.Value<>实现 IComparable、等接口
+            //         3.Assign方法适应Nullable<>
+            //         4.Value<>的Json序列化和反序列化
+            //         5.DateTimeOffset、TimeOnly等类型的支持
+            //         6.join-on、select 无强类型限制 以实现动态join和动态select
 
             Console.WriteLine("-- Start --");
 
