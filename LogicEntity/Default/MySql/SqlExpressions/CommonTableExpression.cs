@@ -104,7 +104,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             {
                 DataManipulationSql = context.DataManipulationSql;
 
-                Name = SqlNode.GetCTEAlias(context.Level, DataManipulationSql.CommonTableExpressions.Count);
+                Name = SqlNode.GetCTEAlias(DataManipulationSql.CommonTableExpressions.Count, context.Level);
 
                 DataManipulationSql.CommonTableExpressions.Add(this);
             }
