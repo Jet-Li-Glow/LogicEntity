@@ -369,6 +369,9 @@ namespace Demo
             //Select - 18
             data = db.Students.FirstOrDefault(s => s.Gender == Gender.Male);
 
+            //Select - 19
+            data = db.Students.Where(s => ((Student.JsonObject)s.Json).Array.Contains(5)).FirstOrDefault();
+
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
             {

@@ -25,9 +25,7 @@ namespace Demo
         {
             //Version 1.0.1
 
-            //MySQL 8.0.31
-
-            //开发计划 1.FIrst().Id 适应性翻译
+            //开发计划 1.First().Id 适应性翻译
             //         2.Value<>实现 IComparable、等接口
             //         3.Assign方法适应Nullable<>
             //         4.Value<>的Json序列化和反序列化
@@ -307,7 +305,7 @@ namespace Demo
     {
         public static string ConnectionStr = File.ReadAllText("ConnectionString.txt");
 
-        public readonly static TestDb TestDb = new(ConnectionStr);
+        public readonly static TestDb TestDb = new(ConnectionStr); //MySQL 8.0.31
 
         public readonly static TestDb TestReadOnlyDb = new(ConnectionStr);
     }

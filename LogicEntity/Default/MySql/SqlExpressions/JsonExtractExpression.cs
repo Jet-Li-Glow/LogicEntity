@@ -38,10 +38,13 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new()
             {
                 Text = SqlNode.Call(
-                    "Json_Extract",
-                    JsonDocument.BuildValue(context).Text,
-                    Path.BuildValue(context).Text
+                    "Json_UnQuote",
+                    SqlNode.Call(
+                        "Json_Extract",
+                        JsonDocument.BuildValue(context).Text,
+                        Path.BuildValue(context).Text
                     )
+                )
             };
         }
     }

@@ -23,7 +23,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             return new()
             {
-                Text = Value.BuildValue(context).Text + " Member Of " + JsonArray.BuildValue(context).Text
+                Text = Value.BuildValue(context).Text + " Member Of " + SqlNode.Bracket(JsonArray.BuildValue(context).Text)
             };
         }
     }

@@ -51,37 +51,6 @@ namespace LogicEntity.Default.MySql
         public const string NewRowAlias = "newRow";
 
         /// <summary>
-        /// 唯一名称
-        /// </summary>
-        /// <returns></returns>
-        public static string UniqueName()
-        {
-            return $" @Guid_{Guid.NewGuid().ToString("N")} ";
-        }
-
-        /// <summary>
-        /// 参数
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        public static KeyValuePair<string, object> Parameter(object value)
-        {
-            if (value is IValue val)
-            {
-                if (val.ValueSetted == false || val.ValueType == ValueType.Expression)
-                    throw new Exception();
-
-                value = val.Object;
-            }
-
-            if (value is Enum)
-                value = value.ToString();
-
-            return KeyValuePair.Create(UniqueName(), value);
-        }
-
-        /// <summary>
         /// 缩进
         /// </summary>
         /// <param name="src"></param>
@@ -171,23 +140,9 @@ namespace LogicEntity.Default.MySql
             return Wrap(memberName, '"', '\\');
         }
 
-        public static JsonAccess JsonMember(JsonAccess path, string memberExpression)
-        {
-            path.Add(SqlString(Point), memberExpression);
-
-            return path;
-        }
-
         public static string Index(string instance, string index)
         {
             return instance + LeftIndexBracket + index + RightIndexBracket;
-        }
-
-        public static JsonAccess JsonIndex(JsonAccess path, string indexExpression)
-        {
-            path.Add(SqlString(LeftIndexBracket), indexExpression, SqlString(RightIndexBracket));
-
-            return path;
         }
 
         public static DataType? DbType(this Type type)
@@ -248,11 +203,6 @@ namespace LogicEntity.Default.MySql
         public static string SubQuery(string sql)
         {
             return LeftBracket + "\n" + sql.Indent(2) + "\n" + RightBracket;
-        }
-
-        public static string In(string left, string right)
-        {
-            return left + " In " + right;
         }
 
         public static string Assign(string left, string right)

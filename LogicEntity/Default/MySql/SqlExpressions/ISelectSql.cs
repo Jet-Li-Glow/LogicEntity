@@ -47,7 +47,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         Command IDataManipulationSql.Build(LinqConvertProvider linqConvertProvider)
         {
-            CommandExtend command = new();
+            Command command = new();
 
             command.CommandTimeout = Timeout;
 
