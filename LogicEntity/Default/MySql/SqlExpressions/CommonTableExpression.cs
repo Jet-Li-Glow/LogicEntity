@@ -53,8 +53,6 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             }
         }
 
-        public ISqlExpression SelectedObjectExpression => SelectSql.SelectedObjectExpression;
-
         public Dictionary<string, ConstructorInfo> Constructors { get; set; }
 
         public Dictionary<int, Delegate> Readers { get; set; }
@@ -81,6 +79,10 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         public string ShortName => Name;
 
         public IReadOnlyCollection<MemberInfo> ColumnMembers { get; set; }
+
+        public bool? IsVector { get => SelectSql.IsVector; }
+
+        public IList<ColumnInfo> Columns => SelectSql.Columns.AsReadOnly();
 
         public SqlCommand BuildCTE(BuildContext context)
         {
@@ -138,6 +140,11 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             selectSqlCommand.Readers = Readers;
 
             return selectSqlCommand;
+        }
+
+        public ISqlExpression[] GetOrderByParameters()
+        {
+            return SelectSql.GetOrderByParameters();
         }
 
         public bool CanAddNode(SelectNodeType nodeType)

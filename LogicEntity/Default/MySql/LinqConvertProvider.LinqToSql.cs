@@ -275,7 +275,7 @@ namespace LogicEntity.Default.MySql
                 joinedTable.Predicate = (SqlExpressions.IValueExpression)GetSqlExpression(lambdaExpression.Body,
                     context.ConcatParameters(
                         lambdaExpression.Parameters
-                            .Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                            .Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                         )
                     );
             }
@@ -306,7 +306,7 @@ namespace LogicEntity.Default.MySql
                     lambdaExpression.Parameters.Select((p, i) =>
                     {
                         if (i < count)
-                            return KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i)));
+                            return KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i)));
                         else
                             return KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.IndexColumn(new(selectExpression.From)));
                     })
@@ -321,16 +321,12 @@ namespace LogicEntity.Default.MySql
             {
                 selectExpression = selectSql.AddHaving();
 
-                SqlExpressions.ISqlExpression sqlExpression = selectExpression.SelectedObjectExpression ?? SqlExpressions.SqlExpression.Empty;
-
-                SqlExpressions.LambdaParameterInfo lambdaParameterInfo =
-                    sqlExpression is SqlExpressions.ITableExpression tableExpression ?
-                        SqlExpressions.LambdaParameterInfo.Table(tableExpression) :
-                        SqlExpressions.LambdaParameterInfo.Value((SqlExpressions.IValueExpression)sqlExpression);
+                SqlExpressions.IValueExpression parameterExpression = selectExpression.IsVector.Value ?
+                    SqlExpressions.SqlExpression.Empty : new SqlExpressions.ColumnExpression(null, selectExpression.Columns[0].Alias);
 
                 SqlExpressions.IValueExpression value = (SqlExpressions.IValueExpression)GetSqlExpression(lambdaExpression.Body, context.ConcatParameters(new KeyValuePair<ParameterExpression, SqlExpressions.LambdaParameterInfo>[]
                 {
-                    KeyValuePair.Create(lambdaExpression.Parameters[0], lambdaParameterInfo)
+                    KeyValuePair.Create(lambdaExpression.Parameters[0], SqlExpressions.LambdaParameterInfo.Value(parameterExpression))
                 }));
 
                 if (selectExpression.Having is null)
@@ -348,7 +344,7 @@ namespace LogicEntity.Default.MySql
                     lambdaExpression.Parameters.Select((p, i) =>
                     {
                         if (i < count)
-                            return KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i)));
+                            return KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i)));
                         else
                             return KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.IndexColumn(new(selectExpression.From)));
                     })
@@ -372,7 +368,7 @@ namespace LogicEntity.Default.MySql
             Dictionary<MemberInfo, SqlExpressions.IValueExpression> groupKeys = new();
 
             context = context.ConcatParameters(
-                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                 );
 
             if (lambdaExpression.Body is NewExpression newExpression)
@@ -418,33 +414,29 @@ namespace LogicEntity.Default.MySql
             {
                 selectSql = selectSql.AddThenBy();
 
-                selectSql.OrderBy.Expressions.Add(GetOrderExpression(selectSql.SelectedObjectExpression));
+                selectSql.OrderBy.Expressions.Add(GetOrderExpression());
             }
             else
             {
                 selectSql = selectSql.AddOrderBy();
 
-                selectSql.OrderBy = new SqlExpressions.OrderKeys(GetOrderExpression(selectSql.SelectedObjectExpression));
+                selectSql.OrderBy = new SqlExpressions.OrderKeys(GetOrderExpression());
             }
 
             selectSql.Type = type;
 
             return selectSql;
 
-            SqlExpressions.OrderExpression GetOrderExpression(SqlExpressions.ISqlExpression sqlExpression)
+            SqlExpressions.OrderExpression GetOrderExpression()
             {
-                if (sqlExpression is null)
-                    sqlExpression = SqlExpressions.SqlExpression.Empty;
+                var expressions = selectSql.GetOrderByParameters();
 
-                SqlExpressions.LambdaParameterInfo lambdaParameterInfo =
-                sqlExpression is SqlExpressions.ITableExpression tableExpression ?
-                    SqlExpressions.LambdaParameterInfo.Table(tableExpression) :
-                    SqlExpressions.LambdaParameterInfo.Value((SqlExpressions.IValueExpression)sqlExpression);
-
-                context = context.ConcatParameters(new KeyValuePair<ParameterExpression, SqlExpressions.LambdaParameterInfo>[]
+                context = context.ConcatParameters(lambdaExpression.Parameters.Select((p, i) =>
                 {
-                KeyValuePair.Create(lambdaExpression.Parameters[0], lambdaParameterInfo)
-                });
+                    var expression = expressions[i];
+
+                    return KeyValuePair.Create(p, expression is SqlExpressions.IValueExpression valueExpression ? SqlExpressions.LambdaParameterInfo.Value(valueExpression) : SqlExpressions.LambdaParameterInfo.LambdaParameter((SqlExpressions.ITableExpression)expression));
+                }));
 
                 return new SqlExpressions.OrderExpression((SqlExpressions.IValueExpression)GetSqlExpression(lambdaExpression.Body, context), descending);
             }
@@ -499,10 +491,10 @@ namespace LogicEntity.Default.MySql
 
             selectExpression.Constructors = constructors;
 
-            selectExpression.SelectedObjectExpression =
-                selector is LambdaExpression lambdaExpression && lambdaExpression.Body is NewExpression ?
-                    SqlExpressions.SqlExpression.Empty :
-                    selectExpression.Columns.FirstOrDefault()?.ValueExpression;
+            selectExpression.IsVector = selectExpression.Columns.Count > 1 || (selector is LambdaExpression lambdaExpression && lambdaExpression.Body is NewExpression);
+
+            if (selectExpression.IsVector == false && selectExpression.Columns[0].Alias is null)
+                selectExpression.Columns[0].Alias = SqlNode.ScalarAlias;
 
             selectExpression.Type = type;
 
@@ -527,7 +519,7 @@ namespace LogicEntity.Default.MySql
             selectExpression.Columns.Clear();
 
             context = context.ConcatParameters(
-                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                 );
 
             selectExpression.Columns.Add(new SqlExpressions.ColumnInfo()
@@ -563,7 +555,7 @@ namespace LogicEntity.Default.MySql
             selectExpression.Columns.Clear();
 
             context = context.ConcatParameters(
-                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                 );
 
             selectExpression.Columns.Add(new SqlExpressions.ColumnInfo()
@@ -583,7 +575,7 @@ namespace LogicEntity.Default.MySql
             selectExpression.Columns.Clear();
 
             context = context.ConcatParameters(
-                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                 );
 
             selectExpression.Columns.Add(new SqlExpressions.ColumnInfo()
@@ -603,7 +595,7 @@ namespace LogicEntity.Default.MySql
             selectExpression.Columns.Clear();
 
             context = context.ConcatParameters(
-                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                lambdaExpression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                 );
 
             selectExpression.Columns.Add(new SqlExpressions.ColumnInfo()

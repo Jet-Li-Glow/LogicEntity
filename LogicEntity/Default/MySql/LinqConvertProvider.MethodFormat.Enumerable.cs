@@ -268,7 +268,7 @@ namespace LogicEntity.Default.MySql
             LambdaExpression expression = (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[0]).Operand;
 
             context = context.ConcatParameters(
-                expression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                expression.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(groupingDataTableExpression.From.GetTable(i))))
                 );
 
             return GetSqlExpression(expression.Body, context);
@@ -401,7 +401,7 @@ namespace LogicEntity.Default.MySql
             if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
                 SqlExpressions.SqlContext averageContext = context.ConcatParameters(
-                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(groupingDataTableExpression.From.GetTable(i))))
                     );
 
                 return new SqlExpressions.MethodCallExpression("Avg", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, averageContext));
@@ -550,7 +550,7 @@ namespace LogicEntity.Default.MySql
             if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
                 SqlExpressions.SqlContext maxContext = context.ConcatParameters(
-                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(groupingDataTableExpression.From.GetTable(i))))
                     );
 
                 return new SqlExpressions.MethodCallExpression("Max", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, maxContext));
@@ -587,7 +587,7 @@ namespace LogicEntity.Default.MySql
             if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
                 SqlExpressions.SqlContext maxContext = context.ConcatParameters(
-                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(groupingDataTableExpression.From.GetTable(i))))
                     );
 
                 return new SqlExpressions.MethodCallExpression("Min", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, maxContext));
@@ -624,7 +624,7 @@ namespace LogicEntity.Default.MySql
             if (source is SqlExpressions.GroupingDataTableExpression groupingDataTableExpression)
             {
                 SqlExpressions.SqlContext maxContext = context.ConcatParameters(
-                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(groupingDataTableExpression.From.GetTable(i))))
+                    selector.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(groupingDataTableExpression.From.GetTable(i))))
                     );
 
                 return new SqlExpressions.MethodCallExpression("Sum", (SqlExpressions.IValueExpression)GetSqlExpression(selector.Body, maxContext));

@@ -572,7 +572,7 @@ namespace LogicEntity.Default.MySql
                         Alias = expression is MemberExpression memberExpression ? memberExpression.Member.Name : null,
                         Expression = expression,
                         SqlContext = context.ConcatParameters(
-                            s.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i))))
+                            s.Parameters.Select((p, i) => KeyValuePair.Create(p, SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i))))
                         )
                     };
                 }));
@@ -606,7 +606,7 @@ namespace LogicEntity.Default.MySql
                         }
                         else
                         {
-                            lambdaParameterInfo = SqlExpressions.LambdaParameterInfo.Table(selectExpression.From.GetTable(i));
+                            lambdaParameterInfo = SqlExpressions.LambdaParameterInfo.LambdaParameter(selectExpression.From.GetTable(i));
                         }
 
                         return KeyValuePair.Create(p, lambdaParameterInfo);

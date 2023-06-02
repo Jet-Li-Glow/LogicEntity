@@ -45,8 +45,6 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public OffsetLimit Limit { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public ISqlExpression SelectedObjectExpression => throw new NotImplementedException();
-
         public int? Timeout { get; set; }
 
         public List<CommonTableExpression> CommonTableExpressions => throw new NotImplementedException();
@@ -63,6 +61,10 @@ namespace LogicEntity.Default.MySql.SqlExpressions
                 return tableName;
             }
         }
+
+        public bool? IsVector { get; } = true;
+
+        public IList<ColumnInfo> Columns => throw new NotImplementedException();
 
         public SqlCommand BuildTableDefinition(BuildContext context)
         {
@@ -83,6 +85,11 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             {
                 Type = Type
             }.BuildSelect(context);
+        }
+
+        public ISqlExpression[] GetOrderByParameters()
+        {
+            throw new NotImplementedException();
         }
 
         public bool CanAddNode(SelectNodeType nodeType)

@@ -49,6 +49,7 @@ namespace LogicEntity.Default.MySql
         public const string IndexColumnName = "__Index";
         public const string Default = "Default";
         public const string NewRowAlias = "newRow";
+        public const string ScalarAlias = "__Column0";
 
         /// <summary>
         /// 缩进

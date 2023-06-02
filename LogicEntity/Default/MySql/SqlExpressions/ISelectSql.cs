@@ -11,13 +11,20 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 {
     internal interface ISelectSql : IDataManipulationSql, ITableExpression, IValueExpression, IValuesExpression, IInsertRowsExpression
     {
+        /// <summary>
+        /// 是 矢量 或 标量
+        /// </summary>
+        bool? IsVector { get; }
+
+        IList<ColumnInfo> Columns { get; }
+
         SelectExpression AddJoin();
+
+        ISqlExpression[] GetOrderByParameters();
 
         OrderKeys OrderBy { get; set; }
 
         OffsetLimit Limit { get; set; }
-
-        ISqlExpression SelectedObjectExpression { get; }
 
         SelectSqlCommand BuildSelect(BuildContext context);
 

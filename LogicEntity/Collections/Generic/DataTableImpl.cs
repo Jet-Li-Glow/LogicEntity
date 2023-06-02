@@ -30,7 +30,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2> : DataTableImplBase, IDataTable<T1, T2>
+    public class DataTableImpl<T1, T2> : DataTableImplBase, IOrderedDataTable<T1, T2>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -38,7 +38,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3> : DataTableImplBase, IDataTable<T1, T2, T3>
+    public class DataTableImpl<T1, T2, T3> : DataTableImplBase, IOrderedDataTable<T1, T2, T3>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -46,7 +46,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4> : DataTableImplBase, IDataTable<T1, T2, T3, T4>
+    public class DataTableImpl<T1, T2, T3, T4> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -54,7 +54,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5>
+    public class DataTableImpl<T1, T2, T3, T4, T5> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -62,7 +62,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -70,7 +70,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -78,7 +78,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -86,7 +86,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -94,7 +94,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -102,7 +102,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -110,7 +110,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -118,7 +118,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -126,7 +126,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -134,7 +134,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {
@@ -142,7 +142,7 @@ namespace LogicEntity.Collections.Generic
         }
     }
 
-    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : DataTableImplBase, IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
+    public class DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> : DataTableImplBase, IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
     {
         public DataTableImpl(AbstractDataBase db, TableExpression expression) : base(db, expression)
         {

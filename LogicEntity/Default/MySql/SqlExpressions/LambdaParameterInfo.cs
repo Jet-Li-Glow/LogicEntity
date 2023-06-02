@@ -52,6 +52,16 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             };
         }
 
+        public static LambdaParameterInfo LambdaParameter(ITableExpression tableExpression)
+        {
+            if (tableExpression is ISelectSql subQuery && subQuery.IsVector.Value == false)
+            {
+                return Value(new ColumnExpression(subQuery, subQuery.Columns[0].Alias));
+            }
+
+            return Table(tableExpression);
+        }
+
         public LambdaParameterType ParameterType { get; private set; }
 
         public ISqlExpression SqlExpression { get; private set; }

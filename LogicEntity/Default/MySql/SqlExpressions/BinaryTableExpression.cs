@@ -27,7 +27,17 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public OffsetLimit Limit { get; set; }
 
-        public ISqlExpression SelectedObjectExpression => null;
+        public bool? IsVector { get => Left.IsVector; }
+
+        public IList<ColumnInfo> Columns => Left.Columns.AsReadOnly();
+
+        public ISqlExpression[] GetOrderByParameters()
+        {
+            if (Left.IsVector.Value)
+                return new ISqlExpression[] { Empty };
+            else
+                return new ISqlExpression[] { new ColumnExpression(null, Left.Columns[0].Alias) };
+        }
 
         public bool CanAddNode(SelectNodeType nodeType)
         {

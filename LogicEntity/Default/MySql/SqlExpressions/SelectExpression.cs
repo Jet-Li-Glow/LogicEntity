@@ -29,7 +29,24 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public bool IsDistinct { get; set; } = false;
 
+        bool? _isVector = null;
+
+        public bool? IsVector
+        {
+            get
+            {
+                return _isVector ?? (From is ISelectSql subQuery ? subQuery.IsVector : true);
+            }
+
+            set
+            {
+                _isVector = value;
+            }
+        }
+
         public List<ColumnInfo> Columns { get; } = new();
+
+        IList<ColumnInfo> ISelectSql.Columns => Columns;
 
         public bool HasIndex { get; private set; }
 
@@ -73,18 +90,27 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public OffsetLimit Limit { get; set; }
 
-        ISqlExpression _selectedObjectExpression;
-
-        public ISqlExpression SelectedObjectExpression
+        public ISqlExpression[] GetOrderByParameters()
         {
-            get
+            if (Columns.Count > 0)
             {
-                return _selectedObjectExpression ?? (From.Count == 1 ? From : null);
+                if (IsVector.Value)
+                    return new ISqlExpression[] { SqlExpression.Empty };
+                else
+                    return new ISqlExpression[] { new ColumnExpression(null, Columns[0].Alias) };
             }
-
-            set
+            else
             {
-                _selectedObjectExpression = value;
+                List<ISqlExpression> expressions = new();
+
+                int count = From.Count;
+
+                for (int i = 0; i < count; i++)
+                {
+                    expressions.Add(From.GetTable(i));
+                }
+
+                return expressions.ToArray();
             }
         }
 
@@ -92,6 +118,9 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             if (_nodes.Count == 0)
                 return true;
+
+            if (nodeType == SelectNodeType.Select)
+                return _nodes.Contains(SelectNodeType.Select) == false;
 
             int max = _nodes.Max(n => (int)n);
 

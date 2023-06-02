@@ -1333,6 +1333,171 @@ namespace LogicEntity.Linq
             return new DataTableImpl<TSource>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
         }
 
+        public static IOrderedDataTable<T1, T2> OrderBy<T1, T2, TKey>(this IDataTable<T1, T2> source, Expression<Func<T1, T2, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3> OrderBy<T1, T2, T3, TKey>(this IDataTable<T1, T2, T3> source, Expression<Func<T1, T2, T3, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4> OrderBy<T1, T2, T3, T4, TKey>(this IDataTable<T1, T2, T3, T4> source, Expression<Func<T1, T2, T3, T4, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5> OrderBy<T1, T2, T3, T4, T5, TKey>(this IDataTable<T1, T2, T3, T4, T5> source, Expression<Func<T1, T2, T3, T4, T5, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6> OrderBy<T1, T2, T3, T4, T5, T6, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6> source, Expression<Func<T1, T2, T3, T4, T5, T6, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7> OrderBy<T1, T2, T3, T4, T5, T6, T7, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> OrderBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, false));
+        }
+
         public static IOrderedDataTable<TSource> OrderByDescending<TSource, TKey>(this IDataTable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
         {
             if (source is null)
@@ -1342,6 +1507,171 @@ namespace LogicEntity.Linq
                 throw new ArgumentNullException(nameof(keySelector));
 
             return new DataTableImpl<TSource>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2> OrderByDescending<T1, T2, TKey>(this IDataTable<T1, T2> source, Expression<Func<T1, T2, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3> OrderByDescending<T1, T2, T3, TKey>(this IDataTable<T1, T2, T3> source, Expression<Func<T1, T2, T3, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4> OrderByDescending<T1, T2, T3, T4, TKey>(this IDataTable<T1, T2, T3, T4> source, Expression<Func<T1, T2, T3, T4, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5> OrderByDescending<T1, T2, T3, T4, T5, TKey>(this IDataTable<T1, T2, T3, T4, T5> source, Expression<Func<T1, T2, T3, T4, T5, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6> OrderByDescending<T1, T2, T3, T4, T5, T6, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6> source, Expression<Func<T1, T2, T3, T4, T5, T6, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> OrderByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>(this IDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(source.Db, new OrderedTableExpression(source.Expression, false, keySelector, true));
         }
 
         public static IOrderedDataTable<TSource> ThenBy<TSource, TKey>(this IOrderedDataTable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
@@ -1355,6 +1685,171 @@ namespace LogicEntity.Linq
             return new DataTableImpl<TSource>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
         }
 
+        public static IOrderedDataTable<T1, T2> ThenBy<T1, T2, TKey>(this IOrderedDataTable<T1, T2> source, Expression<Func<T1, T2, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3> ThenBy<T1, T2, T3, TKey>(this IOrderedDataTable<T1, T2, T3> source, Expression<Func<T1, T2, T3, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4> ThenBy<T1, T2, T3, T4, TKey>(this IOrderedDataTable<T1, T2, T3, T4> source, Expression<Func<T1, T2, T3, T4, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5> ThenBy<T1, T2, T3, T4, T5, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5> source, Expression<Func<T1, T2, T3, T4, T5, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6> ThenBy<T1, T2, T3, T4, T5, T6, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6> source, Expression<Func<T1, T2, T3, T4, T5, T6, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7> ThenBy<T1, T2, T3, T4, T5, T6, T7, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> ThenBy<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, false));
+        }
+
         public static IOrderedDataTable<TSource> ThenByDescending<TSource, TKey>(this IOrderedDataTable<TSource> source, Expression<Func<TSource, TKey>> keySelector)
         {
             if (source is null)
@@ -1364,6 +1859,171 @@ namespace LogicEntity.Linq
                 throw new ArgumentNullException(nameof(keySelector));
 
             return new DataTableImpl<TSource>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2> ThenByDescending<T1, T2, TKey>(this IOrderedDataTable<T1, T2> source, Expression<Func<T1, T2, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3> ThenByDescending<T1, T2, T3, TKey>(this IOrderedDataTable<T1, T2, T3> source, Expression<Func<T1, T2, T3, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4> ThenByDescending<T1, T2, T3, T4, TKey>(this IOrderedDataTable<T1, T2, T3, T4> source, Expression<Func<T1, T2, T3, T4, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5> ThenByDescending<T1, T2, T3, T4, T5, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5> source, Expression<Func<T1, T2, T3, T4, T5, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6> ThenByDescending<T1, T2, T3, T4, T5, T6, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6> source, Expression<Func<T1, T2, T3, T4, T5, T6, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
+        }
+
+        public static IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> ThenByDescending<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>(this IOrderedDataTable<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> source, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TKey>> keySelector)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (keySelector is null)
+                throw new ArgumentNullException(nameof(keySelector));
+
+            return new DataTableImpl<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(source.Db, new OrderedTableExpression(source.Expression, true, keySelector, true));
         }
 
         public static IDataTable<TSource> Skip<TSource>(this IDataTable<TSource> source, int count)

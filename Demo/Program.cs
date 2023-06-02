@@ -31,6 +31,7 @@ namespace Demo
             //         4.Value<>的Json序列化和反序列化
             //         5.DateTimeOffset、TimeOnly等类型的支持
             //         6.join-on、select 无强类型限制 以实现动态join和动态select
+            //         7.string.Concat 连续相加翻译优化
 
             Console.WriteLine("-- Start --");
 

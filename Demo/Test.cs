@@ -208,18 +208,18 @@ namespace Demo
 
             data = ((IEnumerable)dataTable).Cast<object>().ToList();
 
-            ////Select - 3
-            //data = db.Value(() => new { n = 1 })
-            //    .Select(s => s.n)
-            //    .Where(s => s > 0)
-            //    .OrderBy(s => s)
-            //    .GroupBy(s => s)
-            //    .Select(s => s.Key)
-            //    .Where(s => s > -1)
-            //    .Union(db.Value(() => 2).Where(s => s > -2))
-            //    .OrderBy(s => s)
-            //    .Take(10)
-            //    .ToList();
+            //Select - 3
+            data = db.Value(() => new { n = 1 })
+                .Select(s => s.n)
+                .Where(s => s > 0)
+                .OrderBy(s => s)
+                .GroupBy(s => s)
+                .Select(s => s.Key)
+                .Where(s => s > -1)
+                .Union(db.Value(() => 2).Where(s => s > -2))
+                .OrderBy(s => s)
+                .Take(10)
+                .ToList();
 
             //Select - 3
             data = db.Value(() => new
@@ -371,6 +371,9 @@ namespace Demo
 
             //Select - 19
             data = db.Students.Where(s => ((Student.JsonObject)s.Json).Array.Contains(5)).FirstOrDefault();
+
+            //Select - 20
+            data = db.Students.OrderBy(s => s.Id).Select(s => new { s.Id, s.Name }).ToList();
 
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()
