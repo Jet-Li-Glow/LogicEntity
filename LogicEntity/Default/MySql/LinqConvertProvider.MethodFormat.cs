@@ -13,6 +13,8 @@ namespace LogicEntity.Default.MySql
 {
     public partial class LinqConvertProvider
     {
+        readonly MethodInfo _StringConcat = typeof(string).GetMethod(nameof(string.Concat), new Type[] { typeof(string), typeof(string) });
+
         readonly Dictionary<MemberInfo, object> MemberFormat = new()
         {
             //Cast
@@ -21,7 +23,6 @@ namespace LogicEntity.Default.MySql
             //string
             { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(object[])}), (string[] args) => $"Concat({string.Join(", ", args.Skip(1))})" },
             { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(string[])}), (string[] args) => $"Concat({string.Join(", ", args.Skip(1))})" },
-            { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(string), typeof(string) }), "Concat({1}, {2})" },
             { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(string), typeof(string), typeof(string) }), "Concat({1}, {2}, {3})" },
             { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(string), typeof(string), typeof(string), typeof(string) }), "Concat({1}, {2}, {3}, {4})" },
             { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(object) }), "Concat({1})" },
@@ -159,7 +160,7 @@ namespace LogicEntity.Default.MySql
 
         void InitDbFunctionMethodFormat()
         {
-
+            MemberFormat[_StringConcat] = (object)FormatStringConcat;
         }
 
         bool TryGetMemberFormat(MemberInfo member, out object format)
@@ -184,6 +185,24 @@ namespace LogicEntity.Default.MySql
             }
 
             return member;
+        }
+
+        SqlExpressions.ISqlExpression FormatStringConcat(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
+            SqlExpressions.IValueExpression left = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], context);
+
+            SqlExpressions.IValueExpression right = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], context);
+
+            List<SqlExpressions.IValueExpression> strExpressions = new();
+
+            if (left is SqlExpressions.ConcatExpression concatExpression)
+                strExpressions.AddRange(concatExpression.StrExpressions);
+            else
+                strExpressions.Add(left);
+
+            strExpressions.Add(right);
+
+            return new SqlExpressions.ConcatExpression(strExpressions.ToArray());
         }
     }
 }
