@@ -38,10 +38,6 @@ namespace LogicEntity.Default.MySql.SqlExpressions
                     Text = SqlNode.Member(tableExpression.ShortName, SqlNode.SqlName(columnName))
                 };
             }
-            else if (SqlExpression is GroupKeyExpression groupKeyExpression)
-            {
-                return groupKeyExpression.Members[Member].BuildValue(context);
-            }
             else
             {
                 return new()

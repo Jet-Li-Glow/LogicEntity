@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class CommonTableExpression : SqlExpression, ISelectSql
+    internal class CommonTableExpression : SqlExpression, ISelectSql, ISubQuerySql
     {
         public CommonTableExpression(ISelectSql selectSql, bool isRecursive)
         {
@@ -80,7 +80,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public IReadOnlyCollection<MemberInfo> ColumnMembers { get; set; }
 
-        public bool? IsVector { get => SelectSql.IsVector; }
+        public bool IsVector { get => SelectSql.IsVector; }
 
         public IList<ColumnInfo> Columns => SelectSql.Columns.AsReadOnly();
 
@@ -153,6 +153,11 @@ namespace LogicEntity.Default.MySql.SqlExpressions
                 return (nodeType == SelectNodeType.OrderBy || nodeType == SelectNodeType.Limit) && SelectSql.CanAddNode(nodeType);
 
             return false;
+        }
+
+        public SelectExpression ChangeColumns()
+        {
+            return new SelectExpression(this);
         }
 
         public SelectExpression AddSelect()

@@ -25,12 +25,11 @@ namespace Demo
         {
             //Version 1.0.1
 
-            //开发计划 1.First().Id 适应性翻译
-            //         2.Value<>实现 IComparable、等接口
-            //         3.Assign方法适应Nullable<>
-            //         4.Value<>的Json序列化和反序列化
-            //         5.DateTimeOffset、TimeOnly等类型的支持
-            //         6.join-on、select 无强类型限制 以实现动态join和动态select
+            //开发计划 1.Value<>实现 IComparable、等接口
+            //         2.Assign方法适应Nullable<>
+            //         3.Value<>的Json序列化和反序列化
+            //         4.DateTimeOffset、TimeOnly等类型的支持
+            //         5.join-on、select 无强类型限制 以实现动态join和动态select
 
             Console.WriteLine("-- Start --");
 
@@ -65,7 +64,7 @@ namespace Demo
 
             data = db.Students.Select((s, i) => new { s.Id, Index = i }).ToList();
 
-            data = db.Students.Select(s => new { SubQuery = db.Majors.Where(m => m.MajorId == s.MajorId).Select(m => m.MajorName).First() }).ToList();
+            data = db.Students.Select(s => new { SubQuery = db.Majors.Where(m => m.MajorId == s.MajorId).First().MajorName }).ToList();
 
             data = db.Students.Union(db.Students).OrderBy(s => s.Id).Take(50).ToList();
 

@@ -321,7 +321,7 @@ namespace LogicEntity.Default.MySql
             {
                 selectExpression = selectSql.AddHaving();
 
-                SqlExpressions.IValueExpression parameterExpression = selectExpression.IsVector.Value ?
+                SqlExpressions.IValueExpression parameterExpression = selectExpression.IsVector ?
                     SqlExpressions.SqlExpression.Empty : new SqlExpressions.ColumnExpression(null, selectExpression.Columns[0].Alias);
 
                 SqlExpressions.IValueExpression value = (SqlExpressions.IValueExpression)GetSqlExpression(lambdaExpression.Body, context.ConcatParameters(new KeyValuePair<ParameterExpression, SqlExpressions.LambdaParameterInfo>[]

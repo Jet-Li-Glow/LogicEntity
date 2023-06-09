@@ -199,7 +199,7 @@ namespace Demo
                         (
                         s.Element.Id
                         + s.Average(c => c.Id)
-                        + db.Students.Where(d => d.Id == b.Id).Select(d => d.Id).First())
+                        + db.Students.First(d => d.Id == b.Id).Id)
                         )
                 })
                 .Take(1);
@@ -374,6 +374,13 @@ namespace Demo
 
             //Select - 20
             data = db.Students.OrderBy(s => s.Id).Select(s => new { s.Id, s.Name }).ToList();
+
+            //Select - 21
+            data = db.Value(() => new
+            {
+                SubQuery1 = db.Students.Select(s => new { s.Id, s.Name }).First().Id,
+                SubQuery2 = ((Student.JsonObject)(db.Students.Select(s => s.Json).First())).Array[0]
+            }).ToList();
 
             //Insert - 1
             rowsAffected = db.Students.Add(new Student()

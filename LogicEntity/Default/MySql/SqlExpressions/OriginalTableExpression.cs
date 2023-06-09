@@ -62,7 +62,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             }
         }
 
-        public bool? IsVector { get; } = true;
+        public bool IsVector { get; } = true;
 
         public IList<ColumnInfo> Columns => throw new NotImplementedException();
 

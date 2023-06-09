@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class BinaryTableExpression : SelectSql, ISelectSql
+    internal class BinaryTableExpression : SelectSql, ISelectSql, ISubQuerySql
     {
         HashSet<SelectNodeType> _nodes = new() { SelectNodeType.From };
 
@@ -27,13 +27,13 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public OffsetLimit Limit { get; set; }
 
-        public bool? IsVector { get => Left.IsVector; }
+        public bool IsVector { get => Left.IsVector; }
 
         public IList<ColumnInfo> Columns => Left.Columns.AsReadOnly();
 
         public ISqlExpression[] GetOrderByParameters()
         {
-            if (Left.IsVector.Value)
+            if (Left.IsVector)
                 return new ISqlExpression[] { Empty };
             else
                 return new ISqlExpression[] { new ColumnExpression(null, Left.Columns[0].Alias) };
@@ -45,6 +45,11 @@ namespace LogicEntity.Default.MySql.SqlExpressions
                 return false;
 
             return (int)nodeType >= _nodes.Max(n => (int)n);
+        }
+
+        public SelectExpression ChangeColumns()
+        {
+            return new SelectExpression(this);
         }
 
         public SelectExpression AddSelect()

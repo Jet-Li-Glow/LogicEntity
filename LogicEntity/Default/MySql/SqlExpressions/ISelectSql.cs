@@ -14,7 +14,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         /// <summary>
         /// 是 矢量 或 标量
         /// </summary>
-        bool? IsVector { get; }
+        bool IsVector { get; }
 
         IList<ColumnInfo> Columns { get; }
 

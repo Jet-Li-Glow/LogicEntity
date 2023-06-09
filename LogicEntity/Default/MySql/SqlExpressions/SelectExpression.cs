@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class SelectExpression : SelectSql, ISelectSql
+    internal class SelectExpression : SelectSql, ISelectSql, ISubQuerySql
     {
         HashSet<SelectNodeType> _nodes = new();
 
@@ -31,7 +31,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         bool? _isVector = null;
 
-        public bool? IsVector
+        public bool IsVector
         {
             get
             {
@@ -94,7 +94,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             if (Columns.Count > 0)
             {
-                if (IsVector.Value)
+                if (IsVector)
                     return new ISqlExpression[] { SqlExpression.Empty };
                 else
                     return new ISqlExpression[] { new ColumnExpression(null, Columns[0].Alias) };
@@ -134,6 +134,13 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             }
 
             return (int)nodeType > max;
+        }
+
+        public SelectExpression ChangeColumns()
+        {
+            _nodes.Add(SelectNodeType.Select);
+
+            return this;
         }
 
         public SelectExpression AddSelect()

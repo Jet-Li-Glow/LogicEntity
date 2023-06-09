@@ -54,7 +54,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public static LambdaParameterInfo LambdaParameter(ITableExpression tableExpression)
         {
-            if (tableExpression is ISelectSql subQuery && subQuery.IsVector.Value == false)
+            if (tableExpression is ISelectSql subQuery && subQuery.IsVector == false)
             {
                 return Value(new ColumnExpression(subQuery, subQuery.Columns[0].Alias));
             }

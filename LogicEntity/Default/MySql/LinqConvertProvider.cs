@@ -428,7 +428,8 @@ namespace LogicEntity.Default.MySql
                         continue;
                     }
 
-                    node.Member = memberExpression.Member;
+                    if (node.Member is null)
+                        node.Member = memberExpression.Member;
 
                     if (node.Alias is null)
                         node.Alias = memberExpression.Member.Name;
@@ -727,23 +728,71 @@ namespace LogicEntity.Default.MySql
                     }
                 }
 
-                if (sqlExpression is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+                if (sqlExpression is SqlExpressions.GroupKeyExpression groupKeyExpression)
                 {
-                    jsonExtractExpression.Member(memberExpression.Member);
-
-                    return jsonExtractExpression;
+                    return groupKeyExpression.Members[memberExpression.Member];
                 }
 
-                if (sqlExpression is SqlExpressions.MemberExpression sqlMemberExpression)
+                if (memberExpression.Expression is not ParameterExpression && sqlExpression is SqlExpressions.ISubQuerySql subQuerySql)
                 {
-                    SqlExpressions.JsonExtractExpression sqlJsonExtractExpression = new SqlExpressions.JsonExtractExpression(sqlMemberExpression);
+                    SqlExpressions.SelectExpression selectExpression = subQuerySql.ChangeColumns();
 
-                    sqlJsonExtractExpression.Member(memberExpression.Member);
+                    if (selectExpression.IsVector)
+                    {
+                        if (selectExpression.Columns.Count > 0)
+                        {
+                            var column = selectExpression.Columns.Single(s => s.Member == memberExpression.Member);
 
-                    return sqlJsonExtractExpression;
+                            column.Alias = memberExpression.Member.Name;
+
+                            selectExpression.Columns.Clear();
+
+                            selectExpression.Columns.Add(column);
+                        }
+                        else
+                        {
+                            selectExpression.Columns.Add(new()
+                            {
+                                Alias = memberExpression.Member.Name,
+                                ValueExpression = new SqlExpressions.MemberExpression(selectExpression.From.GetTable(0), memberExpression.Member),
+                                Member = memberExpression.Member
+                            });
+                        }
+                    }
+                    else
+                    {
+                        var columnInfo = selectExpression.Columns[0];
+
+                        columnInfo.Alias = memberExpression.Member.Name;
+
+                        columnInfo.ValueExpression = (SqlExpressions.IValueExpression)MemberAccess(columnInfo.ValueExpression);
+                    }
+
+                    return selectExpression;
                 }
 
-                return new SqlExpressions.MemberExpression(sqlExpression, memberExpression.Member);
+                return MemberAccess(sqlExpression);
+
+                SqlExpressions.ISqlExpression MemberAccess(SqlExpressions.ISqlExpression instanceExpression)
+                {
+                    if (instanceExpression is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+                    {
+                        jsonExtractExpression.Member(memberExpression.Member);
+
+                        return jsonExtractExpression;
+                    }
+
+                    if (instanceExpression is SqlExpressions.MemberExpression sqlMemberExpression)
+                    {
+                        SqlExpressions.JsonExtractExpression sqlJsonExtractExpression = new SqlExpressions.JsonExtractExpression(sqlMemberExpression);
+
+                        sqlJsonExtractExpression.Member(memberExpression.Member);
+
+                        return sqlJsonExtractExpression;
+                    }
+
+                    return new SqlExpressions.MemberExpression(instanceExpression, memberExpression.Member);
+                }
             }
 
             if (expression.NodeType == ExpressionType.Convert || expression.NodeType == ExpressionType.ConvertChecked || expression.NodeType == ExpressionType.TypeAs)
