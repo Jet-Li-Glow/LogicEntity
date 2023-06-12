@@ -81,7 +81,7 @@ namespace LogicEntity.Default.MySql
 
         Command GetSelectCommand(TableExpression tableExpression)
         {
-            return GetDataManipulationSql(tableExpression).Build(this);
+            return GetSelectSql(tableExpression).Build(this);
         }
 
         Command GetOperateCommand(LogicEntity.Linq.Expressions.Expression operateExpression)
@@ -114,7 +114,7 @@ namespace LogicEntity.Default.MySql
                 insertExpression.AddOperate = addOrUpdateWithFactoryOperateExpression.AddOperate;
 
                 //Table
-                insertExpression.Table = (SqlExpressions.OriginalTableExpression)GetDataManipulationSql(addOrUpdateWithFactoryOperateExpression.Source);
+                insertExpression.Table = (SqlExpressions.OriginalTableExpression)GetSelectSql(addOrUpdateWithFactoryOperateExpression.Source);
 
                 //Values
                 string valuesExpression = string.Empty;
@@ -209,7 +209,7 @@ namespace LogicEntity.Default.MySql
                 }
                 else if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.DataTable)
                 {
-                    insertExpression.Rows = (SqlExpressions.ISelectSql)GetDataManipulationSql(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
+                    insertExpression.Rows = (SqlExpressions.ISelectSql)GetSelectSql(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
                 }
 
                 //Update
@@ -293,12 +293,58 @@ namespace LogicEntity.Default.MySql
 
             if (operateExpression is RemoveOperateExpression removeOperateExpression)
             {
-                return GetDataManipulationSql(removeOperateExpression).Build(this);
+                var deleteExpression = GetSelectSql(removeOperateExpression.Source).AddDelete();
+
+                if (removeOperateExpression.Selectors is not null)
+                {
+                    LambdaExpression[] lambdaExpressions = (LambdaExpression[])removeOperateExpression.Selectors;
+
+                    deleteExpression.DeletedTables.AddRange(lambdaExpressions.Select(lambdaExpression =>
+                    {
+                        if (lambdaExpression.Body is not ParameterExpression parameterExpression)
+                            throw new UnsupportedExpressionException(lambdaExpression.Body);
+
+                        return deleteExpression.From.GetTable(lambdaExpression.Parameters.IndexOf(parameterExpression));
+                    }));
+                }
+
+                deleteExpression.Type = removeOperateExpression.Type;
+
+                return deleteExpression.Build(this);
             }
 
             if (operateExpression is SetOperateExpression setOperateExpression)
             {
-                return GetDataManipulationSql(setOperateExpression).Build(this);
+                var updateExpression = GetSelectSql(setOperateExpression.Source).AddUpdateSet();
+
+                LambdaExpression[] lambdaExpressions = (LambdaExpression[])setOperateExpression.Assignments;
+
+                updateExpression.Assignments.AddRange(lambdaExpressions.Select(lambdaExpression =>
+                {
+                    MethodCallExpression methodCallExpression = lambdaExpression.Body as MethodCallExpression;
+
+                    if (methodCallExpression is null || methodCallExpression.Method.DeclaringType != typeof(SetOperatorFunction))
+                        throw new UnsupportedExpressionException(lambdaExpression.Body);
+
+                    SqlExpressions.SqlContext sqlContext = new()
+                    {
+                        LambdaParameters = new()
+                    };
+
+                    for (int i = 0; i < lambdaExpression.Parameters.Count; i++)
+                    {
+                        sqlContext.LambdaParameters[lambdaExpression.Parameters[i]] = SqlExpressions.LambdaParameterInfo.Table(updateExpression.From.GetTable(i));
+                    }
+
+                    return new SqlExpressions.AssignmentExpression(
+                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], sqlContext),
+                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], sqlContext)
+                        );
+                }));
+
+                updateExpression.Type = setOperateExpression.Type;
+
+                return updateExpression.Build(this);
             }
 
             throw new UnsupportedExpressionException(operateExpression);
@@ -1227,7 +1273,7 @@ namespace LogicEntity.Default.MySql
             {
                 TableExpression tableExpression = ((IDataTable)obj).Expression;
 
-                var sql = GetDataManipulationSql(tableExpression);
+                var sql = GetSelectSql(tableExpression);
 
                 if (sql is SqlExpressions.OriginalTableExpression originalTableExpression)
                 {

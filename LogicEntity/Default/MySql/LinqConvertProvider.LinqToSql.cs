@@ -12,7 +12,7 @@ namespace LogicEntity.Default.MySql
 {
     public partial class LinqConvertProvider
     {
-        internal IDataManipulationSql GetDataManipulationSql(LogicEntity.Linq.Expressions.Expression expression)
+        internal SqlExpressions.ISelectSql GetSelectSql(LogicEntity.Linq.Expressions.Expression expression)
         {
             if (expression is OriginalTableExpression originalTableExpression)
             {
@@ -31,14 +31,11 @@ namespace LogicEntity.Default.MySql
                 }
                 else
                 {
-                    right = GetDataManipulationSql(joinedTableExpression.Right) as SqlExpressions.ITableExpression;
+                    right = GetSelectSql(joinedTableExpression.Right);
                 }
 
-                if (right is null)
-                    throw new UnsupportedExpressionException(joinedTableExpression.Right);
-
                 return JoinToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(joinedTableExpression.Left),
+                    GetSelectSql(joinedTableExpression.Left),
                     joinedTableExpression.Join,
                     right,
                     joinedTableExpression.Predicate as LambdaExpression,
@@ -48,7 +45,7 @@ namespace LogicEntity.Default.MySql
             else if (expression is RowFilteredTableExpression rowFilteredTableExpression)
             {
                 return WhereToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(rowFilteredTableExpression.Source),
+                    GetSelectSql(rowFilteredTableExpression.Source),
                     (LambdaExpression)rowFilteredTableExpression.Filter,
                     rowFilteredTableExpression.HasIndex,
                     new()
@@ -57,7 +54,7 @@ namespace LogicEntity.Default.MySql
             else if (expression is GroupedTableExpression groupedTableExpression)
             {
                 return GroupToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(groupedTableExpression.Source),
+                    GetSelectSql(groupedTableExpression.Source),
                     (LambdaExpression)groupedTableExpression.KeySelector,
                     new()
                     );
@@ -65,34 +62,34 @@ namespace LogicEntity.Default.MySql
             else if (expression is UnionedTableExpression unionedTableExpression)
             {
                 return BinaryTableToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(unionedTableExpression.Left),
+                    GetSelectSql(unionedTableExpression.Left),
                     SqlExpressions.BinaryTableExpression.BinaryOperate.Union,
                     unionedTableExpression.Distinct,
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(unionedTableExpression.Right)
+                    GetSelectSql(unionedTableExpression.Right)
                     );
             }
             else if (expression is IntersectTableExpression intersectTableExpression)
             {
                 return BinaryTableToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(intersectTableExpression.Left),
+                    GetSelectSql(intersectTableExpression.Left),
                     SqlExpressions.BinaryTableExpression.BinaryOperate.Intersect,
                     intersectTableExpression is not IntersectAllTableExpression,
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(intersectTableExpression.Right)
+                    GetSelectSql(intersectTableExpression.Right)
                     );
             }
             else if (expression is ExceptTableExpression exceptTableExpression)
             {
                 return BinaryTableToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(exceptTableExpression.Left),
+                    GetSelectSql(exceptTableExpression.Left),
                     SqlExpressions.BinaryTableExpression.BinaryOperate.Except,
                     exceptTableExpression is not ExceptAllTableExpression,
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(exceptTableExpression.Right)
+                    GetSelectSql(exceptTableExpression.Right)
                     );
             }
             else if (expression is OrderedTableExpression orderedTableExpression)
             {
                 return OrderByToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(orderedTableExpression.Source),
+                    GetSelectSql(orderedTableExpression.Source),
                     orderedTableExpression.Ordered,
                     (LambdaExpression)orderedTableExpression.KeySelector,
                     orderedTableExpression.Descending,
@@ -102,20 +99,20 @@ namespace LogicEntity.Default.MySql
             else if (expression is SkippedTableExpression skippedTableExpression)
             {
                 return SkipToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(skippedTableExpression.Source),
+                    GetSelectSql(skippedTableExpression.Source),
                     skippedTableExpression.Count
                     );
             }
             else if (expression is TakedTableExpression takedTableExpression)
             {
                 return TakeToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(takedTableExpression.Source),
+                    GetSelectSql(takedTableExpression.Source),
                     takedTableExpression.Count
                     );
             }
             else if (expression is SelectedTableExpression selectedTableExpression)
             {
-                SqlExpressions.ISelectSql sql = selectedTableExpression.Source is null ? new SqlExpressions.SelectExpression() : (SqlExpressions.ISelectSql)GetDataManipulationSql(selectedTableExpression.Source);
+                SqlExpressions.ISelectSql sql = selectedTableExpression.Source is null ? new SqlExpressions.SelectExpression() : GetSelectSql(selectedTableExpression.Source);
 
                 return SelectToSql(
                     sql,
@@ -127,13 +124,13 @@ namespace LogicEntity.Default.MySql
             else if (expression is DistinctTableExpression distinctTableExpression)
             {
                 return DistinctToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(distinctTableExpression.Source)
+                    GetSelectSql(distinctTableExpression.Source)
                     );
             }
             else if (expression is AverageTableExpression averageTableExpression)
             {
                 return AverageToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(averageTableExpression.Source),
+                    GetSelectSql(averageTableExpression.Source),
                     (LambdaExpression)averageTableExpression.Selector,
                     expression.Type,
                     new()
@@ -142,14 +139,14 @@ namespace LogicEntity.Default.MySql
             else if (expression is CountTableExpression countTableExpression)
             {
                 return CountToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(countTableExpression.Source),
+                    GetSelectSql(countTableExpression.Source),
                     expression.Type
                     );
             }
             else if (expression is MaxTableExpression maxTableExpression)
             {
                 return MaxToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(maxTableExpression.Source),
+                    GetSelectSql(maxTableExpression.Source),
                     (LambdaExpression)maxTableExpression.Selector,
                     expression.Type,
                     new()
@@ -158,7 +155,7 @@ namespace LogicEntity.Default.MySql
             else if (expression is MinTableExpression minTableExpression)
             {
                 return MinToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(minTableExpression.Source),
+                    GetSelectSql(minTableExpression.Source),
                     (LambdaExpression)minTableExpression.Selector,
                     expression.Type,
                     new()
@@ -167,7 +164,7 @@ namespace LogicEntity.Default.MySql
             else if (expression is SumTableExpression sumTableExpression)
             {
                 return SumToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(sumTableExpression.Source),
+                    GetSelectSql(sumTableExpression.Source),
                     (LambdaExpression)sumTableExpression.Selector,
                     expression.Type,
                     new()
@@ -176,13 +173,13 @@ namespace LogicEntity.Default.MySql
             else if (expression is AnyTableExpression anyTableExpression)
             {
                 return AnyToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(anyTableExpression.Source)
+                    GetSelectSql(anyTableExpression.Source)
                     );
             }
             else if (expression is AllTableExpression allTableExpression)
             {
                 return AllToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(allTableExpression.Source),
+                    GetSelectSql(allTableExpression.Source),
                     (LambdaExpression)allTableExpression.Predicate,
                     new()
                     );
@@ -190,69 +187,15 @@ namespace LogicEntity.Default.MySql
             else if (expression is RecursiveUnionedTableExpression recursiveUnionedTableExpression)
             {
                 return RecursiveUnionToSql(
-                    (SqlExpressions.ISelectSql)GetDataManipulationSql(recursiveUnionedTableExpression.Left),
+                    GetSelectSql(recursiveUnionedTableExpression.Left),
                     recursiveUnionedTableExpression.Distinct,
                     recursiveUnionedTableExpression.RightFactory,
                     new()
                     );
             }
-            else if (expression is RemoveOperateExpression removeOperateExpression)
-            {
-                var deleteExpression = GetDataManipulationSql(removeOperateExpression.Source).AddDelete();
-
-                if (removeOperateExpression.Selectors is not null)
-                {
-                    LambdaExpression[] lambdaExpressions = (LambdaExpression[])removeOperateExpression.Selectors;
-
-                    deleteExpression.DeletedTables.AddRange(lambdaExpressions.Select(lambdaExpression =>
-                    {
-                        if (lambdaExpression.Body is not ParameterExpression parameterExpression)
-                            throw new UnsupportedExpressionException(lambdaExpression.Body);
-
-                        return deleteExpression.From.GetTable(lambdaExpression.Parameters.IndexOf(parameterExpression));
-                    }));
-                }
-
-                deleteExpression.Type = expression.Type;
-
-                return deleteExpression;
-            }
-            else if (expression is SetOperateExpression setOperateExpression)
-            {
-                var updateExpression = GetDataManipulationSql(setOperateExpression.Source).AddUpdateSet();
-
-                LambdaExpression[] lambdaExpressions = (LambdaExpression[])setOperateExpression.Assignments;
-
-                updateExpression.Assignments.AddRange(lambdaExpressions.Select(lambdaExpression =>
-                {
-                    MethodCallExpression methodCallExpression = lambdaExpression.Body as MethodCallExpression;
-
-                    if (methodCallExpression is null || methodCallExpression.Method.DeclaringType != typeof(SetOperatorFunction))
-                        throw new UnsupportedExpressionException(lambdaExpression.Body);
-
-                    SqlExpressions.SqlContext sqlContext = new()
-                    {
-                        LambdaParameters = new()
-                    };
-
-                    for (int i = 0; i < lambdaExpression.Parameters.Count; i++)
-                    {
-                        sqlContext.LambdaParameters[lambdaExpression.Parameters[i]] = SqlExpressions.LambdaParameterInfo.Table(updateExpression.From.GetTable(i));
-                    }
-
-                    return new SqlExpressions.AssignmentExpression(
-                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], sqlContext),
-                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], sqlContext)
-                        );
-                }));
-
-                updateExpression.Type = expression.Type;
-
-                return updateExpression;
-            }
             else if (expression is TimeoutTableExpression timeoutTableExpression)
             {
-                return TimeoutToSql(GetDataManipulationSql(timeoutTableExpression.Source), timeoutTableExpression.Timeout);
+                return TimeoutToSql(GetSelectSql(timeoutTableExpression.Source), timeoutTableExpression.Timeout);
             }
 
             throw new UnsupportedExpressionException(expression);
@@ -692,11 +635,11 @@ namespace LogicEntity.Default.MySql
             return commonTableExpression;
         }
 
-        IDataManipulationSql TimeoutToSql(IDataManipulationSql sql, int timeout)
+        SqlExpressions.ISelectSql TimeoutToSql(SqlExpressions.ISelectSql selectSql, int timeout)
         {
-            sql.Timeout = timeout;
+            selectSql.Timeout = timeout;
 
-            return sql;
+            return selectSql;
         }
     }
 }

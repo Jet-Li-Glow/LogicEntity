@@ -18,30 +18,6 @@ namespace LogicEntity.Default.MySql
 
         List<CommonTableExpression> CommonTableExpressions { get; }
 
-        bool CanAddNode(SelectNodeType nodeType);
-
-        SelectExpression AddSelect();
-
-        SelectExpression Distinct();
-
-        SelectExpression AddIndex();
-
-        SelectExpression AddWhere();
-
-        SelectExpression AddGroupBy();
-
-        SelectExpression AddHaving();
-
-        ISelectSql AddOrderBy();
-
-        ISelectSql AddThenBy();
-
-        ISelectSql AddLimit();
-
-        DeleteExpression AddDelete();
-
-        UpdateExpression AddUpdateSet();
-
         Command Build(LinqConvertProvider linqConvertProvider);
     }
 }

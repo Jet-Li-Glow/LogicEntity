@@ -18,7 +18,31 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         IList<ColumnInfo> Columns { get; }
 
+        bool CanAddNode(SelectNodeType nodeType);
+
+        SelectExpression AddSelect();
+
         SelectExpression AddJoin();
+
+        SelectExpression Distinct();
+
+        SelectExpression AddIndex();
+
+        SelectExpression AddWhere();
+
+        SelectExpression AddGroupBy();
+
+        SelectExpression AddHaving();
+
+        ISelectSql AddOrderBy();
+
+        ISelectSql AddThenBy();
+
+        ISelectSql AddLimit();
+
+        DeleteExpression AddDelete();
+
+        UpdateExpression AddUpdateSet();
 
         ISqlExpression[] GetOrderByParameters();
 
