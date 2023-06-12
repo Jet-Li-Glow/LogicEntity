@@ -453,6 +453,13 @@ namespace Demo
 
             rowsAffected = db.Monthly.Create((s, t) => (s, t + "_2022_9")).OrderByDescending(s => s.DateTime).Take(1).Remove();
 
+            //Value
+            data = new List<Student>() { new() { Id = 1 }, new() { Id = 2 } }.OrderBy(s => s.Id).ToList();
+
+            data = new List<Student>() { new() { Id = 1 }, new() { Id = 2 } }.Where(s => s.Id == 1).ToList();
+
+            new Student().Gender.SetValue(Gender.Male);
+
             Console.WriteLine("测试通过");
         }
 

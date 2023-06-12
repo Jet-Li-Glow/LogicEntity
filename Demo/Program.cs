@@ -25,11 +25,10 @@ namespace Demo
         {
             //Version 1.0.1
 
-            //开发计划 1.Value<>实现 IComparable、等接口
-            //         2.Assign方法适应Nullable<>
-            //         3.Value<>的Json序列化和反序列化
-            //         4.DateTimeOffset、TimeOnly等类型的支持
-            //         5.join-on、select 无强类型限制 以实现动态join和动态select
+            //开发计划 1.DateTimeOffset、TimeOnly等类型的支持
+            //         2.join-on、select 无强类型限制 以实现动态join和动态select
+            //         3.Update 中 List.Add 等支持
+            //         4.去掉 Value<> 包装
 
             Console.WriteLine("-- Start --");
 

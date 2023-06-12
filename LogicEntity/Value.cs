@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace LogicEntity
 {
-    public struct Value<T> : IValue
+    public struct Value<T> : IValue, IComparable, IComparable<Value<T>>
     {
         T _value = default;
 
         Expression<Func<T>> _expression = default;
 
-        Value(T vlaue)
+        Value(T value)
         {
-            _value = vlaue;
+            _value = value;
 
             ValueType = ValueType.Value;
 
@@ -43,6 +43,16 @@ namespace LogicEntity
         public override string ToString()
         {
             return Object?.ToString();
+        }
+
+        public int CompareTo(object obj)
+        {
+            return ((IComparable)_value).CompareTo(obj);
+        }
+
+        public int CompareTo(Value<T> other)
+        {
+            return ((IComparable<T>)_value).CompareTo(other._value);
         }
 
         public static implicit operator Value<T>(T value)
