@@ -439,6 +439,9 @@ namespace Demo
 
             rowsAffected = db.Students.Where(s => s.Id == maxId || s.Id == maxId - 1).Remove();
 
+            //Update - 1
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.RemoveAt(((Student.JsonObject)(s.Json)).List.Count - 1));
+
             //Monthly
             data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();
 

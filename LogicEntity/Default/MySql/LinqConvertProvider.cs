@@ -321,25 +321,22 @@ namespace LogicEntity.Default.MySql
 
                 updateExpression.Assignments.AddRange(lambdaExpressions.Select(lambdaExpression =>
                 {
-                    MethodCallExpression methodCallExpression = lambdaExpression.Body as MethodCallExpression;
-
-                    if (methodCallExpression is null || methodCallExpression.Method.DeclaringType != typeof(SetOperatorFunction))
-                        throw new UnsupportedExpressionException(lambdaExpression.Body);
-
-                    SqlExpressions.SqlContext sqlContext = new()
+                    SqlExpressions.SqlContext context = new()
                     {
                         LambdaParameters = new()
                     };
 
                     for (int i = 0; i < lambdaExpression.Parameters.Count; i++)
                     {
-                        sqlContext.LambdaParameters[lambdaExpression.Parameters[i]] = SqlExpressions.LambdaParameterInfo.Table(updateExpression.From.GetTable(i));
+                        context.LambdaParameters[lambdaExpression.Parameters[i]] = SqlExpressions.LambdaParameterInfo.Table(updateExpression.From.GetTable(i));
                     }
 
-                    return new SqlExpressions.AssignmentExpression(
-                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], sqlContext),
-                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], sqlContext)
-                        );
+                    var assignmentExpression = GetSqlExpression(lambdaExpression.Body, context) as SqlExpressions.AssignmentExpression;
+
+                    if (assignmentExpression is null)
+                        throw new UnsupportedExpressionException(lambdaExpression.Body);
+
+                    return assignmentExpression;
                 }));
 
                 updateExpression.Type = setOperateExpression.Type;
@@ -733,6 +730,13 @@ namespace LogicEntity.Default.MySql
             {
                 MemberExpression memberExpression = (MemberExpression)expression;
 
+                bool hasFormat = TryGetMemberFormat(memberExpression.Member, out object format);
+
+                if (hasFormat && format is Func<MemberExpression, SqlExpressions.SqlContext, SqlExpressions.ISqlExpression> formatFunc)
+                {
+                    return formatFunc(memberExpression, context);
+                }
+
                 var sqlExpression = GetSqlExpression(memberExpression.Expression, context);
 
                 if (memberExpression.Expression is null || sqlExpression is SqlExpressions.IObjectExpression)
@@ -757,7 +761,7 @@ namespace LogicEntity.Default.MySql
                     return TryUnboxSubquery(obj, out var memberSqlExpression) ? memberSqlExpression : new SqlExpressions.ParameterExpression(obj);
                 }
 
-                if (TryGetMemberFormat(memberExpression.Member, out object format) && format is string formatStr)
+                if (hasFormat && format is string formatStr)
                 {
                     return new SqlExpressions.RawSqlExpression(formatStr, (SqlExpressions.IValueExpression)sqlExpression);
                 }

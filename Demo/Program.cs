@@ -25,10 +25,9 @@ namespace Demo
         {
             //Version 1.0.1
 
-            //开发计划 1.DateTimeOffset、TimeOnly等类型的支持
-            //         2.join-on、select 无强类型限制 以实现动态join和动态select
-            //         3.Update 中 List.Add 等支持
-            //         4.去掉 Value<> 包装
+            //开发计划 1.join-on、select 无强类型限制 以实现动态join和动态select
+            //         2.Update 中 List.Add 等支持
+            //         3.去掉 Value<> 包装
 
             Console.WriteLine("-- Start --");
 
@@ -164,7 +163,8 @@ namespace Demo
             rowsAffected = db.Students.Where(s => s.Id == 1)
                 .Set(
                 s => s.Float.SetValue(5.5f),
-                s => ((Student.JsonObject)s.Json).Array[0].SetValue(-5)
+                s => ((Student.JsonObject)s.Json).Array[0].SetValue(-5),
+                s => ((Student.JsonObject)s.Json).List.Add(6)
                 );
 
             rowsAffected = db.Students

@@ -161,6 +161,17 @@ namespace LogicEntity.Default.MySql
         void InitDbFunctionMethodFormat()
         {
             MemberFormat[_StringConcat] = (object)FormatStringConcat;
+
+            foreach (var m in typeof(SetOperatorFunction).GetMethods(BindingFlags.Public | BindingFlags.Static).Where(m => m.Name == nameof(SetOperatorFunction.SetValue)))
+            {
+                MemberFormat[m] = (object)FormatSetValue;
+            }
+
+            MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.Add))] = (object)FormatListAdd;
+
+            MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.RemoveAt))] = (object)FormatListRemoveAt;
+
+            MemberFormat[typeof(List<>).GetProperty(nameof(List<int>.Count))] = (object)FormatListCount;
         }
 
         bool TryGetMemberFormat(MemberInfo member, out object format)
@@ -203,6 +214,97 @@ namespace LogicEntity.Default.MySql
             strExpressions.Add(right);
 
             return new SqlExpressions.ConcatExpression(strExpressions.ToArray());
+        }
+
+        SqlExpressions.ISqlExpression FormatSetValue(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
+            return new SqlExpressions.AssignmentExpression(
+                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                        (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], context)
+                        );
+        }
+
+        SqlExpressions.ISqlExpression FormatListAdd(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
+            var left = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Object, context);
+
+            SqlExpressions.IValueExpression jsonDocument;
+
+            SqlExpressions.JsonPathExpression path;
+
+            if (left is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+            {
+                jsonDocument = jsonExtractExpression.JsonDocument;
+
+                path = jsonExtractExpression.Path;
+            }
+            else
+            {
+                jsonDocument = left;
+
+                path = new();
+            }
+
+            return new SqlExpressions.AssignmentExpression(
+                jsonDocument,
+                new SqlExpressions.MethodCallExpression(
+                    "Json_Array_Append",
+                    jsonDocument,
+                    path,
+                    (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], context)
+                ));
+        }
+
+        SqlExpressions.ISqlExpression FormatListRemoveAt(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
+            var left = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Object, context);
+
+            SqlExpressions.IValueExpression jsonDocument;
+
+            SqlExpressions.JsonPathExpression path;
+
+            if (left is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+            {
+                jsonDocument = jsonExtractExpression.JsonDocument;
+
+                path = jsonExtractExpression.Path;
+            }
+            else
+            {
+                jsonDocument = left;
+
+                path = new();
+            }
+
+            path.Index((SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], context));
+
+            return new SqlExpressions.AssignmentExpression(
+                jsonDocument,
+                new SqlExpressions.MethodCallExpression(
+                    "Json_Remove",
+                    jsonDocument,
+                    path
+                ));
+        }
+
+        SqlExpressions.ISqlExpression FormatListCount(MemberExpression memberExpression, SqlExpressions.SqlContext context)
+        {
+            var left = (SqlExpressions.IValueExpression)GetSqlExpression(memberExpression.Expression, context);
+
+            List<SqlExpressions.IValueExpression> valueExpressions = new();
+
+            if (left is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+            {
+                valueExpressions.Add(jsonExtractExpression.JsonDocument);
+
+                valueExpressions.Add(jsonExtractExpression.Path);
+            }
+            else
+            {
+                valueExpressions.Add(left);
+            }
+
+            return new SqlExpressions.MethodCallExpression("Json_Length", valueExpressions.ToArray());
         }
     }
 }

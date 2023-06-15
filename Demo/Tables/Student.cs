@@ -52,6 +52,8 @@ namespace Demo.Tables
 
             public int[] Array { get; set; }
 
+            public List<int> List { get; set; }
+
             public Dictionary<string, object> Dictionary { get; set; }
 
             public class PropertyObject
