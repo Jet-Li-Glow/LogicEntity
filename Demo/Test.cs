@@ -379,7 +379,7 @@ namespace Demo
             data = db.Value(() => new
             {
                 SubQuery1 = db.Students.Select(s => new { s.Id, s.Name }).First().Id,
-                SubQuery2 = ((Student.JsonObject)(db.Students.Select(s => s.Json).First())).Array[0]
+                SubQuery2 = ((Student.JsonObject)(db.Students.First().Json)).Array[0]
             }).ToList();
 
             //Insert - 1

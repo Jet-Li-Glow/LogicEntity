@@ -808,6 +808,8 @@ namespace LogicEntity.Default.MySql
                                 Member = memberExpression.Member
                             });
                         }
+
+                        selectExpression.IsVector = false;
                     }
                     else
                     {
