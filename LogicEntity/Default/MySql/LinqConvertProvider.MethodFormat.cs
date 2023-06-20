@@ -169,9 +169,13 @@ namespace LogicEntity.Default.MySql
 
             MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.Add))] = (object)FormatListAdd;
 
+            MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.Insert))] = (object)FormatListInsert;
+
             MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.RemoveAt))] = (object)FormatListRemoveAt;
 
             MemberFormat[typeof(List<>).GetProperty(nameof(List<int>.Count))] = (object)FormatListCount;
+
+            MemberFormat[typeof(List<>).GetMethod(nameof(List<int>.Clear))] = (object)FormatListClear;
         }
 
         bool TryGetMemberFormat(MemberInfo member, out object format)
@@ -255,6 +259,39 @@ namespace LogicEntity.Default.MySql
                 ));
         }
 
+        SqlExpressions.ISqlExpression FormatListInsert(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
+            var left = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Object, context);
+
+            SqlExpressions.IValueExpression jsonDocument;
+
+            SqlExpressions.JsonPathExpression path;
+
+            if (left is SqlExpressions.JsonExtractExpression jsonExtractExpression)
+            {
+                jsonDocument = jsonExtractExpression.JsonDocument;
+
+                path = jsonExtractExpression.Path;
+            }
+            else
+            {
+                jsonDocument = left;
+
+                path = new();
+            }
+
+            path.Index((SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[0], context));
+
+            return new SqlExpressions.AssignmentExpression(
+                jsonDocument,
+                new SqlExpressions.MethodCallExpression(
+                    "Json_Array_Insert",
+                    jsonDocument,
+                    path,
+                    (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Arguments[1], context)
+                ));
+        }
+
         SqlExpressions.ISqlExpression FormatListRemoveAt(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             var left = (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Object, context);
@@ -305,6 +342,14 @@ namespace LogicEntity.Default.MySql
             }
 
             return new SqlExpressions.MethodCallExpression("Json_Length", valueExpressions.ToArray());
+        }
+
+        SqlExpressions.ISqlExpression FormatListClear(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
+        {
+            return new SqlExpressions.AssignmentExpression(
+                (SqlExpressions.IValueExpression)GetSqlExpression(methodCallExpression.Object, context),
+                new SqlExpressions.MethodCallExpression("Json_Array")
+                );
         }
     }
 }

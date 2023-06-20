@@ -442,6 +442,10 @@ namespace Demo
             //Update - 1
             rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.RemoveAt(((Student.JsonObject)(s.Json)).List.Count - 1));
 
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.Insert(0, -1));
+
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.Clear());
+
             //Monthly
             data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();
 

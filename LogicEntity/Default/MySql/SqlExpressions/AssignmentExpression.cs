@@ -23,11 +23,13 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             if (Left is JsonExtractExpression jsonExtractExpression)
             {
+                string document = jsonExtractExpression.JsonDocument.BuildValue(context).Text;
+
                 return new()
                 {
                     Text = SqlNode.Assign(
-                        jsonExtractExpression.JsonDocument.BuildValue(context).Text,
-                        new MethodCallExpression("Json_Set", jsonExtractExpression.JsonDocument, jsonExtractExpression.Path, Right).BuildValue(context).Text
+                        document,
+                        SqlNode.Call("Json_Set", document, jsonExtractExpression.Path.BuildValue(context).Text, Right.BuildValue(context).Text)
                         )
                 };
             }
