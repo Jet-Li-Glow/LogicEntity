@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -66,9 +67,9 @@ namespace LogicEntity
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        public IEnumerable<object> Query(Expression expression)
+        public IEnumerable Query(Expression expression)
         {
-            foreach (IEnumerable<object> result in Query(_db.LinqConvertProvider.Convert(expression)))
+            foreach (IEnumerable result in Query(_db.LinqConvertProvider.Convert(expression)))
             {
                 foreach (object obj in result)
                 {
@@ -88,7 +89,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(string commandText, params object[] parameters)
         {
-            foreach (IEnumerable<object> result in Query(new Command(typeof(T), commandText, parameters)))
+            foreach (IEnumerable result in Query(new Command(typeof(T), commandText, parameters)))
             {
                 foreach (object obj in result)
                 {
@@ -121,7 +122,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(string commandText, IEnumerable<KeyValuePair<string, object>> parameters, int? commandTimeout)
         {
-            foreach (IEnumerable<object> result in Query(new Command(typeof(T), commandText, parameters, commandTimeout)))
+            foreach (IEnumerable result in Query(new Command(typeof(T), commandText, parameters, commandTimeout)))
             {
                 foreach (object obj in result)
                 {
@@ -137,7 +138,7 @@ namespace LogicEntity
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public IEnumerable<IEnumerable<object>> Query(Command command)
+        public IEnumerable<IEnumerable> Query(Command command)
         {
             return _connection.Query(_transaction, command);
         }

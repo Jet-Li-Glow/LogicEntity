@@ -88,9 +88,9 @@ namespace LogicEntity
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        public IEnumerable<object> Query(Expression expression)
+        public IEnumerable Query(Expression expression)
         {
-            foreach (IEnumerable<object> result in Query(LinqConvertProvider.Convert(expression)))
+            foreach (IEnumerable result in Query(LinqConvertProvider.Convert(expression)))
             {
                 foreach (object obj in result)
                 {
@@ -110,7 +110,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(string commandText, params object[] parameters)
         {
-            foreach (IEnumerable<object> result in Query(new Command(typeof(T), commandText, parameters)))
+            foreach (IEnumerable result in Query(new Command(typeof(T), commandText, parameters)))
             {
                 foreach (object obj in result)
                 {
@@ -143,7 +143,7 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<T> Query<T>(string commandText, IEnumerable<KeyValuePair<string, object>> parameters, int? commandTimeout)
         {
-            foreach (IEnumerable<object> result in Query(new Command(typeof(T), commandText, parameters, commandTimeout)))
+            foreach (IEnumerable result in Query(new Command(typeof(T), commandText, parameters, commandTimeout)))
             {
                 foreach (object obj in result)
                 {
@@ -159,11 +159,11 @@ namespace LogicEntity
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public IEnumerable<IEnumerable<object>> Query(Command command)
+        public IEnumerable<IEnumerable> Query(Command command)
         {
             if (ThreadLocalTransaction is not null)
             {
-                foreach (IEnumerable<object> result in ThreadLocalTransaction.Query(command))
+                foreach (IEnumerable result in ThreadLocalTransaction.Query(command))
                     yield return result;
 
                 yield break;
@@ -173,7 +173,7 @@ namespace LogicEntity
             {
                 connection.Open();
 
-                foreach (IEnumerable<object> result in connection.Query(null, command))
+                foreach (IEnumerable result in connection.Query(null, command))
                     yield return result;
             }
         }

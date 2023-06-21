@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -164,7 +165,7 @@ namespace LogicEntity
         /// <param name="command"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static IEnumerable<IEnumerable<object>> Query(this IDbConnection connection, IDbTransaction transaction, Command command)
+        public static IEnumerable<IEnumerable> Query(this IDbConnection connection, IDbTransaction transaction, Command command)
         {
             if (command is null)
                 throw new ArgumentNullException(nameof(command));
@@ -194,7 +195,7 @@ namespace LogicEntity
                 }
             }
 
-            IEnumerable<object> ReadTable(IDataReader reader, Type entityType, Dictionary<string, ConstructorInfo> constructors, Dictionary<int, Delegate> clientReaders)
+            IEnumerable ReadTable(IDataReader reader, Type entityType, Dictionary<string, ConstructorInfo> constructors, Dictionary<int, Delegate> clientReaders)
             {
                 Type baseEntityType = GetBaseType(entityType);
 
