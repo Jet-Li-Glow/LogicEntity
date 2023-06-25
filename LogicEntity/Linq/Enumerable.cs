@@ -3006,6 +3006,11 @@ namespace LogicEntity.Linq
             return source.AddRange(elements);
         }
 
+        public static int Add<TSource>(this ITable<TSource> source, params Expression<Func<TSource>>[] elements)
+        {
+            return source.AddRange(elements);
+        }
+
         public static int AddRange<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
         {
             if (source is null)
@@ -3014,13 +3019,21 @@ namespace LogicEntity.Linq
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements is not IDataTable && elements.Any() is false)
-                throw new InvalidOperationException("No elements");
+            return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements));
+        }
+
+        public static int AddRange<TSource>(this ITable<TSource> source, IEnumerable<Expression<Func<TSource>>> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
 
             return source.Db.ExecuteNonQuery(new AddOperateExpression(source.Expression, elements));
         }
 
-        public static ulong AddNext<TSource>(this ITable<TSource> source, TSource element)
+        public static ulong AddNext<TSource>(this ITable<TSource> source, Expression<Func<TSource>> element)
         {
             if (source is null)
                 throw new ArgumentNullException(nameof(source));
@@ -3036,6 +3049,11 @@ namespace LogicEntity.Linq
             return source.AddRangeOrUpdate(elements);
         }
 
+        public static int AddOrUpdate<TSource>(this ITable<TSource> source, params Expression<Func<TSource>>[] elements)
+        {
+            return source.AddRangeOrUpdate(elements);
+        }
+
         public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
         {
             if (source is null)
@@ -3044,8 +3062,16 @@ namespace LogicEntity.Linq
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements is not IDataTable && elements.Any() is false)
-                throw new InvalidOperationException("No elements");
+            return source.Db.ExecuteNonQuery(new AddOrUpdateOperateExpression(source.Expression, elements));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<Expression<Func<TSource>>> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
 
             return source.Db.ExecuteNonQuery(new AddOrUpdateOperateExpression(source.Expression, elements));
         }

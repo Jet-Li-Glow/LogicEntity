@@ -121,69 +121,103 @@ namespace LogicEntity.Default.MySql
 
                 if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.Entity)
                 {
-                    PropertyInfo[] properties = insertExpression.Table.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty)
-                        .Where(p => p.PropertyType.IsAssignableTo(typeof(IValue))).ToArray();
+                    PropertyInfo[] properties = insertExpression.Table.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty).ToArray();
 
                     Dictionary<PropertyInfo, EntityPropertyInfo> validProperties = new();
 
-                    List<Dictionary<PropertyInfo, IValue>> rows = new();
+                    //Rows
+                    List<Dictionary<PropertyInfo, PropertyValue>> rows = new();
 
                     foreach (object element in addOrUpdateWithFactoryOperateExpression.Elements)
                     {
-                        Dictionary<PropertyInfo, IValue> row = new();
+                        Dictionary<PropertyInfo, PropertyValue> row = new();
 
-                        foreach (PropertyInfo property in properties)
+                        if (element is LambdaExpression lambdaExpression)
                         {
-                            IValue propertyValue = (IValue)property.GetValue(element);
+                            MemberInitExpression memberInitExpression = lambdaExpression.Body as MemberInitExpression;
 
-                            if (propertyValue.ValueSetted is false)
-                                continue;
+                            if (memberInitExpression is null)
+                                throw new UnsupportedExpressionException(lambdaExpression.Body);
 
-                            if (validProperties.ContainsKey(property) == false)
+                            BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
+
+                            foreach (BinaryExpression binaryExpression in blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2))
                             {
-                                Expression<Func<object, object>> writer = null;
+                                PropertyInfo property = ((MemberExpression)binaryExpression.Left).Member as PropertyInfo;
 
-                                if (PropertyConvert.TryGetValue(property, out ValueConverter converter) && converter.Writer is not null)
+                                if (property is null)
+                                    throw new UnsupportedExpressionException(binaryExpression);
+
+                                if (validProperties.ContainsKey(property) == false)
                                 {
-                                    ParameterExpression obj = System.Linq.Expressions.Expression.Parameter(typeof(object));
-
-                                    System.Linq.Expressions.Expression val = obj;
-
-                                    Type parameterType = converter.Writer.Method.GetParameters()[0].ParameterType;
-
-                                    if (val.Type != parameterType)
-                                        val = System.Linq.Expressions.Expression.Convert(val, parameterType);
-
-                                    val = System.Linq.Expressions.Expression.Invoke(System.Linq.Expressions.Expression.Constant(converter.Writer), val);
-
-                                    writer = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(val, obj);
+                                    validProperties.Add(property, new());
                                 }
 
-                                validProperties.Add(property, new()
+                                row[property] = new()
                                 {
-                                    Writer = writer?.Compile()
-                                });
+                                    Expression = binaryExpression.Right,
+                                    Type = PropertyValue.ValueType.Expression
+                                };
                             }
+                        }
+                        else
+                        {
+                            foreach (PropertyInfo property in properties)
+                            {
+                                if (validProperties.ContainsKey(property) == false)
+                                {
+                                    validProperties.Add(property, new());
+                                }
 
-                            row[property] = propertyValue;
+                                row[property] = new()
+                                {
+                                    Object = property.GetValue(element),
+                                    Type = PropertyValue.ValueType.Object
+                                };
+                            }
                         }
 
                         rows.Add(row);
                     }
 
+                    //Property Writer
+                    foreach (KeyValuePair<PropertyInfo, EntityPropertyInfo> propertyInfo in validProperties)
+                    {
+                        Expression<Func<object, object>> writer = null;
+
+                        if (PropertyConvert.TryGetValue(propertyInfo.Key, out ValueConverter converter) && converter.Writer is not null)
+                        {
+                            ParameterExpression obj = System.Linq.Expressions.Expression.Parameter(typeof(object));
+
+                            System.Linq.Expressions.Expression val = obj;
+
+                            Type parameterType = converter.Writer.Method.GetParameters()[0].ParameterType;
+
+                            if (val.Type != parameterType)
+                                val = System.Linq.Expressions.Expression.Convert(val, parameterType);
+
+                            val = System.Linq.Expressions.Expression.Invoke(System.Linq.Expressions.Expression.Constant(converter.Writer), val);
+
+                            writer = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(val, obj);
+                        }
+
+                        propertyInfo.Value.Writer = writer?.Compile();
+                    }
+
+                    //Expression
                     insertExpression.Columns = validProperties.Select(s => s.Key).ToList();
 
                     List<SqlExpressions.ValuesExpression> rowExpressions = new();
 
-                    foreach (Dictionary<PropertyInfo, IValue> row in rows)
+                    foreach (Dictionary<PropertyInfo, PropertyValue> row in rows)
                     {
                         List<SqlExpressions.IValueExpression> valueExpressions = new();
 
                         foreach (KeyValuePair<PropertyInfo, EntityPropertyInfo> entityProperty in validProperties)
                         {
-                            if (row.TryGetValue(entityProperty.Key, out IValue value))
+                            if (row.TryGetValue(entityProperty.Key, out PropertyValue value))
                             {
-                                if (value.ValueType == ValueType.Value)
+                                if (value.Type == PropertyValue.ValueType.Object)
                                 {
                                     valueExpressions.Add(new SqlExpressions.ParameterExpression(
                                         entityProperty.Value.Writer is null ? value.Object : entityProperty.Value.Writer(value.Object)
@@ -191,9 +225,7 @@ namespace LogicEntity.Default.MySql
                                 }
                                 else
                                 {
-                                    LambdaExpression lambdaExpression = (LambdaExpression)value.Object;
-
-                                    valueExpressions.Add((SqlExpressions.IValueExpression)GetSqlExpression(lambdaExpression.Body, new()));
+                                    valueExpressions.Add((SqlExpressions.IValueExpression)GetSqlExpression(value.Expression, new()));
                                 }
 
                                 continue;
@@ -209,7 +241,7 @@ namespace LogicEntity.Default.MySql
                 }
                 else if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.DataTable)
                 {
-                    insertExpression.Rows = (SqlExpressions.ISelectSql)GetSelectSql(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
+                    insertExpression.Rows = GetSelectSql(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
                 }
 
                 //Update
@@ -513,6 +545,8 @@ namespace LogicEntity.Default.MySql
                     if (method.IsGenericMethod)
                         method = method.GetGenericMethodDefinition();
 
+                    ParameterInfo[] parameterInfos = method.GetParameters();
+
                     if (method == _Read)
                     {
                         System.Linq.Expressions.Expression readerExpression = methodCallExpression.Arguments[1];
@@ -573,9 +607,9 @@ namespace LogicEntity.Default.MySql
 
                         node.Expression = methodCallExpression.Arguments[0];
                     }
-                    else if (method.IsStatic && method.GetParameters().Length == 1 && TryGetMemberFormat(method, out _) == false)
+                    else if (method.IsStatic && parameterInfos.Length == 1 && TryGetMemberFormat(method, out _) == false)
                     {
-                        node.Reader = method.CreateDelegate(typeof(Func<,>).MakeGenericType(methodCallExpression.Type, methodCallExpression.Arguments[0].Type));
+                        node.Reader = method.CreateDelegate(typeof(Func<,>).MakeGenericType(method.ReturnType, parameterInfos[0].ParameterType));
 
                         node.Expression = methodCallExpression.Arguments[0];
                     }
@@ -1268,6 +1302,91 @@ namespace LogicEntity.Default.MySql
                     );
             }
 
+            if (expression.NodeType == ExpressionType.New)
+            {
+                NewExpression newExpression = (NewExpression)expression;
+
+                List<SqlExpressions.IValueExpression> parameters = new();
+
+                if (newExpression.Members is not null)
+                {
+                    foreach (var memberArgument in newExpression.Members.Zip(newExpression.Arguments, (member, argument) => new { Member = member, Argument = argument }))
+                    {
+                        parameters.Add(new SqlExpressions.ConstantExpression(memberArgument.Member.Name));
+
+                        parameters.Add((SqlExpressions.IValueExpression)GetSqlExpression(memberArgument.Argument, context));
+                    }
+
+                    return new SqlExpressions.MethodCallExpression("Json_Object", parameters.ToArray());
+                }
+
+                if (newExpression.Type.IsArray || (newExpression.Type.IsGenericType && newExpression.Type.GetGenericTypeDefinition() == typeof(List<>)))
+                {
+                    return new SqlExpressions.MethodCallExpression("Json_Array");
+                }
+
+                return new SqlExpressions.MethodCallExpression("Json_Object");
+            }
+
+            if (expression.NodeType == ExpressionType.MemberInit)
+            {
+                MemberInitExpression memberInitExpression = (MemberInitExpression)expression;
+
+                List<SqlExpressions.IValueExpression> parameters = new();
+
+                foreach (MemberBinding memberBinding in memberInitExpression.Bindings)
+                {
+                    if (memberBinding.BindingType != MemberBindingType.Assignment)
+                        throw new UnsupportedExpressionException(memberInitExpression);
+
+                    MemberAssignment memberAssignment = (MemberAssignment)memberBinding;
+
+                    parameters.Add(new SqlExpressions.ConstantExpression(memberAssignment.Member.Name));
+
+                    parameters.Add((SqlExpressions.IValueExpression)GetSqlExpression(memberAssignment.Expression, context));
+                }
+
+                return new SqlExpressions.MethodCallExpression("Json_Object", parameters.ToArray());
+            }
+
+            if (expression.NodeType == ExpressionType.ListInit)
+            {
+                ListInitExpression listInitExpression = (ListInitExpression)expression;
+
+                if (listInitExpression.Type.IsGenericType && listInitExpression.Type.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    return new SqlExpressions.MethodCallExpression("Json_Array", listInitExpression.Initializers.Select(s => (SqlExpressions.IValueExpression)GetSqlExpression(s.Arguments[0], context)).ToArray());
+                }
+
+                if (listInitExpression.Type.IsGenericType && listInitExpression.Type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                {
+                    List<SqlExpressions.IValueExpression> parameters = new();
+
+                    foreach (ElementInit elementInit in listInitExpression.Initializers)
+                    {
+                        parameters.Add((SqlExpressions.IValueExpression)GetSqlExpression(elementInit.Arguments[0], context));
+
+                        parameters.Add((SqlExpressions.IValueExpression)GetSqlExpression(elementInit.Arguments[1], context));
+                    }
+
+                    return new SqlExpressions.MethodCallExpression("Json_Object", parameters.ToArray());
+                }
+
+                throw new UnsupportedExpressionException(listInitExpression);
+            }
+
+            if (expression.NodeType == ExpressionType.NewArrayInit)
+            {
+                NewArrayExpression newArrayExpression = (NewArrayExpression)expression;
+
+                return new SqlExpressions.MethodCallExpression("Json_Array", newArrayExpression.Expressions.Select(s => (SqlExpressions.IValueExpression)GetSqlExpression(s, context)).ToArray());
+            }
+
+            if (expression.NodeType == ExpressionType.NewArrayBounds)
+            {
+                return new SqlExpressions.MethodCallExpression("Json_Array");
+            }
+
             throw new UnsupportedExpressionException(expression);
         }
 
@@ -1322,9 +1441,9 @@ namespace LogicEntity.Default.MySql
         bool IsEnumCompare(BinaryExpression binaryExpression)
         {
             return IsConvertExpression(binaryExpression.Left)
-                && GetUnderlyingValueGenericType(((UnaryExpression)binaryExpression.Left).Operand.Type).IsSubclassOf(typeof(Enum))
+                && GetUnderlyingType(((UnaryExpression)binaryExpression.Left).Operand.Type).IsSubclassOf(typeof(Enum))
                 && IsConvertExpression(binaryExpression.Right)
-                && GetUnderlyingValueGenericType(((UnaryExpression)binaryExpression.Right).Operand.Type).IsSubclassOf(typeof(Enum));
+                && GetUnderlyingType(((UnaryExpression)binaryExpression.Right).Operand.Type).IsSubclassOf(typeof(Enum));
         }
 
         bool IsConvertExpression(System.Linq.Expressions.Expression expression)
@@ -1332,11 +1451,8 @@ namespace LogicEntity.Default.MySql
             return expression.NodeType == ExpressionType.Convert || expression.NodeType == ExpressionType.ConvertChecked || expression.NodeType == ExpressionType.TypeAs;
         }
 
-        Type GetUnderlyingValueGenericType(Type type)
+        Type GetUnderlyingType(Type type)
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Value<>))
-                return GetUnderlyingValueGenericType(type.GetGenericArguments()[0]);
-
             return Nullable.GetUnderlyingType(type) ?? type;
         }
 
@@ -1372,6 +1488,21 @@ namespace LogicEntity.Default.MySql
             public bool IsConstant => IsParamArray ? Values.All(v => v is SqlExpressions.ConstantExpression) : Value is SqlExpressions.ConstantExpression;
 
             public object ConstantValue => IsParamArray ? Values.Select(s => ((SqlExpressions.ConstantExpression)s).Value).ToArray() : ((SqlExpressions.ConstantExpression)Value).Value;
+        }
+
+        class PropertyValue
+        {
+            public object Object { get; set; }
+
+            public System.Linq.Expressions.Expression Expression { get; set; }
+
+            public ValueType Type { get; set; }
+
+            public enum ValueType
+            {
+                Object,
+                Expression
+            }
         }
     }
 }

@@ -93,7 +93,7 @@ namespace Demo
                     && a.Id > parameter.Object.Integer
                     && (a.Name == null || a.Name == Test.Value)
                     && (a.Id == 4 || (a.Id >= 5 && a.Id <= 6) || false)
-                    && ((string)a.Name).Contains("123")
+                    && a.Name.Contains("123")
                     && parameter.Integers.Contains(a.Id)
                     && db.Students.Select(s => s.Id).Contains(a.Id)
                     )
@@ -102,15 +102,15 @@ namespace Demo
                 .Select(g => new
                 {
                     Id = g.Key.Id,
-                    Name = (((string)g.Key.Name) ?? "Null Replace")
+                    Name = (g.Key.Name ?? "Null Replace")
                         + " - "
                         + g.Key.Id.ToString()
                         + string.Concat(g.Key.Name, g.Element((a, b) => a.MajorId), g.Element((a, b) => b.MajorId))
                         + string.Join("--", parameter.String, g.Element((a, b) => a.Name)),
 
-                    Calculation = (-g.Key.Id + 1) * 5 + Math.Round(1.25) + ((string)g.Key.Name).Length + g.Element((a, b) => ((Student.JsonObject)a.Json).Array).Length,
+                    Calculation = (-g.Key.Id + 1) * 5 + Math.Round(1.25) + g.Key.Name.Length + g.Element((a, b) => a.Json.Array).Length,
 
-                    Condition = g.Key.Id > 0 ? (int)g.Key.Id : 0,
+                    Condition = g.Key.Id > 0 ? g.Key.Id : 0,
 
                     Any = g.Key.Id == DbFunction.Any(db.Students.Select(b => b.Id)),
                     All = g.Key.Id == DbFunction.All(db.Students.Select(b => b.Id)),
@@ -147,11 +147,11 @@ namespace Demo
                     Array = new int[] { g.Key.Id, g.Element((a, b) => a.Id) },
 
                     Json = g.Element((a, b) => a.Json),
-                    JsonValue = ((Student.JsonObject)g.Element((a, b) => a.Json)).Object.Property
-                        + ((Student.JsonObject)g.Element((a, b) => a.Json)).Array[0]
-                        + ((Student.JsonObject)g.Element((a, b) => a.Json)).Dictionary["A.B"]
-                        + ((Student.JsonObject)g.Element((a, b) => a.Json)).Dictionary["A\"B\\C"],
-                    JsonArrayItemItem = g.Element((a, b) => ((Student.JsonObject)a.Json).Array[7]),
+                    JsonValue = g.Element((a, b) => a.Json).Object.Property
+                        + g.Element((a, b) => a.Json).Array[0]
+                        + g.Element((a, b) => a.Json).Dictionary["A.B"]
+                        + g.Element((a, b) => a.Json).Dictionary["A\"B\\C"],
+                    JsonArrayItemItem = g.Element((a, b) => a.Json.Array[7]),
                     SubQuery = db.Students.
                                Where(a => a.Id == g.Key.Id && a.Name == g.Element((a, b) => a.Name))
                                .Select(a => db.Students.Where(b => b.Id == a.Id).Average(b => b.Id))
@@ -163,7 +163,7 @@ namespace Demo
                     Bytes = g.Element((a, b) => a.Bytes).ReadBytes(bytesReader),
                     Chars = g.Key.Name.ReadChars(charsReader),
 
-                    Tuple = Tuple.Create((int)g.Key.Id, (string)g.Key.Name) == Tuple.Create(1, (string)db.Students.Select(s => s.Name).First())
+                    Tuple = Tuple.Create(g.Key.Id, g.Key.Name) == Tuple.Create(1, db.Students.Select(s => s.Name).First())
                 })
                 .Where(s => s.Id > 0)
                 .OrderBy(a => a.Id)
@@ -254,8 +254,8 @@ namespace Demo
                 {
                     Index = i,
                     IndexPlus = i + s.Id,
-                    Id = (int)s.Id,
-                    Name = (string)s.Name
+                    Id = s.Id,
+                    Name = s.Name
                 })
                 .Select((s, i) => new
                 {
@@ -370,7 +370,7 @@ namespace Demo
             data = db.Students.FirstOrDefault(s => s.Gender == Gender.Male);
 
             //Select - 19
-            data = db.Students.Where(s => ((Student.JsonObject)s.Json).Array.Contains(5)).FirstOrDefault();
+            data = db.Students.Where(s => s.Json.Array.Contains(5)).FirstOrDefault();
 
             //Select - 20
             data = db.Students.OrderBy(s => s.Id).Select(s => new { s.Id, s.Name }).ToList();
@@ -379,33 +379,40 @@ namespace Demo
             data = db.Value(() => new
             {
                 SubQuery1 = db.Students.Select(s => new { s.Id, s.Name }).First().Id,
-                SubQuery2 = ((Student.JsonObject)(db.Students.First().Json)).Array[0]
+                SubQuery2 = db.Students.First().Json.Array[0]
             }).ToList();
 
             //Insert - 1
-            rowsAffected = db.Students.Add(new Student()
+            byte[] bytes = Encoding.UTF8.GetBytes("123");
+
+            rowsAffected = db.Students.Add(() => new Student()
             {
-                Name = new(() => db.Students.Select(s => s.Name + "Add Operate").First()),
+                Name = db.Students.Select(s => s.Name + "Add Operate").First(),
                 Birthday = DateTime.Now,
                 Gender = Gender.Male,
                 MajorId = 3,
                 Guid = Guid.NewGuid(),
-                Bytes = Encoding.UTF8.GetBytes("123"),
+                Bytes = bytes,
                 Float = 4f,
                 Double = 5d,
                 Decimal = 6m,
                 Bool = true,
                 Long = 7L,
-                Json = new Student.JsonObject()
+                Json = new()
                 {
                     Array = new[] { 8, 9, 10 },
+                    List = new() { 11, 12, 13 },
                     Object = new()
                     {
                         Property = "Insert Property Value"
                     },
-                    Dictionary = new() { { "Dictionary \"-\\ Key", "Dictionary Key Value" } }
+                    Dictionary = new()
+                    {
+                        { "Dictionary \"-\\ Key", "Dictionary Key Value" },
+                        { "Object", new { Property = "Property Value" } }
+                    }
                 }
-            }, new Student()
+            }, () => new Student()
             {
                 Name = "Add Operate 2",
                 MajorId = 3,
@@ -415,7 +422,7 @@ namespace Demo
             });
 
             //Insert - 2
-            rowsAffected = db.Students.Timeout(5).Add(new Student() { Name = "Add Timeout", MajorId = 1 });
+            rowsAffected = db.Students.Timeout(5).Add(() => new Student() { Name = "Add Timeout", MajorId = 1 });
 
             //Insert - 3
             int maxId = db.Students.Max(s => s.Id);
@@ -427,24 +434,28 @@ namespace Demo
                     Id = maxId,
                     Name = "New Value 80",
                     Birthday = DateTime.Now,
-                    MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                    MajorId = db.Majors.Max(m => m.MajorId)
                 },
                 new Student()
                 {
                     Id = maxId - 1,
                     Name = "New Value 80",
                     Birthday = DateTime.Now,
-                    MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                    MajorId = db.Majors.Max(m => m.MajorId)
                 });
 
             rowsAffected = db.Students.Where(s => s.Id == maxId || s.Id == maxId - 1).Remove();
 
             //Update - 1
-            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.RemoveAt(((Student.JsonObject)(s.Json)).List.Count - 1));
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => s.Json.List.RemoveAt(s.Json.List.Count - 1));
 
-            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.Insert(0, -1));
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => s.Json.List.Insert(0, -1));
 
-            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => ((Student.JsonObject)(s.Json)).List.Clear());
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => s.Json.List.Clear());
+
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => s.Json.List.SetValue(new()));
+
+            rowsAffected = db.Students.Where(s => s.Id == 1).Set(s => SetOperatorFunction.SetValue(s.Json.Array, new int[0]));
 
             //Monthly
             data = db.Monthly.Create((s, t) => (s, t + "_2022_9")).ToList();

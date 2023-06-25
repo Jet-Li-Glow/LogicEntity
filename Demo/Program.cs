@@ -88,7 +88,7 @@ namespace Demo
 
             data = db.Students.Select(s => MyConvert.ToDictionary(s.Json)).Take(1).ToList();
 
-            data = db.Students.Select(s => ((Student.JsonObject)s.Json).Dictionary["Key - \" - \\ -"]).Take(1).ToList();
+            data = db.Students.Select(s => s.Json.Dictionary["Key - \" - \\ -"]).Take(1).ToList();
 
             data = db.Students.Take(1).Timeout(10).ToList();  //IDbCommand.CommandTimeout
 
@@ -104,6 +104,7 @@ namespace Demo
 
             rowsAffected = db.Students.Add(new Student()
             {
+                Id = db.Students.Max(s => s.Id) + 1,
                 Name = Path.GetRandomFileName(),
                 MajorId = 3,
                 Json = new Student.JsonObject()
@@ -115,26 +116,26 @@ namespace Demo
                 }
             });
 
-            var autoIncrementId = db.Students.AddNext(new()
+            var autoIncrementId = db.Students.AddNext(() => new()
             {
                 MajorId = 3,
                 Name = "Auto Increment"
             });
 
-            rowsAffected = db.Students.AddOrUpdate(new Student()
+            rowsAffected = db.Students.AddOrUpdate(() => new Student()
             {
-                Id = new(() => db.Students.Max(s => s.Id)),
+                Id = db.Students.Max(s => s.Id),
                 Name = "Add or Update",
-                MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                MajorId = db.Majors.Max(m => m.MajorId)
             });
 
             rowsAffected = db.Students.AddOrUpdate(
                 (oldValue, newValue) => new Student() { Name = oldValue.Name + " - " + newValue.Name + " - Update Factory" },
-                new Student()
+                () => new Student()
                 {
                     Id = (int)autoIncrementId,
                     Name = "New Value",
-                    MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                    MajorId = db.Majors.Max(m => m.MajorId)
                 });
 
             rowsAffected = db.Students.AddRangeOrUpdate(db.Majors.Select(s => new Student()
@@ -144,18 +145,18 @@ namespace Demo
             }).Take(1),
             (oldValue, newValue) => new Student() { Name = oldValue.Name + " - " + newValue.Name + " - Update Factory" });
 
-            rowsAffected = db.Students.AddIgnore(new Student()
+            rowsAffected = db.Students.AddIgnore(() => new Student()
             {
                 Id = (int)autoIncrementId,
                 Name = "Insert Ignore",
-                MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                MajorId = db.Majors.Max(m => m.MajorId)
             });
 
-            rowsAffected = db.Students.Replace(new Student()
+            rowsAffected = db.Students.Replace(() => new Student()
             {
                 Id = (int)autoIncrementId,
                 Name = "Replaced Value",
-                MajorId = new(() => db.Majors.Max(m => m.MajorId))
+                MajorId = db.Majors.Max(m => m.MajorId)
             });
 
             //Update
@@ -163,8 +164,8 @@ namespace Demo
             rowsAffected = db.Students.Where(s => s.Id == 1)
                 .Set(
                 s => s.Float.SetValue(5.5f),
-                s => ((Student.JsonObject)s.Json).Array[0].SetValue(-5),
-                s => ((Student.JsonObject)s.Json).List.Add(6)
+                s => s.Json.Array[0].SetValue(-5),
+                s => s.Json.List.Add(6)
                 );
 
             rowsAffected = db.Students
@@ -225,7 +226,7 @@ namespace Demo
     static class MyDbFunction
     {
         [MethodFormat("({1} + 1)")]
-        public static object MyFunction(this Value<int> valueExpression)
+        public static object MyFunction(this int value)
         {
             return default;
         }
@@ -247,7 +248,7 @@ namespace Demo
     {
         public static void Add()
         {
-            Database.TestDb.Students.Add(new Student()
+            Database.TestDb.Students.Add(() => new Student()
             {
                 Name = "Service Add",
                 MajorId = 3,

@@ -19,6 +19,12 @@ namespace LogicEntity.Default.MySql
         {
             //Cast
             { typeof(object).GetMethod(nameof(object.ToString)),  "Cast({0} As Char)" },
+            { typeof(int).GetMethod(nameof(int.ToString), Array.Empty<Type>()),  "Cast({0} As Char)" },
+            { typeof(short).GetMethod(nameof(short.ToString), Array.Empty<Type>()),  "Cast({0} As Char)" },
+            { typeof(long).GetMethod(nameof(long.ToString), Array.Empty<Type>()),  "Cast({0} As Char)" },
+            { typeof(double).GetMethod(nameof(double.ToString), Array.Empty<Type>()),  "Cast({0} As Char)" },
+            { typeof(float).GetMethod(nameof(float.ToString), Array.Empty<Type>()),  "Cast({0} As Char)" },
+            { typeof(decimal).GetMethod(nameof(decimal.ToString), Array.Empty<Type>()),  "Cast({0} As Char)" },
 
             //string
             { typeof(string).GetMethod(nameof(string.Concat), new Type[]{ typeof(object[])}), (string[] args) => $"Concat({string.Join(", ", args.Skip(1))})" },

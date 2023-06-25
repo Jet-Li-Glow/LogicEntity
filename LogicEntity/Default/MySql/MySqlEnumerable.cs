@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1579,7 +1580,12 @@ namespace LogicEntity.Default.MySql
             return source.AddRangeOrUpdate(elements, updateFactory);
         }
 
-        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, System.Linq.Expressions.Expression<Func<TSource, TSource, TSource>> updateFactory)
+        public static int AddOrUpdate<TSource>(this ITable<TSource> source, Expression<Func<TSource, TSource, TSource>> updateFactory, params Expression<Func<TSource>>[] elements)
+        {
+            return source.AddRangeOrUpdate(elements, updateFactory);
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements, Expression<Func<TSource, TSource, TSource>> updateFactory)
         {
             if (source is null)
                 throw new ArgumentNullException(nameof(source));
@@ -1587,8 +1593,24 @@ namespace LogicEntity.Default.MySql
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements is not IDataTable && elements.Any() is false)
-                throw new InvalidOperationException("No elements");
+            if (updateFactory is null)
+                throw new ArgumentNullException(nameof(updateFactory));
+
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(
+                SqlExpressions.InsertExpression.AddOperateType.Insert,
+                source.Expression,
+                elements,
+                updateFactory
+                ));
+        }
+
+        public static int AddRangeOrUpdate<TSource>(this ITable<TSource> source, IEnumerable<Expression<Func<TSource>>> elements, Expression<Func<TSource, TSource, TSource>> updateFactory)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
 
             if (updateFactory is null)
                 throw new ArgumentNullException(nameof(updateFactory));
@@ -1606,6 +1628,11 @@ namespace LogicEntity.Default.MySql
             return source.AddRangeIgnore(elements);
         }
 
+        public static int AddIgnore<TSource>(this ITable<TSource> source, params Expression<Func<TSource>>[] elements)
+        {
+            return source.AddRangeIgnore(elements);
+        }
+
         public static int AddRangeIgnore<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
         {
             if (source is null)
@@ -1614,8 +1641,20 @@ namespace LogicEntity.Default.MySql
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements is not IDataTable && elements.Any() is false)
-                throw new InvalidOperationException("No elements");
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(
+                SqlExpressions.InsertExpression.AddOperateType.InsertIgnore,
+                source.Expression,
+                elements
+                ));
+        }
+
+        public static int AddRangeIgnore<TSource>(this ITable<TSource> source, IEnumerable<Expression<Func<TSource>>> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
 
             return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(
                 SqlExpressions.InsertExpression.AddOperateType.InsertIgnore,
@@ -1629,6 +1668,11 @@ namespace LogicEntity.Default.MySql
             return source.ReplaceRange(elements);
         }
 
+        public static int Replace<TSource>(this ITable<TSource> source, params Expression<Func<TSource>>[] elements)
+        {
+            return source.ReplaceRange(elements);
+        }
+
         public static int ReplaceRange<TSource>(this ITable<TSource> source, IEnumerable<TSource> elements)
         {
             if (source is null)
@@ -1637,8 +1681,20 @@ namespace LogicEntity.Default.MySql
             if (elements is null)
                 throw new ArgumentNullException(nameof(elements));
 
-            if (elements is not IDataTable && elements.Any() is false)
-                throw new InvalidOperationException("No elements");
+            return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(
+                SqlExpressions.InsertExpression.AddOperateType.Replace,
+                source.Expression,
+                elements
+                ));
+        }
+
+        public static int ReplaceRange<TSource>(this ITable<TSource> source, IEnumerable<Expression<Func<TSource>>> elements)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (elements is null)
+                throw new ArgumentNullException(nameof(elements));
 
             return source.Db.ExecuteNonQuery(new AddOrUpdateWithFactoryOperateExpression(
                 SqlExpressions.InsertExpression.AddOperateType.Replace,

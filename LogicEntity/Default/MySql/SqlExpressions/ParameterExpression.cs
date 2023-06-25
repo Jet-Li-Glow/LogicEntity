@@ -21,19 +21,6 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
             object obj = Value;
 
-            if (obj is IValue val)
-            {
-                if (val.ValueSetted == false)
-                {
-                    obj = null;
-                }
-                else
-                {
-
-                    obj = val.Object;
-                }
-            }
-
             if (obj is Enum)
                 obj = obj.ToString();
 

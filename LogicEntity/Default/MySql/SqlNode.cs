@@ -148,9 +148,6 @@ namespace LogicEntity.Default.MySql
 
         public static DataType? DbType(this Type type)
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Value<>))
-                return type.GetGenericArguments()[0].DbType();
-
             type = Nullable.GetUnderlyingType(type) ?? type;
 
             if (type == typeof(int) || type == typeof(long) || type == typeof(short))

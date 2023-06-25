@@ -12,39 +12,36 @@ using LogicEntity.Json;
 
 namespace Demo.Tables
 {
-    [Table("Student", Schema = "testdb")]
+    [Table(nameof(Student), Schema = "testdb")]
     public class Student
     {
         [Column("StudentId")]
-        public Value<int> Id { get; set; }
+        public int Id { get; set; }
 
         [Column("StudentName")]
-        public Value<string> Name { get; set; }
+        public string Name { get; set; }
 
-        [Column("StudentName")]
-        public Value<string> AnotherName { get; set; }
+        public DateTime? Birthday { get; set; }
 
-        public Value<DateTime?> Birthday { get; set; }
+        public Gender? Gender { get; set; }
 
-        public Value<Gender?> Gender { get; set; }
+        public int MajorId { get; set; }
 
-        public Value<int> MajorId { get; set; }
+        public Guid? Guid { get; set; }
 
-        public Value<Guid?> Guid { get; set; }
+        public byte[] Bytes { get; set; }
 
-        public Value<byte[]> Bytes { get; set; }
+        public float Float { get; set; }
 
-        public Value<float> Float { get; set; }
+        public double Double { get; set; }
 
-        public Value<double> Double { get; set; }
+        public decimal Decimal { get; set; }
 
-        public Value<decimal> Decimal { get; set; }
+        public bool Bool { get; set; }
 
-        public Value<bool> Bool { get; set; }
+        public long Long { get; set; }
 
-        public Value<long> Long { get; set; }
-
-        public Value<JsonObject> Json { get; set; }
+        public JsonObject Json { get; set; }
 
         public class JsonObject
         {

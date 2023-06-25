@@ -79,29 +79,6 @@ namespace LogicEntity
         }
 
         /// <summary>
-        /// 获取Value<T>泛型
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        static Type GetBaseType(Type type)
-        {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Value<>))
-                type = type.GetGenericArguments()[0];
-
-            return type;
-        }
-
-        /// <summary>
-        /// 获取隐式转换函数
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        static MethodInfo GetValueImplicitMethod(Type type)
-        {
-            return typeof(Value<>).MakeGenericType(type).GetMethod("op_Implicit", new[] { type });
-        }
-
-        /// <summary>
         /// 获取ClientReader的参数类型
         /// </summary>
         /// <param name="reader"></param>
@@ -197,16 +174,11 @@ namespace LogicEntity
 
             IEnumerable ReadTable(IDataReader reader, Type entityType, Dictionary<string, ConstructorInfo> constructors, Dictionary<int, Delegate> clientReaders)
             {
-                Type baseEntityType = GetBaseType(entityType);
-
                 clientReaders.TryGetValue(0, out var clientReader);
 
                 Type returnType = clientReader?.Method.ReturnType;
 
-                if (returnType is not null)
-                    returnType = GetBaseType(returnType);
-
-                if (IsDbDataType(baseEntityType) || (reader.FieldCount == 1 && constructors.Count == 0 && returnType == baseEntityType))
+                if (IsDbDataType(entityType) || (reader.FieldCount == 1 && constructors.Count == 0 && returnType == entityType))
                 {
                     ParameterExpression record = Expression.Parameter(typeof(IDataRecord));
 
@@ -215,11 +187,11 @@ namespace LogicEntity
                     if (val.Type != typeof(object))
                         val = Expression.Convert(val, typeof(object));
 
-                    Func<IDataRecord, object> cellReader = Expression.Lambda<Func<IDataRecord, object>>(val, record).Compile();
+                    Func<IDataRecord, object> readCell = Expression.Lambda<Func<IDataRecord, object>>(val, record).Compile();
 
                     while (reader.Read())
                     {
-                        yield return cellReader(reader);
+                        yield return readCell(reader);
                     }
                 }
                 else
@@ -366,8 +338,6 @@ namespace LogicEntity
 
         static Expression GetValueExpression(ParameterExpression record, Type propertyType, int i, Delegate clientReader)
         {
-            Type baseType = GetBaseType(propertyType);
-
             Expression val = null;
 
             //区分 clientReader
@@ -400,29 +370,23 @@ namespace LogicEntity
             //获取值表达式
             if (valueReader is null)
             {
-                val = _GetRecordValue(record, baseType, i, clientBytesReader, clientCharsReader);
+                val = _GetRecordValue(record, propertyType, i, clientBytesReader, clientCharsReader);
             }
             else
             {
-                val = _GetRecordValue(record, GetBaseType(parameterType), i, null, null);
-
-                if (val.Type != parameterType)
-                    val = Expression.Convert(val, parameterType, GetValueImplicitMethod(val.Type));
+                val = _GetRecordValue(record, parameterType, i, null, null);
 
                 val = Expression.Invoke(Expression.Constant(clientReader), val);
             }
 
-            if (val.Type != baseType)
-                val = Expression.Convert(val, baseType);
+            if (val.Type != propertyType)
+                val = Expression.Convert(val, propertyType);
 
             val = Expression.Condition(
                 Expression.Call(record, _IsDBNull, Expression.Constant(i)),
-                Expression.Default(baseType),
+                Expression.Default(propertyType),
                 val
                 );
-
-            if (val.Type != propertyType)
-                val = Expression.Convert(val, propertyType, GetValueImplicitMethod(val.Type));
 
             return val;
 
@@ -688,9 +652,7 @@ namespace LogicEntity
             if (value.GetType() == type)
                 return value;
 
-            Type baseType = GetBaseType(type);
-
-            Type underlyingType = Nullable.GetUnderlyingType(baseType) ?? baseType;
+            Type underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
             if (underlyingType.IsSubclassOf(typeof(Enum)))
             {
@@ -700,10 +662,10 @@ namespace LogicEntity
                     throw new InvalidCastException($"{value} is not defined in {underlyingType.FullName}");
             }
 
-            value = Convert.ChangeType(Convert.ChangeType(value, underlyingType), baseType);
+            value = Convert.ChangeType(value, underlyingType);
 
-            if (baseType != type)
-                value = GetValueImplicitMethod(baseType).Invoke(null, new object[] { value });
+            if (type != underlyingType)
+                value = Convert.ChangeType(value, type);
 
             return value;
         }

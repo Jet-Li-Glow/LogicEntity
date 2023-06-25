@@ -12,31 +12,19 @@ namespace Demo.Tables
     /// </summary>
     public class Monthly
     {
-        string _tableName;
-
-        public Monthly()
-        {
-            _tableName = nameof(Monthly);
-        }
-
-        public Monthly(DateTime dateTime)
-        {
-            _tableName = nameof(Monthly) + dateTime.ToString("_yyyy_MM");
-        }
-
         /// <summary>
         /// Guid
         /// </summary>
-        public Value<Guid> Guid { get; set; }
+        public Guid Guid { get; set; }
 
         /// <summary>
         /// 时间
         /// </summary>
-        public Value<DateTime> DateTime { get; set; }
+        public DateTime DateTime { get; set; }
 
         /// <summary>
         /// 描述
         /// </summary>
-        public Value<string> Description { get; set; }
+        public string Description { get; set; }
     }
 }
