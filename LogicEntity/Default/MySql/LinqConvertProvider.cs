@@ -139,14 +139,17 @@ namespace LogicEntity.Default.MySql
                             if (memberInitExpression is null)
                                 throw new UnsupportedExpressionException(lambdaExpression.Body);
 
-                            BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
-
-                            foreach (BinaryExpression binaryExpression in blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2))
+                            foreach (MemberBinding memberBinding in memberInitExpression.Bindings)
                             {
-                                PropertyInfo property = ((MemberExpression)binaryExpression.Left).Member as PropertyInfo;
+                                if (memberBinding.BindingType != MemberBindingType.Assignment)
+                                    throw new UnsupportedExpressionException(memberInitExpression);
+
+                                MemberAssignment memberAssignment = (MemberAssignment)memberBinding;
+
+                                PropertyInfo property = memberAssignment.Member as PropertyInfo;
 
                                 if (property is null)
-                                    throw new UnsupportedExpressionException(binaryExpression);
+                                    throw new UnsupportedExpressionException(memberInitExpression);
 
                                 if (validProperties.ContainsKey(property) == false)
                                 {
@@ -155,7 +158,7 @@ namespace LogicEntity.Default.MySql
 
                                 row[property] = new()
                                 {
-                                    Expression = binaryExpression.Right,
+                                    Expression = memberAssignment.Expression,
                                     Type = PropertyValue.ValueType.Expression
                                 };
                             }
@@ -260,8 +263,6 @@ namespace LogicEntity.Default.MySql
                         if (memberInitExpression is null)
                             throw new UnsupportedExpressionException(addOrUpdateWithFactoryOperateExpression.UpdateFactory.Body);
 
-                        BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
-
                         var sqlContext = new SqlExpressions.SqlContext()
                         {
                             LambdaParameters = new()
@@ -283,18 +284,21 @@ namespace LogicEntity.Default.MySql
 
                         ColumnVisitor columnVisitor = new ColumnVisitor(addOrUpdateWithFactoryOperateExpression.UpdateFactory.Parameters[1]);
 
-                        insertExpression.Assignments = blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(memberInit =>
+                        insertExpression.Assignments = memberInitExpression.Bindings.Select(memberBinding =>
                         {
-                            BinaryExpression assign = (BinaryExpression)memberInit;
+                            if (memberBinding.BindingType != MemberBindingType.Assignment)
+                                throw new UnsupportedExpressionException(memberInitExpression);
 
-                            var left = new SqlExpressions.MemberExpression(insertExpression.Table, ((MemberExpression)assign.Left).Member);
+                            MemberAssignment memberAssignment = (MemberAssignment)memberBinding;
 
-                            System.Linq.Expressions.Expression rightExpression = assign.Right;
+                            var left = new SqlExpressions.MemberExpression(insertExpression.Table, memberAssignment.Member);
+
+                            System.Linq.Expressions.Expression right = memberAssignment.Expression;
 
                             if (_updateFactoryVersion == UpdateFactoryVersion.V5_7)
-                                rightExpression = columnVisitor.Visit(rightExpression);
+                                right = columnVisitor.Visit(right);
 
-                            return new SqlExpressions.AssignmentExpression(left, (SqlExpressions.IValueExpression)GetSqlExpression(rightExpression, sqlContext));
+                            return new SqlExpressions.AssignmentExpression(left, (SqlExpressions.IValueExpression)GetSqlExpression(right, sqlContext));
                         }).ToList();
                     }
                     else
@@ -441,19 +445,18 @@ namespace LogicEntity.Default.MySql
                         }
                     }, groupKeys, ref constructors, indexParemeters));
 
-                    BlockExpression blockExpression = (BlockExpression)memberInitExpression.Reduce();
-
-                    columns.AddRange(ExpandColumns(blockExpression.Expressions.Skip(1).Take(blockExpression.Expressions.Count - 2).Select(e =>
+                    columns.AddRange(ExpandColumns(memberInitExpression.Bindings.Select(memberBinding =>
                     {
-                        BinaryExpression assign = (BinaryExpression)e;
+                        if (memberBinding.BindingType != MemberBindingType.Assignment)
+                            throw new UnsupportedExpressionException(memberInitExpression);
 
-                        MemberInfo member = ((MemberExpression)assign.Left).Member;
+                        MemberAssignment memberAssignment = (MemberAssignment)memberBinding;
 
                         return new SqlColumnInfo()
                         {
-                            Alias = SqlNode.Member(node.Alias, member.Name),
-                            Expression = assign.Right,
-                            Member = member
+                            Alias = SqlNode.Member(node.Alias, memberAssignment.Member.Name),
+                            Expression = memberAssignment.Expression,
+                            Member = memberAssignment.Member
                         };
                     }), groupKeys, ref constructors, indexParemeters));
 

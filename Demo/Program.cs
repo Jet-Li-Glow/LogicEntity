@@ -26,8 +26,7 @@ namespace Demo
             //Version 1.0.1
 
             //开发计划 1.join-on、select 无强类型限制 以实现动态join和动态select
-            //         2.去掉 Value<> 包装
-            //         3.数据填充使用反射生成赋值委托替代表达式树
+            //         2.数据填充使用反射生成赋值委托替代表达式树
 
             Console.WriteLine("-- Start --");
 
