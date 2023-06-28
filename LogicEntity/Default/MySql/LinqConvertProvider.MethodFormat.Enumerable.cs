@@ -222,7 +222,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatSelect(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return SelectToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 ((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 methodCallExpression.Type,
                 context
@@ -234,7 +234,7 @@ namespace LogicEntity.Default.MySql
             System.Linq.Expressions.Expression predicate = methodCallExpression.Arguments.Count > 2 ? ((UnaryExpression)methodCallExpression.Arguments[2]).Operand : null;
 
             return JoinToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 join,
                 (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[1], context),
                 predicate as LambdaExpression,
@@ -245,7 +245,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatWhere(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return WhereToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 methodCallExpression.Method.IsDefined(typeof(HasIndexAttribute)),
                 context
@@ -255,7 +255,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatGroupBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return GroupToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 context
                 );
@@ -277,27 +277,27 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatConcat(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return BinaryTableToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 SqlExpressions.BinaryTableExpression.BinaryOperate.Union,
                 false,
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[1], context)
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[1], context)
                 );
         }
 
         SqlExpressions.ISqlExpression FormatUnion(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return BinaryTableToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 SqlExpressions.BinaryTableExpression.BinaryOperate.Union,
                 true,
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[1], context)
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[1], context)
                 );
         }
 
         SqlExpressions.ISqlExpression FormatOrderBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return OrderByToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 false,
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 false,
@@ -308,7 +308,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatOrderByDescending(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return OrderByToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 false,
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 true,
@@ -319,7 +319,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatThenBy(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return OrderByToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 true,
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 false,
@@ -330,7 +330,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatThenByDescending(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return OrderByToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 true,
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 true,
@@ -346,7 +346,7 @@ namespace LogicEntity.Default.MySql
                 throw new UnsupportedExpressionException(methodCallExpression.Arguments[1]);
 
             return SkipToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 (int)constantExpression.Value
                 );
         }
@@ -359,7 +359,7 @@ namespace LogicEntity.Default.MySql
                 throw new UnsupportedExpressionException(methodCallExpression.Arguments[1]);
 
             return TakeToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 (int)constantExpression.Value
                 );
         }
@@ -367,7 +367,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatAll(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return AllToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 context
                 );
@@ -375,12 +375,12 @@ namespace LogicEntity.Default.MySql
 
         SqlExpressions.ISqlExpression FormatAny(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
-            SqlExpressions.ISelectSql selectSql = (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context);
+            SqlExpressions.ITableExpression tableExpression = (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context);
 
             if (methodCallExpression.Arguments.Count > 1)
             {
-                selectSql = WhereToSql(
-                    selectSql,
+                tableExpression = WhereToSql(
+                    tableExpression,
                     (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                     false,
                     context
@@ -388,7 +388,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return AnyToSql(
-                selectSql
+                tableExpression
                 );
         }
 
@@ -408,7 +408,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return AverageToSql(
-                (SqlExpressions.ISelectSql)source,
+                (SqlExpressions.ITableExpression)source,
                 selector,
                 methodCallExpression.Type,
                 context
@@ -471,7 +471,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return CountToSql(
-                (SqlExpressions.ISelectSql)source,
+                (SqlExpressions.ITableExpression)source,
                 methodCallExpression.Type
                 );
         }
@@ -479,7 +479,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatDistinct(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return DistinctToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context)
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context)
                 );
         }
 
@@ -495,7 +495,7 @@ namespace LogicEntity.Default.MySql
 
             return SelectToSql(
                 GroupToSql(
-                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                     (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                     context
                 ),
@@ -514,7 +514,7 @@ namespace LogicEntity.Default.MySql
 
             return TakeToSql(
                 SkipToSql(
-                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                     (int)constantExpression.Value
                     ),
                 1
@@ -528,7 +528,7 @@ namespace LogicEntity.Default.MySql
             if (methodCallExpression.Arguments.Count > 1)
             {
                 source = WhereToSql(
-                    (SqlExpressions.ISelectSql)source,
+                    (SqlExpressions.ITableExpression)source,
                     (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                     false,
                     context
@@ -536,7 +536,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return TakeToSql(
-                (SqlExpressions.ISelectSql)source,
+                (SqlExpressions.ITableExpression)source,
                 1
                 );
         }
@@ -557,7 +557,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return MaxToSql(
-                (SqlExpressions.ISelectSql)source,
+                (SqlExpressions.ITableExpression)source,
                 selector,
                 methodCallExpression.Type,
                 context
@@ -568,7 +568,7 @@ namespace LogicEntity.Default.MySql
         {
             return TakeToSql(
                 OrderByToSql(
-                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                     false,
                     (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                     true,
@@ -594,7 +594,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return MinToSql(
-                (SqlExpressions.ISelectSql)source,
+                (SqlExpressions.ITableExpression)source,
                 selector,
                 methodCallExpression.Type,
                 context
@@ -605,7 +605,7 @@ namespace LogicEntity.Default.MySql
         {
             return TakeToSql(
                 OrderByToSql(
-                    (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                    (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                     false,
                     (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                     false,
@@ -631,7 +631,7 @@ namespace LogicEntity.Default.MySql
             }
 
             return SumToSql(
-                (SqlExpressions.ISelectSql)source,
+                (SqlExpressions.ITableExpression)source,
                 selector,
                 methodCallExpression.Type,
                 context
@@ -651,7 +651,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatRecursiveConcat(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return RecursiveUnionToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 false,
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 context
@@ -661,7 +661,7 @@ namespace LogicEntity.Default.MySql
         SqlExpressions.ISqlExpression FormatRecursiveUnion(MethodCallExpression methodCallExpression, SqlExpressions.SqlContext context)
         {
             return RecursiveUnionToSql(
-                (SqlExpressions.ISelectSql)GetSqlExpression(methodCallExpression.Arguments[0], context),
+                (SqlExpressions.ITableExpression)GetSqlExpression(methodCallExpression.Arguments[0], context),
                 true,
                 (LambdaExpression)((UnaryExpression)methodCallExpression.Arguments[1]).Operand,
                 context

@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class CommonTableExpression : SqlExpression, ISelectSql, ISubQuerySql
+    internal class CommonTableExpression : SqlExpression, ITableExpression, ISubQuerySql
     {
-        public CommonTableExpression(ISelectSql selectSql, bool isRecursive)
+        public CommonTableExpression(ITableExpression tableExpression, bool isRecursive)
         {
-            SelectSql = selectSql;
+            TableExpression = tableExpression;
 
             IsRecursive = isRecursive;
         }
 
-        public ISelectSql SelectSql { get; private set; }
+        public ITableExpression TableExpression { get; private set; }
 
         public bool CanModify { get; set; } = false;
 
@@ -31,12 +31,12 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             get
             {
-                return SelectSql.OrderBy;
+                return TableExpression.OrderBy;
             }
 
             set
             {
-                SelectSql.OrderBy = value;
+                TableExpression.OrderBy = value;
             }
         }
 
@@ -44,12 +44,12 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             get
             {
-                return SelectSql.Limit;
+                return TableExpression.Limit;
             }
 
             set
             {
-                SelectSql.Limit = value;
+                TableExpression.Limit = value;
             }
         }
 
@@ -61,16 +61,16 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             get
             {
-                return SelectSql.Timeout;
+                return TableExpression.Timeout;
             }
 
             set
             {
-                SelectSql.Timeout = value;
+                TableExpression.Timeout = value;
             }
         }
 
-        public List<CommonTableExpression> CommonTableExpressions => SelectSql.CommonTableExpressions;
+        public List<CommonTableExpression> CommonTableExpressions => TableExpression.CommonTableExpressions;
 
         public bool HasAlias => throw new NotImplementedException();
 
@@ -80,13 +80,13 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public IReadOnlyCollection<MemberInfo> ColumnMembers { get; set; }
 
-        public bool IsVector { get => SelectSql.IsVector; }
+        public bool IsVector { get => TableExpression.IsVector; }
 
-        public IList<ColumnInfo> Columns => SelectSql.Columns.AsReadOnly();
+        public IList<ColumnInfo> Columns => TableExpression.Columns.AsReadOnly();
 
         public SqlCommand BuildCTE(BuildContext context)
         {
-            SelectSqlCommand selectSqlCommand = SelectSql.BuildSelect(context with { Level = -1 });
+            SelectSqlCommand selectSqlCommand = TableExpression.BuildSelect(context with { Level = -1 });
 
             ColumnMembers = selectSqlCommand.ColumnMembers;
 
@@ -144,13 +144,13 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public ISqlExpression[] GetOrderByParameters()
         {
-            return SelectSql.GetOrderByParameters();
+            return TableExpression.GetOrderByParameters();
         }
 
         public bool CanAddNode(SelectNodeType nodeType)
         {
             if (CanModify)
-                return (nodeType == SelectNodeType.OrderBy || nodeType == SelectNodeType.Limit) && SelectSql.CanAddNode(nodeType);
+                return (nodeType == SelectNodeType.OrderBy || nodeType == SelectNodeType.Limit) && TableExpression.CanAddNode(nodeType);
 
             return false;
         }
@@ -175,9 +175,9 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new SelectExpression(this).AddIndex();
         }
 
-        public SelectExpression AddJoin()
+        public JoinedTableExpression AddJoin()
         {
-            return new SelectExpression(this).AddJoin();
+            return new(this);
         }
 
         public SelectExpression AddWhere()
@@ -195,11 +195,11 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new SelectExpression(this).AddHaving();
         }
 
-        public ISelectSql AddOrderBy()
+        public ITableExpression AddOrderBy()
         {
             if (CanAddNode(SelectNodeType.OrderBy))
             {
-                SelectSql.AddOrderBy();
+                TableExpression.AddOrderBy();
 
                 return this;
             }
@@ -207,18 +207,18 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new SelectExpression(this).AddOrderBy();
         }
 
-        public ISelectSql AddThenBy()
+        public ITableExpression AddThenBy()
         {
-            SelectSql.AddThenBy();
+            TableExpression.AddThenBy();
 
             return this;
         }
 
-        public ISelectSql AddLimit()
+        public ITableExpression AddLimit()
         {
             if (CanAddNode(SelectNodeType.Limit))
             {
-                SelectSql.AddLimit();
+                TableExpression.AddLimit();
 
                 return this;
             }

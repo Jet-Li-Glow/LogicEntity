@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class SelectExpression : SelectSql, ISelectSql, ISubQuerySql
+    internal class SelectExpression : SqlExpression, ITableExpression, ISubQuerySql
     {
         HashSet<SelectNodeType> _nodes = new();
 
@@ -21,11 +21,34 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         {
             From = table;
 
-            if (table is ISelectSql selectSql)
-                Timeout = selectSql.Timeout;
+            if (table is IDataManipulationSql dataManipulationSql)
+                Timeout = dataManipulationSql.Timeout;
 
             _nodes.Add(SelectNodeType.From);
         }
+
+        public int? Timeout { get; set; }
+
+        public List<CommonTableExpression> CommonTableExpressions { get; } = new();
+
+        string _alisas;
+
+        public string Alias
+        {
+            get
+            {
+                return _alisas;
+            }
+
+            set
+            {
+                _alisas = value;
+
+                HasAlias = true;
+            }
+        }
+
+        public bool HasAlias { get; private set; } = false;
 
         public bool IsDistinct { get; set; } = false;
 
@@ -46,7 +69,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public List<ColumnInfo> Columns { get; } = new();
 
-        IList<ColumnInfo> ISelectSql.Columns => Columns;
+        IList<ColumnInfo> ITableExpression.Columns => Columns;
 
         public bool HasIndex { get; private set; }
 
@@ -71,14 +94,6 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         }
 
         public ITableExpression From { get; private set; }
-
-        public void AddJoinedTable(JoinedTableExpression.JoinedTable joinedTable)
-        {
-            if (From is not JoinedTableExpression)
-                From = new JoinedTableExpression(From);
-
-            ((JoinedTableExpression)From).JoinedTables.Add(joinedTable);
-        }
 
         public IValueExpression Where { get; set; }
 
@@ -171,12 +186,9 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return this;
         }
 
-        public SelectExpression AddJoin()
+        public JoinedTableExpression AddJoin()
         {
-            if (_nodes.SingleOrDefault() == SelectNodeType.From)
-                return this;
-
-            return new SelectExpression(this);
+            return new(this);
         }
 
         public SelectExpression AddWhere()
@@ -221,7 +233,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return selectExpression;
         }
 
-        public ISelectSql AddOrderBy()
+        public ITableExpression AddOrderBy()
         {
             var selectExpression = this;
 
@@ -237,7 +249,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return selectExpression;
         }
 
-        public ISelectSql AddThenBy()
+        public ITableExpression AddThenBy()
         {
             if (_nodes.Count == 0 || _nodes.Max(s => (int)s) != (int)SelectNodeType.OrderBy)
                 throw new UnsupportedExpressionException();
@@ -245,7 +257,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return this;
         }
 
-        public ISelectSql AddLimit()
+        public ITableExpression AddLimit()
         {
             var selectExpression = this;
 

@@ -9,46 +9,12 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal interface ISelectSql : IDataManipulationSql, ITableExpression, IValueExpression, IValuesExpression, IInsertRowsExpression
+    internal interface ISelectSql : IDataManipulationSql, IValueExpression, IValuesExpression, IInsertRowsExpression
     {
         /// <summary>
         /// 是 矢量 或 标量
         /// </summary>
         bool IsVector { get; }
-
-        IList<ColumnInfo> Columns { get; }
-
-        bool CanAddNode(SelectNodeType nodeType);
-
-        SelectExpression AddSelect();
-
-        SelectExpression AddJoin();
-
-        SelectExpression Distinct();
-
-        SelectExpression AddIndex();
-
-        SelectExpression AddWhere();
-
-        SelectExpression AddGroupBy();
-
-        SelectExpression AddHaving();
-
-        ISelectSql AddOrderBy();
-
-        ISelectSql AddThenBy();
-
-        ISelectSql AddLimit();
-
-        DeleteExpression AddDelete();
-
-        UpdateExpression AddUpdateSet();
-
-        ISqlExpression[] GetOrderByParameters();
-
-        OrderKeys OrderBy { get; set; }
-
-        OffsetLimit Limit { get; set; }
 
         SelectSqlCommand BuildSelect(BuildContext context);
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class OriginalTableExpression : SqlExpression, ISelectSql
+    internal class OriginalTableExpression : SqlExpression, ITableExpression
     {
         public OriginalTableExpression(string schema, string name)
         {
@@ -74,9 +74,9 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             };
         }
 
-        public SelectExpression AddJoin()
+        public JoinedTableExpression AddJoin()
         {
-            return new SelectExpression(this).AddJoin();
+            return new(this);
         }
 
         public SelectSqlCommand BuildSelect(BuildContext context)
@@ -139,7 +139,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             }.AddHaving();
         }
 
-        public ISelectSql AddOrderBy()
+        public ITableExpression AddOrderBy()
         {
             return new SelectExpression(this)
             {
@@ -147,12 +147,12 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             }.AddOrderBy();
         }
 
-        public ISelectSql AddThenBy()
+        public ITableExpression AddThenBy()
         {
             throw new NotImplementedException();
         }
 
-        public ISelectSql AddLimit()
+        public ITableExpression AddLimit()
         {
             return new SelectExpression(this)
             {

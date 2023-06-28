@@ -81,7 +81,7 @@ namespace LogicEntity.Default.MySql
 
         Command GetSelectCommand(TableExpression tableExpression)
         {
-            return GetSelectSql(tableExpression).Build(this);
+            return GetTableExpression(tableExpression).Build(this);
         }
 
         Command GetOperateCommand(LogicEntity.Linq.Expressions.Expression operateExpression)
@@ -114,7 +114,7 @@ namespace LogicEntity.Default.MySql
                 insertExpression.AddOperate = addOrUpdateWithFactoryOperateExpression.AddOperate;
 
                 //Table
-                insertExpression.Table = (SqlExpressions.OriginalTableExpression)GetSelectSql(addOrUpdateWithFactoryOperateExpression.Source);
+                insertExpression.Table = (SqlExpressions.OriginalTableExpression)GetTableExpression(addOrUpdateWithFactoryOperateExpression.Source);
 
                 //Values
                 string valuesExpression = string.Empty;
@@ -244,7 +244,7 @@ namespace LogicEntity.Default.MySql
                 }
                 else if (addOrUpdateWithFactoryOperateExpression.DataSource == AddDataSource.DataTable)
                 {
-                    insertExpression.Rows = GetSelectSql(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
+                    insertExpression.Rows = GetTableExpression(addOrUpdateWithFactoryOperateExpression.DataTable.Expression);
                 }
 
                 //Update
@@ -329,7 +329,7 @@ namespace LogicEntity.Default.MySql
 
             if (operateExpression is RemoveOperateExpression removeOperateExpression)
             {
-                var deleteExpression = GetSelectSql(removeOperateExpression.Source).AddDelete();
+                var deleteExpression = GetTableExpression(removeOperateExpression.Source).AddDelete();
 
                 if (removeOperateExpression.Selectors is not null)
                 {
@@ -351,7 +351,7 @@ namespace LogicEntity.Default.MySql
 
             if (operateExpression is SetOperateExpression setOperateExpression)
             {
-                var updateExpression = GetSelectSql(setOperateExpression.Source).AddUpdateSet();
+                var updateExpression = GetTableExpression(setOperateExpression.Source).AddUpdateSet();
 
                 LambdaExpression[] lambdaExpressions = (LambdaExpression[])setOperateExpression.Assignments;
 
@@ -1399,18 +1399,16 @@ namespace LogicEntity.Default.MySql
 
             if (obj is not null && obj.GetType().IsAssignableTo(typeof(IDataTable)))
             {
-                TableExpression tableExpression = ((IDataTable)obj).Expression;
+                var tableExpression = GetTableExpression(((IDataTable)obj).Expression);
 
-                var sql = GetSelectSql(tableExpression);
-
-                if (sql is SqlExpressions.OriginalTableExpression originalTableExpression)
+                if (tableExpression is SqlExpressions.OriginalTableExpression originalTableExpression)
                 {
                     sqlExpression = originalTableExpression;
 
                     return true;
                 }
 
-                if (sql is SqlExpressions.CommonTableExpression commonTableExpression)
+                if (tableExpression is SqlExpressions.CommonTableExpression commonTableExpression)
                 {
                     commonTableExpression.CanModify = false;
 
@@ -1418,7 +1416,7 @@ namespace LogicEntity.Default.MySql
                 }
                 else
                 {
-                    sqlExpression = new SqlExpressions.CommonTableExpression((SqlExpressions.ISelectSql)sql, false);
+                    sqlExpression = new SqlExpressions.CommonTableExpression((SqlExpressions.ITableExpression)tableExpression, false);
                 }
 
                 return true;

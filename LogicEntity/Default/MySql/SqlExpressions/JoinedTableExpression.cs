@@ -24,6 +24,93 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public int Count => JoinedTables.Count + 1;
 
+        public IList<ColumnInfo> Columns => throw new NotImplementedException();
+
+        public OrderKeys OrderBy { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public OffsetLimit Limit { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public bool IsVector => throw new NotImplementedException();
+
+        public int? Timeout { get; set; }
+
+        public List<CommonTableExpression> CommonTableExpressions => throw new NotImplementedException();
+
+        public bool CanAddNode(SelectNodeType nodeType)
+        {
+            return true;
+        }
+
+        public SelectExpression AddSelect()
+        {
+            return new SelectExpression(this);
+        }
+
+        public JoinedTableExpression AddJoin()
+        {
+            return this;
+        }
+
+        public SelectExpression Distinct()
+        {
+            return new SelectExpression(this).Distinct();
+        }
+
+        public SelectExpression AddIndex()
+        {
+            return new SelectExpression(this).AddIndex();
+        }
+
+        public SelectExpression AddWhere()
+        {
+            return new SelectExpression(this).AddWhere();
+        }
+
+        public SelectExpression AddGroupBy()
+        {
+            return new SelectExpression(this).AddGroupBy();
+        }
+
+        public SelectExpression AddHaving()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ITableExpression AddOrderBy()
+        {
+            return new SelectExpression(this).AddOrderBy();
+        }
+
+        public ITableExpression AddThenBy()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ITableExpression AddLimit()
+        {
+            return new SelectExpression(this).AddLimit();
+        }
+
+        public ISqlExpression[] GetOrderByParameters()
+        {
+            throw new NotImplementedException();
+        }
+
+        public DeleteExpression AddDelete()
+        {
+            return new SelectExpression(this).AddDelete();
+        }
+
+        public UpdateExpression AddUpdateSet()
+        {
+            return new SelectExpression(this).AddUpdateSet();
+        }
+
+        public SelectSqlCommand BuildSelect(BuildContext context)
+        {
+            throw new NotImplementedException();
+        }
+
         public SqlCommand BuildTableDefinition(BuildContext context)
         {
             List<string> tableCommands = new()

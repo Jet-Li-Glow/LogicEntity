@@ -11,17 +11,40 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal class BinaryTableExpression : SelectSql, ISelectSql, ISubQuerySql
+    internal class BinaryTableExpression : SqlExpression, ITableExpression, ISubQuerySql
     {
         HashSet<SelectNodeType> _nodes = new() { SelectNodeType.From };
 
-        public ISelectSql Left { get; set; }
+        public int? Timeout { get; set; }
+
+        public List<CommonTableExpression> CommonTableExpressions { get; } = new();
+
+        string _alisas;
+
+        public string Alias
+        {
+            get
+            {
+                return _alisas;
+            }
+
+            set
+            {
+                _alisas = value;
+
+                HasAlias = true;
+            }
+        }
+
+        public bool HasAlias { get; private set; } = false;
+
+        public ITableExpression Left { get; set; }
 
         public BinaryOperate Operate { get; set; }
 
         public bool IsDistinct { get; set; }
 
-        public ISelectSql Right { get; set; }
+        public ITableExpression Right { get; set; }
 
         public OrderKeys OrderBy { get; set; }
 
@@ -67,9 +90,9 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new SelectExpression(this).AddIndex();
         }
 
-        public SelectExpression AddJoin()
+        public JoinedTableExpression AddJoin()
         {
-            return new SelectExpression(this);
+            return new(this);
         }
 
         public SelectExpression AddWhere()
@@ -87,7 +110,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new SelectExpression(this).AddHaving();
         }
 
-        public ISelectSql AddOrderBy()
+        public ITableExpression AddOrderBy()
         {
             if (CanAddNode(SelectNodeType.OrderBy))
             {
@@ -101,7 +124,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return new SelectExpression(this).AddOrderBy();
         }
 
-        public ISelectSql AddThenBy()
+        public ITableExpression AddThenBy()
         {
             if (_nodes.Count == 0 || _nodes.Max(s => (int)s) != (int)SelectNodeType.OrderBy)
                 throw new UnsupportedExpressionException();
@@ -109,7 +132,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return this;
         }
 
-        public ISelectSql AddLimit()
+        public ITableExpression AddLimit()
         {
             if (CanAddNode(SelectNodeType.Limit))
             {

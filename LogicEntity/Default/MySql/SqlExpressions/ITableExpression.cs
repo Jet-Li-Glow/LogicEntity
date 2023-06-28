@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LogicEntity.Default.MySql.SqlExpressions
 {
-    internal interface ITableExpression : ISqlExpression
+    internal interface ITableExpression : ISqlExpression, ISelectSql
     {
         public bool HasAlias { get; }
 
@@ -15,6 +15,40 @@ namespace LogicEntity.Default.MySql.SqlExpressions
         public string ShortName => Alias;
 
         int Count => 1;
+
+        IList<ColumnInfo> Columns { get; }
+
+        bool CanAddNode(SelectNodeType nodeType);
+
+        SelectExpression AddSelect();
+
+        JoinedTableExpression AddJoin();
+
+        SelectExpression Distinct();
+
+        SelectExpression AddIndex();
+
+        SelectExpression AddWhere();
+
+        SelectExpression AddGroupBy();
+
+        SelectExpression AddHaving();
+
+        ITableExpression AddOrderBy();
+
+        ITableExpression AddThenBy();
+
+        ITableExpression AddLimit();
+
+        ISqlExpression[] GetOrderByParameters();
+
+        OrderKeys OrderBy { get; set; }
+
+        OffsetLimit Limit { get; set; }
+
+        DeleteExpression AddDelete();
+
+        UpdateExpression AddUpdateSet();
 
         SqlCommand BuildTableDefinition(BuildContext context);
 
