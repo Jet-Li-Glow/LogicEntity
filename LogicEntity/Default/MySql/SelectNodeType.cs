@@ -10,6 +10,10 @@ namespace LogicEntity.Default.MySql
     {
         From,
         Where,
+        /// <summary>
+        /// 聚合函数
+        /// </summary>
+        AggregateFunction,
         GroupBy,
         Select,
         Having,

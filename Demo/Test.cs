@@ -313,6 +313,7 @@ namespace Demo
             //Select - 9
             data = db.Students.Average(s => s.Id + s.Id);
             data = db.Students.Count();
+            Assert(db.Students.Take(10).Count() <= 10);
             data = db.Students.LongCount();
             data = db.Students.Max(s => s.Id + s.Id);
             data = db.Students.Min(s => s.Id + s.Id);

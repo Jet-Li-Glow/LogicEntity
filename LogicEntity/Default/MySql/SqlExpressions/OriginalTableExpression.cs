@@ -126,6 +126,11 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             }.AddWhere();
         }
 
+        public SelectExpression AddAggregateFunction()
+        {
+            return AddSelect();
+        }
+
         public SelectExpression AddGroupBy()
         {
             return new SelectExpression(this).AddGroupBy();

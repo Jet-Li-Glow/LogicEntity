@@ -205,6 +205,20 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return selectExpression;
         }
 
+        public SelectExpression AddAggregateFunction()
+        {
+            var selectExpression = this;
+
+            if (selectExpression.CanAddNode(SelectNodeType.AggregateFunction) == false)
+            {
+                selectExpression = new(this);
+            }
+
+            selectExpression._nodes.Add(SelectNodeType.Select);
+
+            return selectExpression;
+        }
+
         public SelectExpression AddGroupBy()
         {
             var selectExpression = this;

@@ -447,7 +447,7 @@ namespace LogicEntity.Default.MySql
 
         SqlExpressions.SelectExpression AverageToSql(SqlExpressions.ITableExpression tableExpression, LambdaExpression lambdaExpression, Type type, SqlExpressions.SqlContext context)
         {
-            var selectExpression = tableExpression.AddSelect();
+            var selectExpression = tableExpression.AddAggregateFunction();
 
             selectExpression.Columns.Clear();
 
@@ -467,7 +467,7 @@ namespace LogicEntity.Default.MySql
 
         SqlExpressions.SelectExpression CountToSql(SqlExpressions.ITableExpression tableExpression, Type type)
         {
-            var selectExpression = tableExpression.AddSelect();
+            var selectExpression = tableExpression.AddAggregateFunction();
 
             selectExpression.Columns.Clear();
 
@@ -483,7 +483,7 @@ namespace LogicEntity.Default.MySql
 
         SqlExpressions.SelectExpression MaxToSql(SqlExpressions.ITableExpression tableExpression, LambdaExpression lambdaExpression, Type type, SqlExpressions.SqlContext context)
         {
-            var selectExpression = tableExpression.AddSelect();
+            var selectExpression = tableExpression.AddAggregateFunction();
 
             selectExpression.Columns.Clear();
 
@@ -503,7 +503,7 @@ namespace LogicEntity.Default.MySql
 
         SqlExpressions.SelectExpression MinToSql(SqlExpressions.ITableExpression tableExpression, LambdaExpression lambdaExpression, Type type, SqlExpressions.SqlContext context)
         {
-            var selectExpression = tableExpression.AddSelect();
+            var selectExpression = tableExpression.AddAggregateFunction();
 
             selectExpression.Columns.Clear();
 
@@ -523,7 +523,7 @@ namespace LogicEntity.Default.MySql
 
         SqlExpressions.SelectExpression SumToSql(SqlExpressions.ITableExpression tableExpression, LambdaExpression lambdaExpression, Type type, SqlExpressions.SqlContext context)
         {
-            var selectExpression = tableExpression.AddSelect();
+            var selectExpression = tableExpression.AddAggregateFunction();
 
             selectExpression.Columns.Clear();
 

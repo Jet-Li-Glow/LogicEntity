@@ -30,6 +30,12 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         SelectExpression AddWhere();
 
+        /// <summary>
+        /// 添加聚合函数
+        /// </summary>
+        /// <returns></returns>
+        SelectExpression AddAggregateFunction();
+
         SelectExpression AddGroupBy();
 
         SelectExpression AddHaving();
