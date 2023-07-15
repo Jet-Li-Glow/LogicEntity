@@ -50,8 +50,6 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public bool HasAlias { get; private set; } = false;
 
-        public bool IsDistinct { get; set; } = false;
-
         bool? _isVector = null;
 
         public bool IsVector
@@ -131,24 +129,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         public bool CanAddNode(SelectNodeType nodeType)
         {
-            if (_nodes.Count == 0)
-                return true;
-
-            if (nodeType == SelectNodeType.Select)
-                return _nodes.Contains(SelectNodeType.Select) == false;
-
-            int max = _nodes.Max(n => (int)n);
-
-            if (nodeType == SelectNodeType.Where
-                || nodeType == SelectNodeType.Having
-                || nodeType == SelectNodeType.OrderBy
-                || nodeType == SelectNodeType.Limit
-                )
-            {
-                return (int)nodeType >= max;
-            }
-
-            return (int)nodeType > max;
+            return _nodes.Any(node => SelectNodeOperationProhibited.GetProhibitedNode(node).Contains(nodeType)) == false;
         }
 
         public SelectExpression ChangeColumns()
@@ -172,9 +153,16 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return selectExpression;
         }
 
-        public SelectExpression Distinct()
+        public SelectExpression AddDistinct()
         {
-            IsDistinct = true;
+            var selectExpression = this;
+
+            if (selectExpression.CanAddNode(SelectNodeType.Distinct) == false)
+            {
+                selectExpression = new(this);
+            }
+
+            selectExpression._nodes.Add(SelectNodeType.Distinct);
 
             return this;
         }
@@ -332,7 +320,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
             string select = "Select";
 
-            if (IsDistinct)
+            if (_nodes.Contains(SelectNodeType.Distinct))
                 select += " Distinct";
 
             select += "\n" + string.Join(",\n", columns).Indent(2);

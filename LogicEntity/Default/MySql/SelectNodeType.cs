@@ -16,6 +16,7 @@ namespace LogicEntity.Default.MySql
         AggregateFunction,
         GroupBy,
         Select,
+        Distinct,
         Having,
         OrderBy,
         Limit

@@ -24,7 +24,7 @@ namespace LogicEntity.Default.MySql.SqlExpressions
 
         JoinedTableExpression AddJoin();
 
-        SelectExpression Distinct();
+        SelectExpression AddDistinct();
 
         SelectExpression AddIndex();
 

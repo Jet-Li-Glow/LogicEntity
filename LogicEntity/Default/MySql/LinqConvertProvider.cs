@@ -634,9 +634,19 @@ namespace LogicEntity.Default.MySql
 
             if (selector is null)
             {
-                ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(selectExpression.Type);
+                if (selectExpression.IsVector)
+                {
+                    ParameterExpression parameter = System.Linq.Expressions.Expression.Parameter(selectExpression.Type);
 
-                selector = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
+                    selector = System.Linq.Expressions.Expression.Lambda(parameter, parameter);
+                }
+                else
+                {
+                    columnInfos.Add(new()
+                    {
+                        Expression = new SqlExpressions.ColumnExpression(null, selectExpression.From.Columns[0].Alias)
+                    });
+                }
             }
 
             if (selector is LambdaExpression[] lambdaExpressions)

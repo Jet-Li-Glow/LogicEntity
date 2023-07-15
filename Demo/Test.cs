@@ -383,6 +383,9 @@ namespace Demo
                 SubQuery2 = db.Students.First().Json.Array[0]
             }).ToList();
 
+            //Select - 22
+            Assert(db.Value(() => 1).Concat(db.Value(() => 1)).Concat(db.Value(() => 2)).Take(2).Distinct().AsEnumerable().Count(), 1);
+
             //Insert - 1
             byte[] bytes = Encoding.UTF8.GetBytes("123");
 

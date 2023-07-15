@@ -51,9 +51,9 @@ namespace LogicEntity.Default.MySql.SqlExpressions
             return this;
         }
 
-        public SelectExpression Distinct()
+        public SelectExpression AddDistinct()
         {
-            return new SelectExpression(this).Distinct();
+            return new SelectExpression(this).AddDistinct();
         }
 
         public SelectExpression AddIndex()

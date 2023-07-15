@@ -438,7 +438,7 @@ namespace LogicEntity.Default.MySql
         {
             Type type = tableExpression.Type;
 
-            var selectExpression = tableExpression.Distinct();
+            var selectExpression = tableExpression.AddDistinct();
 
             selectExpression.Type = type;
 
