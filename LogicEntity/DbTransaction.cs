@@ -309,11 +309,16 @@ namespace LogicEntity
         /// </summary>
         public void Dispose()
         {
-            _transaction.Dispose();
-
-            _connection.Dispose();
-
             _db.ThreadLocalTransaction = null;
+
+            try
+            {
+                _transaction.Dispose();
+            }
+            finally
+            {
+                _connection.Dispose();
+            }
         }
     }
 }

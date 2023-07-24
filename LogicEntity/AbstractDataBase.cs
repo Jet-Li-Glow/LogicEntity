@@ -20,7 +20,7 @@ namespace LogicEntity
         /// <summary>
         /// 当前线程的事务对象
         /// </summary>
-        ThreadLocal<DbTransaction> _threadLocalTransaction = new ThreadLocal<DbTransaction>(false);
+        ThreadLocal<DbTransaction> _threadLocalTransaction;
 
         /// <summary>
         /// 阻止程序集外部使用
@@ -72,12 +72,29 @@ namespace LogicEntity
         {
             get
             {
-                return _threadLocalTransaction.Value;
+                return _threadLocalTransaction?.Value;
             }
 
             set
             {
-                _threadLocalTransaction.Value = value;
+                if (value is null)
+                {
+                    if (_threadLocalTransaction is not null)
+                    {
+                        _threadLocalTransaction.Value = null;
+
+                        _threadLocalTransaction.Dispose();
+
+                        _threadLocalTransaction = null;
+                    }
+                }
+                else
+                {
+                    if (_threadLocalTransaction is null)
+                        _threadLocalTransaction = new(false);
+
+                    _threadLocalTransaction.Value = value;
+                }
             }
         }
 
