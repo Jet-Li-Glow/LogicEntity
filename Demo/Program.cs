@@ -23,10 +23,9 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //Version 1.0.1
+            //Version 1.1.0
 
             //开发计划 1.join-on、select 无强类型限制 以实现动态join和动态select
-            //         2.数据填充使用反射生成赋值委托替代表达式树
 
             Console.WriteLine("-- Start --");
 
@@ -51,7 +50,7 @@ namespace Demo
 
             data = db.Students.Where(s => s.Id == 1).ToList();
 
-            data = db.Students.Where(s => ((string)s.Name).Contains("小")).Take(1).ToList();
+            data = db.Students.Where(s => s.Name.Contains("小")).Take(1).ToList();
 
             data = db.Students.Where((s, i) => i > 0).ToList();
 

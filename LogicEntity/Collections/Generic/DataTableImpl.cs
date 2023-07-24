@@ -16,18 +16,6 @@ namespace LogicEntity.Collections.Generic
         {
 
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            foreach (object obj in Db.Query(Expression))
-                yield return obj;
-        }
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            foreach (object obj in Db.Query(Expression))
-                yield return (T)obj;
-        }
     }
 
     public class DataTableImpl<T1, T2> : DataTableImplBase, IOrderedDataTable<T1, T2>

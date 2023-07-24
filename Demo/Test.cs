@@ -176,7 +176,7 @@ namespace Demo
 
             command = linqConvertProvider.Convert(dataTable.Expression);
 
-            data = ((IEnumerable)dataTable).Cast<object>().ToList();
+            data = dataTable.Cast<object>().ToList();
 
             //Select - 2
             dataTable = db.Students
@@ -206,7 +206,7 @@ namespace Demo
 
             command = linqConvertProvider.Convert(dataTable.Expression);
 
-            data = ((IEnumerable)dataTable).Cast<object>().ToList();
+            data = dataTable.Cast<object>().ToList();
 
             //Select - 3
             data = db.Value(() => new { n = 1 })
@@ -271,7 +271,7 @@ namespace Demo
 
             command = linqConvertProvider.Convert(dataTable.Expression);
 
-            data = ((IEnumerable)dataTable).Cast<object>().ToList();
+            data = dataTable.Cast<object>().ToList();
 
             //Select - 6
             dataTable = db.Students
@@ -282,7 +282,7 @@ namespace Demo
 
             command = linqConvertProvider.Convert(dataTable.Expression);
 
-            data = ((IEnumerable)dataTable).Cast<object>().ToList();
+            data = dataTable.Cast<object>().ToList();
 
             //Select - 7
             dataTable = db.Students.Select(s =>
@@ -299,7 +299,7 @@ namespace Demo
 
             command = linqConvertProvider.Convert(dataTable.Expression);
 
-            data = ((IEnumerable)dataTable).Cast<object>().ToList();
+            data = dataTable.Cast<object>().ToList();
 
             //Select - 8
             data = db.Students.Select(

@@ -14,6 +14,12 @@ namespace LogicEntity.Collections.Generic
         {
             return this;
         }
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            foreach (object obj in (IEnumerable)this)
+                yield return (T)obj;
+        }
     }
 
     public interface IDataTable<T1, T2> : IDataTable
