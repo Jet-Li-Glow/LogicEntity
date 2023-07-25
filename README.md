@@ -24,6 +24,7 @@ Insert:
 ```C#
 var rowsAffected = db.Students.Add(new Student()
 {
+    Id = 1,
     Name = "Name String",
     MajorId = 3,
     Json = new Student.JsonObject()
