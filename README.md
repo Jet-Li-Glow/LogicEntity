@@ -43,8 +43,9 @@ Update:
 var rowsAffected = db.Students.Where(s => s.Id == 1)
     .Set
     (
-        s => s.Float.Assign(5.5f),
-        s => ((Student.JsonObject)s.Json).Array[0].Assign(-5)
+        s => s.Float.SetValue(5.5f),
+        s => s.Json.Array[0].SetValue(-5),
+        s => s.Json.List.Add(6)
     );
 ```
 
