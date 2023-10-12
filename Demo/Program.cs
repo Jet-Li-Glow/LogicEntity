@@ -23,7 +23,7 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            //Version 1.1.0
+            //Version 1.1.1
 
             //开发计划 1.join-on、select 无强类型限制 以实现动态join和动态select
 
