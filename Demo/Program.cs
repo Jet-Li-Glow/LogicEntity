@@ -26,6 +26,10 @@ namespace Demo
             //Version 1.1.1
 
             //开发计划 1.join-on、select 无强类型限制 以实现动态join和动态select
+            //         2.select ... for update 支持
+            //         3.select<T>(columnSrc) 动态列的 标准支持
+            //         4.db.Session(()=> { ... }) 使用同一个连接的支持
+            //         5.LogicEntity.Enumerable 重命名
 
             Console.WriteLine("-- Start --");
 
@@ -296,6 +300,12 @@ namespace Demo
         public ITable<Major> Majors { get; init; }
 
         public ITable<Monthly> Monthly { get; init; }
+
+        public void SaveData()
+        {
+            //Students.Add(new());
+            //Majors.Add(new());
+        }
     }
 
     static class Database

@@ -386,6 +386,20 @@ namespace Demo
             //Select - 22
             Assert(db.Value(() => 1).Concat(db.Value(() => 1)).Concat(db.Value(() => 2)).Take(2).Distinct().AsEnumerable().Count(), 1);
 
+            //Select - 23
+            System.Linq.Enumerable.Range(1, 10).AsParallel().ForAll(i =>
+            {
+                db.Session(() =>
+                {
+                    Assert(db.ExecuteScalar<int>("Select Connection_Id()"), db.ExecuteScalar<int>("Select Connection_Id()"));
+                });
+
+                db.ExecuteTransaction(transaction =>
+                {
+                    Assert(db.ExecuteScalar<int>("Select Connection_Id()"), db.ExecuteScalar<int>("Select Connection_Id()"));
+                });
+            });
+
             //Insert - 1
             byte[] bytes = Encoding.UTF8.GetBytes("123");
 

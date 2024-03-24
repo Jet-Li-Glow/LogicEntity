@@ -290,7 +290,7 @@ namespace LogicEntity
                             .GroupJoin(instanceColumns, a => a.Name, b => b.ColumnName[level].MemberName, (a, bs) => new { Property = a, ColumnInfos = bs.ToList() })
                             .Where(s => s.ColumnInfos.Count > 0).ToList();
 
-                        if (propertyBindings.Any())
+                        if (propertyBindings.Count > 0)
                         {
                             ParameterExpression propertyInstance = Expression.Parameter(result.Type);
 
@@ -320,7 +320,7 @@ namespace LogicEntity
                 {
                     List<ColumnInfo> nextLevel = columnInfos.Where(c => c.ColumnName.Length > (level + 1)).ToList();
 
-                    if (nextLevel.Any())
+                    if (nextLevel.Count > 0)
                         return _CreateInstance(propertyType, nextLevel, level + 1);
 
                     int i = columnInfos[0].Index;
@@ -630,10 +630,10 @@ namespace LogicEntity
             if (result is DBNull)
                 result = null;
 
-            if (command.Results.Any() == false)
+            if (command.Results.Count == 0)
                 return result;
 
-            CommandResult resultInfo = command.Results.First();
+            CommandResult resultInfo = command.Results[0];
 
             if (resultInfo is null || resultInfo.Type is null)
                 return result;

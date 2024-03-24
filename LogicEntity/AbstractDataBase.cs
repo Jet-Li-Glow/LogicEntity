@@ -23,7 +23,12 @@ namespace LogicEntity
         ThreadLocal<DbTransaction> _threadLocalTransaction = new ThreadLocal<DbTransaction>(false);
 
         /// <summary>
-        /// 阻止程序集外部使用
+        /// 当前线程的会话的Db连接
+        /// </summary>
+        ThreadLocal<IDbConnection> _threadLocalSessionDbConnection = new ThreadLocal<IDbConnection>(false);
+
+        /// <summary>
+        /// 提供Linq转换功能的对象（阻止程序集外部使用）
         /// </summary>
         internal ILinqConvertProvider LinqConvertProvider { get; private set; }
 
@@ -161,19 +166,9 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<IEnumerable> Query(Command command)
         {
-            if (ThreadLocalTransaction is not null)
+            using (SessionDbConnection sessionDbConnection = new(this))
             {
-                foreach (IEnumerable result in ThreadLocalTransaction.Query(command))
-                    yield return result;
-
-                yield break;
-            }
-
-            using (IDbConnection connection = CreateDbConnection())
-            {
-                connection.Open();
-
-                foreach (IEnumerable result in connection.Query(null, command))
+                foreach (IEnumerable result in sessionDbConnection.DbConnection.Query(ThreadLocalTransaction?.DbTransactionProvider, command))
                     yield return result;
             }
         }
@@ -231,19 +226,9 @@ namespace LogicEntity
         /// <returns></returns>
         public IEnumerable<System.Data.DataTable> QueryDataTable(Command command)
         {
-            if (ThreadLocalTransaction is not null)
+            using (SessionDbConnection sessionDbConnection = new(this))
             {
-                foreach (System.Data.DataTable result in ThreadLocalTransaction.QueryDataTable(command))
-                    yield return result;
-
-                yield break;
-            }
-
-            using (IDbConnection connection = CreateDbConnection())
-            {
-                connection.Open();
-
-                foreach (System.Data.DataTable result in connection.QueryDataTable(null, command))
+                foreach (System.Data.DataTable result in sessionDbConnection.DbConnection.QueryDataTable(ThreadLocalTransaction?.DbTransactionProvider, command))
                     yield return result;
             }
         }
@@ -301,14 +286,9 @@ namespace LogicEntity
         /// <returns></returns>
         public int ExecuteNonQuery(Command command)
         {
-            if (ThreadLocalTransaction is not null)
-                return ThreadLocalTransaction.ExecuteNonQuery(command);
-
-            using (IDbConnection connection = CreateDbConnection())
+            using (SessionDbConnection sessionDbConnection = new(this))
             {
-                connection.Open();
-
-                return connection.ExecuteNonQuery(null, command);
+                return sessionDbConnection.DbConnection.ExecuteNonQuery(ThreadLocalTransaction?.DbTransactionProvider, command);
             }
         }
 
@@ -368,14 +348,23 @@ namespace LogicEntity
         /// <returns></returns>
         public object ExecuteScalar(Command command)
         {
-            if (ThreadLocalTransaction is not null)
-                return ThreadLocalTransaction.ExecuteScalar(command);
-
-            using (IDbConnection connection = CreateDbConnection())
+            using (SessionDbConnection sessionDbConnection = new(this))
             {
-                connection.Open();
+                return sessionDbConnection.DbConnection.ExecuteScalar(ThreadLocalTransaction?.DbTransactionProvider, command);
+            }
+        }
 
-                return connection.ExecuteScalar(null, command);
+        //--------------------------------- Session ------------------------------------------
+
+        /// <summary>
+        /// 执行会话
+        /// </summary>
+        /// <param name="action"></param>
+        public void Session(Action action)
+        {
+            using (SessionDbConnection sessionDbConnection = new(this))
+            {
+                action();
             }
         }
 
@@ -424,6 +413,11 @@ namespace LogicEntity
             return success;
         }
 
+        /// <summary>
+        /// 执行事务
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
         public bool TryExecuteTransaction(Action action)
         {
             return TryExecuteTransaction(action, out Exception _);
@@ -484,9 +478,82 @@ namespace LogicEntity
             if (action is null)
                 return;
 
-            using (DbTransaction transaction = new DbTransaction(this, il))
+            if (ThreadLocalTransaction is not null)
+                throw new InvalidOperationException("Nested transactions are not supported");
+
+            using (SessionDbConnection sessionDbConnection = new(this))
             {
-                action(transaction);
+                IDbTransaction transaction = null;
+
+                try
+                {
+                    IDbConnection connection = sessionDbConnection.DbConnection;
+
+                    transaction = il.HasValue ? connection.BeginTransaction(il.Value) : connection.BeginTransaction();
+
+                    DbTransaction dbTransaction = new DbTransaction(transaction);
+
+                    ThreadLocalTransaction = dbTransaction;
+
+                    action(dbTransaction);
+                }
+                finally
+                {
+                    ThreadLocalTransaction = null;
+
+                    try
+                    {
+                        transaction?.Dispose();
+                    }
+                    catch
+                    {
+                    }
+                }
+            };
+        }
+
+        class SessionDbConnection : IDisposable
+        {
+            AbstractDataBase _db;
+
+            IDbConnection _connection;
+
+            bool _isConnectionNeedDispose = false;
+
+            public SessionDbConnection(AbstractDataBase db)
+            {
+                _db = db;
+
+                _connection = _db._threadLocalSessionDbConnection.Value;
+
+                if (_connection is null)
+                {
+                    _connection = _db.CreateDbConnection();
+
+                    _isConnectionNeedDispose = true;
+
+                    _connection.Open();
+
+                    _db._threadLocalSessionDbConnection.Value = _connection;
+                }
+            }
+
+            public IDbConnection DbConnection => _connection;
+
+            public void Dispose()
+            {
+                if (_isConnectionNeedDispose)
+                {
+                    _db._threadLocalSessionDbConnection.Value = null;
+
+                    try
+                    {
+                        _connection?.Dispose();
+                    }
+                    catch
+                    {
+                    }
+                }
             }
         }
     }
