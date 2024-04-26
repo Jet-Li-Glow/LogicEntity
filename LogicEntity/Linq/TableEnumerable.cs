@@ -15,7 +15,7 @@ using LogicEntity.Method;
 
 namespace LogicEntity.Linq
 {
-    public static class Enumerable
+    public static class TableEnumerable
     {
         public static ITable<T> Create<T>(this ITable<T> source, Func<string, string, (string, string)> getTableName)
         {

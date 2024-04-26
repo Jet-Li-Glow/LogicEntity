@@ -29,7 +29,6 @@ namespace Demo
             //         2.select ... for update 支持
             //         3.select<T>(columnSrc) 动态列的 标准支持
             //         4.db.Session(()=> { ... }) 使用同一个连接的支持
-            //         5.LogicEntity.Enumerable 重命名
 
             Console.WriteLine("-- Start --");
 

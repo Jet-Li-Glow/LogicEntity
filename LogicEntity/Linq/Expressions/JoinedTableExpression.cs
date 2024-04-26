@@ -8,7 +8,7 @@ namespace LogicEntity.Linq.Expressions
 {
     public class JoinedTableExpression : TableExpression
     {
-        public JoinedTableExpression(TableExpression left, TableExpression right, object predicate) : this(left, nameof(Enumerable.Join), right, predicate)
+        public JoinedTableExpression(TableExpression left, TableExpression right, object predicate) : this(left, nameof(TableEnumerable.Join), right, predicate)
         {
 
         }
